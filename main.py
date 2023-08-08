@@ -1,16 +1,28 @@
-# This is a sample Python script.
+import pandas as pd
 
-# Press Shift+F10 to execute it or replace it with your code.
-# Press Double Shift to search everywhere for classes, files, tool windows, actions, and settings.
-
-
-def print_hi(name):
-    # Use a breakpoint in the code line below to debug your script.
-    print(f'Hi, {name}')  # Press Ctrl+F8 to toggle the breakpoint.
+from EmQuantAPI import c
 
 
-# Press the green button in the gutter to run the script.
-if __name__ == '__main__':
-    print_hi('PyCharm')
+def gen_st_list(start_date, end_date):
+    print("Downloading ST list")
+    print("----------------------------")
+    c.start()
 
-# See PyCharm help at https://www.jetbrains.com/help/pycharm/
+    trade_dates = c.tradedates(
+        start_date,
+        end_date,
+        "period=1,order=1,market=CNSESH",
+    ).Dates
+    all_st_list = []
+    for date in trade_dates:
+        st_list = c.sector("001023", date).Codes
+        tmp_st_s = pd.Series(st_list, index=[date]*len(st_list))
+        all_st_list.append(tmp_st_s)
+    c.stop()
+
+    all_st_s = pd.concat(all_st_list)
+    return all_st_s
+
+
+st_s = gen_st_list("2022-08-31", "2023-08-07")
+print()
