@@ -97,7 +97,7 @@ def ts_download_daily(date, save_path):
         print(save_path, 'has downloaded.')
 
 
-def update_confirm_kc50_weight(today):
+def update_confirm_kc50_weight(today=None):
     c_download_kc50_weight(today)
     update_email_confirmation('update_confirm_kc50_weight',
                               "update_confirm_kc50_weight")
@@ -135,7 +135,7 @@ def c_download_index_weight(index_ticker, date, save_path):
         print(f'{save_path}', 'has downloaded.')
 
 
-def update_confirm_st_list(today):
+def update_confirm_st_list(today=None):
     c_download_st_list(today)
     update_email_confirmation('update_confirm_st_list',
                               'update_confirm_st_list')
