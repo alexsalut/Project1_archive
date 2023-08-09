@@ -28,12 +28,12 @@ def update_schedule():
     scheduler.add_job(update_confirm_kc50_weight,
                       'cron',
                       day_of_week="1-5",
-                      hour=16, minute=40, args=[today])
+                      hour=10, minute=00, args=[today])
 
     scheduler.add_job(update_confirm_st_list,
                       'cron',
                       day_of_week="1-5",
-                      hour=16, minute=42, args=[today])
+                      hour=10, minute=00, args=[today])
     scheduler.start()
 
 
