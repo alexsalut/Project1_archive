@@ -112,7 +112,9 @@ def c_download_kc50_weight(today=None):
     if os.path.exists(save_path):
         print(save_path, 'has existed.')
     else:
-        c_download_index_weight(index_ticker='000688.SH', date=today, save_path=save_path)
+        c_download_index_weight(index_ticker='000688.SH',
+                                date=today,
+                                save_path=save_path)
 
 
 def c_download_index_weight(index_ticker, date, save_path):
@@ -150,7 +152,11 @@ def c_download_st_list(today=None):
     if os.path.exists(save_path):
         print(save_path, 'has existed.')
     else:
-        c_download_index_list(index_ticker='001023', date=today, save_path=save_path)
+        c_download_index_list(
+            index_ticker='001023',
+            date=today,
+            save_path=save_path,
+        )
 
 
 def c_download_index_list(index_ticker, date, save_path):
@@ -207,6 +213,8 @@ def update_email_confirmation(subject, content):
 
     except smtplib.SMTPException as e:
         print(e)
+
+
 
 
 
