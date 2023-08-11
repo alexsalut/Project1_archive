@@ -20,3 +20,5 @@ def transfer_to_jy_ticker(universe, inverse=False):
         return [x[-6:]+'.'+x[:2].upper() for x in universe]
     else:
         return [x.split('.')[-1].lower()+x.split('.')[0] for x in universe]
+
+

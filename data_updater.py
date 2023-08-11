@@ -22,7 +22,7 @@ from email.mime.text import MIMEText
 
 TUSHARE_DIR = "C:/Users/Yz02/Desktop/Data/Tushare"
 CHOICE_DIR = "C:/Users/Yz02/Desktop/Data/Choice"
-SAVE_PATH = "C:/Users/Yz02/Desktop/Data/Save/price.pkl"
+SAVE_PATH = "C:/Users/Yz02/Desktop/Data/Save/qfq_price.pkl"
 
 
 def update_confirm_adjusted_kline():
@@ -47,7 +47,7 @@ def update_confirm_raw_daily_bar(today=None):
 
 def ts_download_raw_daily_bar(today):
     ts_download_history(
-        start_date='20221231',
+        start_date='20220630',
         end_date=today,
         save_dir=TUSHARE_DIR,
     )
@@ -105,9 +105,9 @@ def update_confirm_kc50_weight(today=None):
 
 def c_download_kc50_weight(today=None):
     today = time.strftime('%Y%m%d') if today is None else today
-    save_dir = rf'{CHOICE_DIR}/kc50_weight/{today[:4]}/{today[:6]}'
+    save_dir = rf'{CHOICE_DIR}/kc50_weight'
     os.makedirs(save_dir, exist_ok=True)
-    save_path = os.path.join(save_dir, f'kc50_weight_{today}.pkl')
+    save_path = os.path.join(save_dir, f'{today}.pkl')
 
     if os.path.exists(save_path):
         print(save_path, 'has existed.')
@@ -145,9 +145,9 @@ def update_confirm_st_list(today=None):
 
 def c_download_st_list(today=None):
     today = time.strftime('%Y%m%d') if today is None else today
-    save_dir = rf'{CHOICE_DIR}/st_list/{today[:4]}/{today[:6]}'
+    save_dir = rf'{CHOICE_DIR}/st_list'
     os.makedirs(save_dir, exist_ok=True)
-    save_path = os.path.join(save_dir, f'st_list_{today}.csv')
+    save_path = os.path.join(save_dir, f'st_list.csv')
 
     if os.path.exists(save_path):
         print(save_path, 'has existed.')
@@ -162,7 +162,7 @@ def c_download_st_list(today=None):
 def c_download_index_list(index_ticker, date, save_path):
     print("Downloading st list until", date)
     print("----------------------------------")
-    start_date = "2020-08-01"
+    start_date = "2020-08-31"
     c.start()
     trade_dates = c.tradedates(
         start_date,
@@ -187,6 +187,82 @@ def c_download_index_list(index_ticker, date, save_path):
         print("ST list updated and new .csv file generated ")
 
 
+def update_confirm_daily_turnover(today=None):
+    today = time.strftime('%Y%m%d') if today is None else today
+    save_dir = rf'{CHOICE_DIR}/daily_turnover_rate/{today[:4]}/{today[:6]}'
+    os.makedirs(save_dir, exist_ok=True)
+    save_path = os.path.join(save_dir, f'{today}.csv')
+    ticker = c_download_daily_turnover_rate(index_ticker='001071', date=today, save_path=save_path)
+    email_content = [
+        'No data available yet',
+        f'{today} turnover rate downloaded with missing values',
+        f'{today} turnover rate downloaded without missing values',
+        f'{today} turnover rate already existed'
+    ]
+    content = email_content[ticker]
+    update_email_confirmation(subject=email_content[ticker], content=email_content[ticker])
+
+
+def c_download_all_daily_turnover_rate(today=None):
+    today = time.strftime('%Y%m%d') if today is None else today
+    print(f"Downloading historical turnover rate until {today}")
+    print("-------------------------------------------------")
+    today = time.strftime('%Y%m%d') if today is None else today
+
+    start_date = "2022-06-30"
+    c.start()
+    trade_dates = c.tradedates(
+        start_date,
+        today,
+        "period=1,order=1,market=CNSESH",
+    ).Dates
+    c.stop()
+
+    date_list = pd.to_datetime(trade_dates).strftime("%Y%m%d").tolist()
+
+    for date in date_list:
+        save_dir = rf'{CHOICE_DIR}/daily_turnover_rate/{date[:4]}/{date[:6]}'
+        os.makedirs(save_dir, exist_ok=True)
+        save_path = os.path.join(save_dir, f'{date}.csv')
+        c_download_daily_turnover_rate(index_ticker='001071', date=date, save_path=save_path)
+
+
+def c_download_daily_turnover_rate(index_ticker, date, save_path):
+    if os.path.exists(save_path):
+        print(save_path, 'has existed.')
+        return 3
+    else:
+        print("Downloading turnover rate")
+        print("-------------------------")
+
+        c.start()
+
+        # A share market
+        stock_list = c.sector(index_ticker, date).Codes
+        filter_list = list(filter(lambda x: x[-2:] == 'SH' or 'SZ', stock_list))
+        a_daily_turnover = c.css(
+            filter_list,
+            "TURN,FREETURNOVER",
+            f"TradeDate={date}, isPandas=1",
+        )
+        c.stop()
+        a_daily_turnover.index = transfer_to_jy_ticker(a_daily_turnover.index)
+        a_daily_turnover.drop(columns=['DATES'], inplace=True)
+
+        if a_daily_turnover.dropna(how='all').empty:
+            print('No data available yet:', date)
+            return 0
+        else:
+            a_daily_turnover.to_csv(save_path)
+            print(f'{save_path}', 'has downloaded.')
+            if a_daily_turnover.dropna(axis='columns').empty:
+                print("there is missing values in the file")
+                return 1
+            else:
+                print("there is no missing values in the file")
+                return 2
+
+
 def update_email_confirmation(subject, content):
     # 配置第三方 SMTP 服务
     host = "smtp.163.com"
@@ -195,12 +271,12 @@ def update_email_confirmation(subject, content):
 
     # 配置发送方、接收方信息
     sender = '13671217387@163.com'
-    receivers = 'zhou.sy@yz-fund.com.cn'
+    receivers = ['zhou.sy@yz-fund.com.cn', 'wu.yw@yz-fund.com.cn']
 
     # 三个参数：第一个为文本内容，第二个 plain 设置文本格式，第三个 utf-8 设置编码
     message = MIMEText(content, 'plain', 'utf-8')
     message['From'] = sender  # 发送者
-    message['To'] = receivers  # 接收者
+    message['To'] = ','.join(receivers)  # 接收者
     message['Subject'] = subject
     try:
         smtpObj = smtplib.SMTP()  # 建立和SMTP邮件服务器的连接
@@ -213,6 +289,11 @@ def update_email_confirmation(subject, content):
 
     except smtplib.SMTPException as e:
         print(e)
+
+
+
+
+
 
 
 
