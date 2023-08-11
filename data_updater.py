@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2023/7/10 9:03
-# @Author  : Youwei Wu
+# @Author  : Youwei Wu, Suying Zhou
 # @File    : data_updater.py
 # @Software: PyCharm
 
@@ -27,8 +27,10 @@ SAVE_PATH = "C:/Users/Yz02/Desktop/Data/Save/qfq_price.pkl"
 
 def update_confirm_adjusted_kline():
     update_adjusted_kline()
-    update_email_confirmation('update_confirm_adjusted_kline',
-                              'update_confirm_adjusted_kline')
+    update_email_confirmation(
+        'update_confirm_adjusted_kline',
+        'update_confirm_adjusted_kline'
+    )
 
 
 def update_adjusted_kline():
@@ -41,8 +43,10 @@ def update_adjusted_kline():
 def update_confirm_raw_daily_bar(today=None):
     today = time.strftime('%Y%m%d') if today is None else today
     ts_download_raw_daily_bar(today)
-    update_email_confirmation('update_confirm_raw_daily_bar',
-                              'update_confirm_raw_daily_bar')
+    update_email_confirmation(
+        'update_confirm_raw_daily_bar',
+        'update_confirm_raw_daily_bar'
+    )
 
 
 def ts_download_raw_daily_bar(today):
@@ -192,15 +196,36 @@ def update_confirm_daily_turnover(today=None):
     save_dir = rf'{CHOICE_DIR}/daily_turnover_rate/{today[:4]}/{today[:6]}'
     os.makedirs(save_dir, exist_ok=True)
     save_path = os.path.join(save_dir, f'{today}.csv')
-    ticker = c_download_daily_turnover_rate(index_ticker='001071', date=today, save_path=save_path)
-    email_content = [
-        'No data available yet',
-        f'{today} turnover rate downloaded with missing values',
-        f'{today} turnover rate downloaded without missing values',
-        f'{today} turnover rate already existed'
-    ]
-    content = email_content[ticker]
-    update_email_confirmation(subject=email_content[ticker], content=email_content[ticker])
+
+    a_daily_turnover = c_download_daily_turnover_rate(
+        index_ticker='001071',
+        date=today,
+        save_path=save_path
+    )
+    if a_daily_turnover.dropna(how='all').empty:
+        subject = '[Turnover Rate]No data available yet'
+        save_path = None
+    else:
+        subject = '[Turnover Rate]Data downloaded successfully '
+
+    stock_count = len(a_daily_turnover.index)
+    na_stock = a_daily_turnover[a_daily_turnover.isna().any(axis=1)].index.tolist()
+    na_stock_count = len(na_stock)
+
+    email_turnover_confirmation(subject, save_path, stock_count, na_stock_count, na_stock)
+
+
+def email_turnover_confirmation(subject, save_path, stock_count, na_stock_count, na_stock):
+    content = f""""
+    Today's turnover rate has been accessed on Choice and the info is as follows:
+    Download path:
+    {save_path}
+    Number of stocks included:            {stock_count}  
+    Number of stocks with missing values: {na_stock_count} 
+    Details(Code) of stocks with missing values:
+    {na_stock}
+    """
+    update_email_confirmation(subject=subject, content=content)
 
 
 def c_download_all_daily_turnover_rate(today=None):
@@ -229,8 +254,10 @@ def c_download_all_daily_turnover_rate(today=None):
 
 def c_download_daily_turnover_rate(index_ticker, date, save_path):
     if os.path.exists(save_path):
-        print(save_path, 'has existed.')
-        return 3
+        a_daily_turnover = pd.read_csv(save_path, index_col=0)
+        print(f'{save_path}', 'has existed.')
+        return a_daily_turnover
+
     else:
         print("Downloading turnover rate")
         print("-------------------------")
@@ -239,7 +266,7 @@ def c_download_daily_turnover_rate(index_ticker, date, save_path):
 
         # A share market
         stock_list = c.sector(index_ticker, date).Codes
-        filter_list = list(filter(lambda x: x[-2:] == 'SH' or 'SZ', stock_list))
+        filter_list = [x for x in stock_list if x[-2:] in ['SH', 'SZ']]
         a_daily_turnover = c.css(
             filter_list,
             "TURN,FREETURNOVER",
@@ -248,19 +275,16 @@ def c_download_daily_turnover_rate(index_ticker, date, save_path):
         c.stop()
         a_daily_turnover.index = transfer_to_jy_ticker(a_daily_turnover.index)
         a_daily_turnover.drop(columns=['DATES'], inplace=True)
+        # stock_count = len(a_daily_turnover.index)
+        # na_stock = a_daily_turnover.isna().T.any()[a_daily_turnover.isna().T.any() == True].index.tolist()
+        # na_stock_count = a_daily_turnover.isna().T.any().sum()
 
         if a_daily_turnover.dropna(how='all').empty:
             print('No data available yet:', date)
-            return 0
         else:
             a_daily_turnover.to_csv(save_path)
             print(f'{save_path}', 'has downloaded.')
-            if a_daily_turnover.dropna(axis='columns').empty:
-                print("there is missing values in the file")
-                return 1
-            else:
-                print("there is no missing values in the file")
-                return 2
+        return a_daily_turnover
 
 
 def update_email_confirmation(subject, content):
@@ -289,6 +313,10 @@ def update_email_confirmation(subject, content):
 
     except smtplib.SMTPException as e:
         print(e)
+
+
+if __name__ == '__main__':
+    update_confirm_daily_turnover('20230803')
 
 
 

@@ -5,22 +5,20 @@
 # @Software: PyCharm
 
 import datetime
-import pandas as pd
 
-from chinese_calendar import is_workday, is_holiday
-from chinese_calendar import is_in_lieu
+from chinese_calendar import is_workday
 from apscheduler.schedulers.blocking import BlockingScheduler
 
-from data_updater import update_confirm_adjusted_kline
-from data_updater import update_confirm_raw_daily_bar
-from data_updater import update_confirm_st_list
-from data_updater import update_confirm_kc50_weight
-from data_updater import update_confirm_daily_turnover
+from data_updater import (update_confirm_adjusted_kline,
+                          update_confirm_raw_daily_bar,
+                          update_confirm_st_list,
+                          update_confirm_kc50_weight,
+                          update_confirm_daily_turnover)
 
 
 def update_schedule():
     scheduler = BlockingScheduler()
-    # 更新时间设置为
+
     scheduler.add_job(execute_update,
                       'cron',
                       day_of_week="1-5",
@@ -46,19 +44,11 @@ def time_update():
 
 
 def execute_update(update_function):
-    if not check_trade_day():
+    today = datetime.datetime.now()
+    if is_workday(today) and today.isoweekday() < 6:
         update_function()
     else:
         print('Today is holiday, no update.')
-
-
-def check_trade_day():
-    today = datetime.date.today()
-    return (
-            is_in_lieu(today)
-            or not is_workday(today)
-            or is_holiday(today)
-    )
 
 
 def update_c_data_list():
@@ -69,8 +59,3 @@ def update_c_data_list():
 def update_ts_data_list():
     update_confirm_raw_daily_bar()
     update_confirm_adjusted_kline()
-
-
-if __name__ == '__main__':
-    update_schedule()
-
