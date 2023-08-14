@@ -151,7 +151,7 @@ def c_download_st_list(today=None):
     today = time.strftime('%Y%m%d') if today is None else today
     save_dir = rf'{CHOICE_DIR}/st_list'
     os.makedirs(save_dir, exist_ok=True)
-    save_path = os.path.join(save_dir, f'st_list.csv')
+    save_path = os.path.join(save_dir, f'st_list_{today}.csv')
 
     if os.path.exists(save_path):
         print(save_path, 'has existed.')
@@ -315,8 +315,6 @@ def update_email_confirmation(subject, content):
         print(e)
 
 
-if __name__ == '__main__':
-    update_confirm_daily_turnover('20230803')
 
 
 

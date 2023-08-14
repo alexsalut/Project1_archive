@@ -7,7 +7,7 @@
 import datetime
 
 from chinese_calendar import is_workday
-from apscheduler.schedulers.blocking import BlockingScheduler
+from apscheduler.schedulers.background import BackgroundScheduler
 
 from data_updater import (update_confirm_adjusted_kline,
                           update_confirm_raw_daily_bar,
@@ -17,22 +17,32 @@ from data_updater import (update_confirm_adjusted_kline,
 
 
 def update_schedule():
-    scheduler = BlockingScheduler()
+    job_defaults = {
+        'coalesce': True,
+        'misfire_grace_time': None
+    }
+    scheduler = BackgroundScheduler(job_defaults=job_defaults)
 
-    scheduler.add_job(execute_update,
-                      'cron',
-                      day_of_week="1-5",
-                      hour=13, minute=56, args=[update_c_data_list])
+    scheduler.add_job(
+        execute_update,
+        'cron',
+        day_of_week="1-5",
+        hour=17, minute=30, args=[update_c_data_list],
+    )  # 13:30
 
-    scheduler.add_job(execute_update,
-                      'cron',
-                      day_of_week="1-5",
-                      hour=16, minute=17, args=[update_ts_data_list])
+    scheduler.add_job(
+        execute_update,
+        'cron',
+        day_of_week="1-5",
+        hour=17, minute=30, args=[update_ts_data_list],
+    )   # 16:17
 
-    scheduler.add_job(execute_update,
-                      'cron',
-                      day_of_week="1-5",
-                      hour=16, minute=30, args=[update_confirm_daily_turnover])
+    scheduler.add_job(
+        execute_update,
+        'cron',
+        day_of_week="1-5",
+        hour=17, minute=30, args=[update_confirm_daily_turnover],
+    )   # 16:30
 
     scheduler.add_job(time_update, 'interval', minutes=10)
     scheduler.start()
@@ -57,5 +67,10 @@ def update_c_data_list():
 
 
 def update_ts_data_list():
-    update_confirm_raw_daily_bar()
     update_confirm_adjusted_kline()
+    update_confirm_raw_daily_bar()
+
+
+if __name__ == '__main__':
+    update_schedule()
+
