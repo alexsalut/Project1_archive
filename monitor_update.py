@@ -7,13 +7,16 @@
 import datetime
 
 from chinese_calendar import is_workday
-from apscheduler.schedulers.background import BackgroundScheduler
+from apscheduler.schedulers.background import BlockingScheduler
 
-from data_updater import (update_confirm_adjusted_kline,
-                          update_confirm_raw_daily_bar,
-                          update_confirm_st_list,
-                          update_confirm_kc50_weight,
-                          update_confirm_daily_turnover)
+from data_updater import (
+    update_confirm_adjusted_kline,
+    update_confirm_raw_daily_bar,
+    update_confirm_st_list,
+    update_confirm_kc50_weight,
+    update_confirm_daily_turnover,
+    c_download_all_daily_turnover_rate
+    )
 
 
 def update_schedule():
@@ -21,30 +24,30 @@ def update_schedule():
         'coalesce': True,
         'misfire_grace_time': None
     }
-    scheduler = BackgroundScheduler(job_defaults=job_defaults)
+    # scheduler = BackgroundScheduler(job_defaults=job_defaults)
+    scheduler = BlockingScheduler(job_defaults=job_defaults)
+    scheduler.add_job(
+        execute_update,
+        'cron',
+        day_of_week="1-5",
+        hour=13, minute=47, args=[update_c_data_list],
+    )  # 13:47
 
     scheduler.add_job(
         execute_update,
         'cron',
         day_of_week="1-5",
-        hour=17, minute=30, args=[update_c_data_list],
-    )  # 13:30
-
-    scheduler.add_job(
-        execute_update,
-        'cron',
-        day_of_week="1-5",
-        hour=17, minute=30, args=[update_ts_data_list],
+        hour=16, minute=17, args=[update_ts_data_list],
     )   # 16:17
 
     scheduler.add_job(
         execute_update,
         'cron',
         day_of_week="1-5",
-        hour=17, minute=30, args=[update_confirm_daily_turnover],
+        hour=16, minute=30, args=[update_confirm_daily_turnover],
     )   # 16:30
 
-    scheduler.add_job(time_update, 'interval', minutes=10)
+    scheduler.add_job(time_update, 'interval', seconds=10)
     scheduler.start()
 
 
@@ -67,10 +70,12 @@ def update_c_data_list():
 
 
 def update_ts_data_list():
-    update_confirm_adjusted_kline()
     update_confirm_raw_daily_bar()
+    update_confirm_adjusted_kline()
 
 
 if __name__ == '__main__':
     update_schedule()
+
+
 
