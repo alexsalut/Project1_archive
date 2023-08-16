@@ -20,9 +20,10 @@ from email.mime.text import MIMEText
 # from script.preprocess.fq_kline import FqKLine
 # from script.product.utils import ProductPath, c_get_trade_dates, transfer_to_jy_ticker
 
-TUSHARE_DIR = "C:/Users/Yz02/Desktop/Data/Tushare"
+TUSHARE_DIR = r"\\192.168.1.116\tushare\price\daily\raw"
 CHOICE_DIR = "C:/Users/Yz02/Desktop/Data/Choice"
-SAVE_PATH = "C:/Users/Yz02/Desktop/Data/Save/qfq_price.pkl"
+SAVE_PATH = r"\\192.168.1.116\kline\qfq_kline_product.pkl"
+ST_PATH = r'\\192.168.1.116\kline\st_list.csv'
 
 
 def update_confirm_adjusted_kline():
@@ -42,19 +43,33 @@ def update_adjusted_kline():
 
 def update_confirm_raw_daily_bar(today=None):
     today = time.strftime('%Y%m%d') if today is None else today
-    ts_download_raw_daily_bar(today)
-    update_email_confirmation(
-        'update_confirm_raw_daily_bar',
-        'update_confirm_raw_daily_bar'
-    )
+    ts_download_history('20220630', today, save_dir=TUSHARE_DIR)
+    save_path = rf'{TUSHARE_DIR}/{today[:4]}/{today[:6]}/raw_daily_{today}.csv'
+    raw_daily_bar = pd.read_csv(save_path)
+
+    if raw_daily_bar.dropna(how='all').empty:
+        subject = '[Raw Daily Bar] No data available yet.'
+        save_path = None
+    elif len(raw_daily_bar.index) < 5000:
+        subject = '[Raw Daily Bar] Data downloaded with alert.'
+    else:
+        subject = '[Raw Daily Bar] Data downloaded successfully.'
+
+    stock_count = len(raw_daily_bar.index)
+    na_stock = raw_daily_bar[raw_daily_bar.isna().any(axis=1)].index.tolist()
+    email_raw_daily_bar_confirmation(subject, save_path, stock_count, na_stock)
 
 
-def ts_download_raw_daily_bar(today):
-    ts_download_history(
-        start_date='20220630',
-        end_date=today,
-        save_dir=TUSHARE_DIR,
-    )
+def email_raw_daily_bar_confirmation(subject, save_path, stock_count, na_stock):
+    content = f"""
+        Today's raw daily bar has been accessed on Tushare and the info is as follows:
+    Download path:
+    {save_path}
+    Number of stocks included:            {stock_count}  
+    Details(Code) of stocks with missing values:
+    {na_stock}
+    """
+    update_email_confirmation(subject, content)
 
 
 def ts_download_history(start_date, end_date, save_dir):
@@ -68,11 +83,12 @@ def ts_download_history(start_date, end_date, save_dir):
 
         if os.path.exists(save_path):
             print(save_path, 'has existed.')
+            raw_daily_bar = pd.read_csv(save_path)
         else:
-            ts_download_daily(date, save_path)
+            ts_download_raw_daily_bar(date, save_path)
 
 
-def ts_download_daily(date, save_path):
+def ts_download_raw_daily_bar(today, save_path):
     """
     Returns
     -------
@@ -92,13 +108,16 @@ def ts_download_daily(date, save_path):
         amount	float	成交额 （千元）
     """
     pro = ts.pro_api()
-    daily_bar = pro.daily(trade_date=date).set_index('ts_code')
-    if daily_bar.empty:
-        print('No data:', date)
+    raw_daily_bar = pro.daily(trade_date=today).set_index('ts_code')
+    if raw_daily_bar.empty:
+        print('No data:', today)
     else:
-        daily_bar = daily_bar.loc[daily_bar.index.str[-2:] != 'BJ']
-        daily_bar.to_csv(save_path)
-        print(save_path, 'has downloaded.')
+        raw_daily_bar = raw_daily_bar.loc[raw_daily_bar.index.str[-2:] != 'BJ']
+        if os.path.exists(save_path):
+            print(save_path, 'has existed.')
+        else:
+            raw_daily_bar.to_csv(save_path)
+            print(save_path, 'has downloaded.')
 
 
 def update_confirm_kc50_weight(today=None):
@@ -142,25 +161,40 @@ def c_download_index_weight(index_ticker, date, save_path):
 
 
 def update_confirm_st_list(today=None):
+    today = time.strftime('%Y%m%d') if today is None else today
     c_download_st_list(today)
-    update_email_confirmation('update_confirm_st_list',
-                              'update_confirm_st_list')
+    st_list = pd.read_csv(ST_PATH, index_col=0)['0']
+    save_path = ST_PATH
+    if st_list.dropna(how='all').empty:
+        subject = '[ST List] No data available yet.'
+        save_path = None
+    elif len(st_list[int(today)]) == 0:
+        subject = "[ST List] Today's ST list is empty"
+    else:
+        subject = '[ST List] Data downloaded successfully.'
+
+    email_st_list_confirmation(subject, len(st_list[int(today)]), save_path)
+
+
+def email_st_list_confirmation(subject, stock_count, save_path ):
+    content = f""""
+    Today's st list has been accessed on Choice and the info is as follows:
+    Download path:
+    {save_path}
+    Number of stocks included today: {stock_count}  
+
+    """
+    update_email_confirmation(subject=subject, content=content)
 
 
 def c_download_st_list(today=None):
-    today = time.strftime('%Y%m%d') if today is None else today
-    save_dir = rf'{CHOICE_DIR}/st_list'
-    os.makedirs(save_dir, exist_ok=True)
-    save_path = os.path.join(save_dir, f'st_list_{today}.csv')
+    #today = time.strftime('%Y%m%d') if today is None else today
 
-    if os.path.exists(save_path):
-        print(save_path, 'has existed.')
-    else:
-        c_download_index_list(
-            index_ticker='001023',
-            date=today,
-            save_path=save_path,
-        )
+    c_download_index_list(
+        index_ticker='001023',
+        date=today,
+        save_path=ST_PATH,
+    )
 
 
 def c_download_index_list(index_ticker, date, save_path):
@@ -209,21 +243,23 @@ def update_confirm_daily_turnover(today=None):
         subject = '[Turnover Rate]Data downloaded successfully '
 
     stock_count = len(a_daily_turnover.index)
+    s = a_daily_turnover[(a_daily_turnover > 100) | (a_daily_turnover < 0)].any(axis=1)
+    anomaly_stock = s[s].index.tolist()
     na_stock = a_daily_turnover[a_daily_turnover.isna().any(axis=1)].index.tolist()
-    na_stock_count = len(na_stock)
 
-    email_turnover_confirmation(subject, save_path, stock_count, na_stock_count, na_stock)
+    email_turnover_confirmation(subject, save_path, stock_count, na_stock, anomaly_stock)
 
 
-def email_turnover_confirmation(subject, save_path, stock_count, na_stock_count, na_stock):
+def email_turnover_confirmation(subject, save_path, stock_count, na_stock, anomaly_stock):
     content = f""""
     Today's turnover rate has been accessed on Choice and the info is as follows:
     Download path:
     {save_path}
     Number of stocks included:            {stock_count}  
-    Number of stocks with missing values: {na_stock_count} 
     Details(Code) of stocks with missing values:
     {na_stock}
+    Stocks with turnover rate > 100% or < 0%:
+    {anomaly_stock}
     """
     update_email_confirmation(subject=subject, content=content)
 
@@ -275,9 +311,6 @@ def c_download_daily_turnover_rate(index_ticker, date, save_path):
         c.stop()
         a_daily_turnover.index = transfer_to_jy_ticker(a_daily_turnover.index)
         a_daily_turnover.drop(columns=['DATES'], inplace=True)
-        # stock_count = len(a_daily_turnover.index)
-        # na_stock = a_daily_turnover.isna().T.any()[a_daily_turnover.isna().T.any() == True].index.tolist()
-        # na_stock_count = a_daily_turnover.isna().T.any().sum()
 
         if a_daily_turnover.dropna(how='all').empty:
             print('No data available yet:', date)
@@ -315,10 +348,8 @@ def update_email_confirmation(subject, content):
         print(e)
 
 
-
-
-
-
+update_confirm_st_list()
+print()
 
 
 

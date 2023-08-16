@@ -37,7 +37,7 @@ def update_schedule():
         execute_update,
         'cron',
         day_of_week="1-5",
-        hour=16, minute=17, args=[update_ts_data_list],
+        hour=16, minute=27, args=[update_ts_data_list],
     )   # 16:17
 
     scheduler.add_job(
