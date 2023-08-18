@@ -6,6 +6,7 @@
 
 import datetime
 
+import pandas as pd
 from chinese_calendar import is_workday
 from apscheduler.schedulers.background import BlockingScheduler
 
@@ -19,7 +20,8 @@ from ts_raw_daily_bar_updater import raw_daily_bar_update_and_confirm
 def update_schedule():
     job_defaults = {
         'coalesce': True,
-        'misfire_grace_time': None
+        'misfire_grace_time': None,
+        'max_instances': 1
     }
     # scheduler = BackgroundScheduler(job_defaults=job_defaults)
     scheduler = BlockingScheduler(job_defaults=job_defaults)
@@ -44,7 +46,7 @@ def update_schedule():
         hour=16, minute=30, args=[turnover_rate_update_and_confirm],
     )   # 16:30
 
-    scheduler.add_job(time_update, 'interval', seconds=10)
+    scheduler.add_job(time_update, 'interval', minutes=10)
     scheduler.start()
 
 
@@ -70,9 +72,9 @@ def update_ts_data_list():
     raw_daily_bar_update_and_confirm()
     adjusted_kline_update_and_confirm()
 
-
 if __name__ == '__main__':
     update_schedule()
+
 
 
 

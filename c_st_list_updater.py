@@ -86,3 +86,4 @@ def c_download_index_list(index_ticker, date, save_path):
     all_st_s.index = pd.to_datetime(all_st_s.index).strftime("%Y%m%d")
     all_st_s.to_csv(save_path)
     print(rf"{index_ticker} list updated and new .csv file generated ")
+
