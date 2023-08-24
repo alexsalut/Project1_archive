@@ -66,5 +66,3 @@ def update_adjusted_kline():
         tushare_dir=TUSHARE_DIR,
         save_path=KLINE_PATH,
     ).gen_qfq_kline()
-
-
