@@ -66,13 +66,16 @@ def c_download_st_list(today=None):
 def c_download_index_list(index_ticker, date, save_path):
     print(rf"Downloading {index_ticker} list until", date)
     print("----------------------------------")
-    start_date = "2020-08-31"
-    c.start()
+    start_date = "20200831"
+    c.start("ForceLogin=1")
     trade_dates = c.tradedates(
-        start_date,
-        date,
-        "period=1,order=1,market=CNSESH",
+        startdate=start_date,
+        enddate=date,
+        options="period=1,order=1,market=CNSESH",
     ).Dates
+    # # 2023-08-25 14:49:55
+    # data = c.tradedates("2020-08-30", "2023-08-25", "period=1,order=1,market=CNSESH")
+
 
     all_st_list = []
     for date in trade_dates:
@@ -86,4 +89,8 @@ def c_download_index_list(index_ticker, date, save_path):
     all_st_s.index = pd.to_datetime(all_st_s.index).strftime("%Y%m%d")
     all_st_s.to_csv(save_path)
     print(rf"{index_ticker} list updated and new .csv file generated ")
+
+
+if __name__ == '__main__':
+    c_download_st_list()
 

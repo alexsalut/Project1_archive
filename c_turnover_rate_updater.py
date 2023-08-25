@@ -81,7 +81,7 @@ def c_download_turnover_rate_history(today=None, save_dir=CHOICE_DIR):
     print(f"Downloading historical turnover rate until {today}")
     print("-------------------------------------------------")
 
-    c.start()
+    c.start("ForceLogin=1")
     trade_dates = c.tradedates(
         "2022-06-30",
         today,
@@ -106,7 +106,7 @@ def c_download_daily_turnover_rate(index_ticker, date, save_path):
     print("-------------------------")
 
     # A share market
-    c.start()
+    c.start("ForceLogin=1")
     stock_list = c.sector(index_ticker, date).Codes
     filter_list = [x for x in stock_list if x[-2:] in ['SH', 'SZ']]
     a_daily_turnover = c.css(

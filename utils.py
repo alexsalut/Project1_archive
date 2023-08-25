@@ -6,7 +6,7 @@ from email.mime.text import MIMEText
 
 
 def c_get_trade_dates(start, end):
-    c.start()
+    c.start("ForceLogin=1")
     c_data = c.tradedates(start, end, "period=1").Data
     trade_dates = pd.to_datetime(c_data).strftime('%Y%m%d')
     c.stop()

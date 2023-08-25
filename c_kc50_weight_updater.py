@@ -80,7 +80,7 @@ def c_download_index_weight(index_ticker, date, save_path):
     print("-----------------------------------")
     jy_ticker = transfer_to_jy_ticker([index_ticker])[0]
 
-    c.start()
+    c.start("ForceLogin=1")
     df = c.ctr(
         "INDEXCOMPOSITION",
         "SECUCODE,WEIGHT",
