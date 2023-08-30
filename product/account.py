@@ -31,5 +31,6 @@ def read_account_info(date, account):
 if __name__ == '__main__':
     import time
     today = time.strftime('%Y%m%d')
-    read_account_info(date=today, account='tanglang3')
     read_account_info(date=today, account='tanglang2')
+    read_account_info(date=today, account='tanglang3')
+

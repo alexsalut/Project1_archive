@@ -33,7 +33,7 @@ def send_email(subject, content):
     # 配置发送方、接收方信息
     sender = '13671217387@163.com'
     # receivers = 'zhou.sy@yz-fund.com.cn'
-    receivers = ['zhou.sy@yz-fund.com.cn', 'wu.yw@yz-fund.com.cn']
+    receivers = ['zhou.sy@yz-fund.com.cn', 'wu.yw@yz-fund.com.cn', 'liu.ch@yz-fund.com.cn']
 
     # 三个参数：第一个为文本内容，第二个 plain 设置文本格式，第三个 utf-8 设置编码
     message = MIMEText(content, 'plain', 'utf-8')
