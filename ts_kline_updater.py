@@ -13,7 +13,7 @@ from fq_kline import FqKLine
 
 TUSHARE_DIR = r"\\192.168.1.116\tushare\price\daily\raw"
 CHOICE_DIR = "C:/Users/Yz02/Desktop/Data/Choice"
-KLINE_PATH = r"\\192.168.1.116\kline\qfq_kline_product_kc.pkl"
+KLINE_PATH = r"\\192.168.1.116\kline\qfq_kline_product.pkl"
 ST_PATH = r'\\192.168.1.116\kline\st_list.csv'
 KC50_WEIGHT_DIR = r"\\192.168.1.116\choice\reference\index_weight\sh000688\cache"
 
@@ -22,6 +22,7 @@ class Kline_Updater:
         self.raw_dir = raw_dir
         self.save_path = save_path
         self.today = time.strftime('%Y%m%d')
+        self.kc_path = self.save_path.replace('.pkl', '_kc.pkl')
 
     def adjusted_kline_update_and_confirm(self):
         self.update_adjusted_kline()
@@ -30,22 +31,21 @@ class Kline_Updater:
 
 
     def redownload_check(self):
-        if not os.path.exists(self.save_path) or os.path.getsize(self.save_path) <= 5500000:
-            print(f'{self.save_path} does not exist or no sufficient data.')
+        if not os.path.exists(self.kc_path) or os.path.getsize(self.kc_path) <= 80000:
+            print(f'{self.kc_path} does not exist or no sufficient data.')
             time.sleep(300)
             self.adjusted_kline_update_and_confirm()
 
 
-
     def generate_email(self):
-        if os.path.exists(self.save_path):
+        if os.path.exists(self.kc_path):
             subject = '[Adjusted Kline] Data finish processing'
-            adjusted_kline = pd.read_pickle(self.save_path)
-            print(f'{self.save_path} exists.')
+            adjusted_kline = pd.read_pickle(self.kc_path)
+            print(f'{self.kc_path} exists.')
             info_dict = self.data_check(adjusted_kline)
             content = f"""
             Today's adjusted kline has been generated.
-            Number of stocks for today is {info_dict['Total_Number of Stocks']}\n
+            Number of stocks for KC stocks today is {info_dict['Total_Number of Stocks']}\n
             NaN: 
             {info_dict['NaN']}\n
             Negative: 
@@ -79,36 +79,30 @@ class Kline_Updater:
             if key == 'Total_Number of Stocks':
                 dict[key] = len(adjusted_kline[adjusted_kline.index.get_level_values(0) == self.today])
             else:
-                dict[key] = adjusted_kline.apply(lambda row: self.row_check(row, option=key), axis=1).dropna()
+                dict[key] = self.df_check(adjusted_kline, option=key)
+                # dict[key] = adjusted_kline.apply(lambda row: self.row_check(row, option=key), axis=1).dropna()
         return dict
 
-    def row_check(self, row, option='NaN'):
+    def df_check(self, adjusted_kline, option):
+        print(option)
         if option == 'NaN':
-            list = row[row.isna()].index.tolist()
-            return list if len(list) > 0 else None
+            return adjusted_kline[adjusted_kline.isna()].dropna(how='all').index.tolist()
         elif option == 'Negative':
-            list = row[row < 0].index.tolist()
-            list = list.drop('pct_chg') if 'pct_chg' in list else list
-            return list if len(list) > 0 else None
+            return adjusted_kline[(adjusted_kline<0)].iloc[:,[0,1,2,3,4,5,-1]].dropna(how='all').index.tolist()
         elif option == 'Zero':
-            list = row[row == 0].index.tolist()
-            return list if len(list) > 0 else None
+            df = (adjusted_kline.loc[:,:'amount']==0)
+            return df[df].dropna().index.tolist()
         elif option == 'Open&Close out of High&Low':
-            if (min(row['open'], row['close']) > row['low']) | (max(row['open'], row['close']) < row['high']):
-                return row.name
-            else:
-                return None
+            return adjusted_kline[(adjusted_kline['close'] > adjusted_kline['high'])|
+                                  (adjusted_kline['open'] > adjusted_kline['high'])|
+                                  (adjusted_kline['close'] < adjusted_kline['low']) |
+                                  (adjusted_kline['open'] < adjusted_kline['low'])].dropna(how='all').index.tolist()
         elif option == 'Extreme High&Low Difference':
-            return row.name if (row['high'] - row['low'])/row['low'] > 0.3 else None
+            return adjusted_kline[(adjusted_kline['high'] - adjusted_kline['low'])/adjusted_kline['low'] > 0.3].dropna(how='all').index.tolist()
         elif option == 'Extreme Daily Ret':
-            return row.name if abs(row['pct_chg']) > 0.2 else None
+            return adjusted_kline.query('pct_chg>0.2').index.tolist()
         else:
             raise ValueError('Option not available')
-
-
-
-
-
 
     def update_adjusted_kline(self):
         FqKLine(
@@ -116,11 +110,11 @@ class Kline_Updater:
             save_path=self.save_path,
         ).gen_qfq_kline()
 
-if __name__ == '__main__':
-    adjusted_kline = pd.read_pickle(KLINE_PATH)
-    adjusted_kline['id'] = None
-    Kline_Updater(
-        raw_dir=TUSHARE_DIR,
-        save_path=KLINE_PATH,
-    ).adjusted_kline_update_and_confirm()
+# if __name__ == '__main__':
+#     kc_kline_path = r"\\192.168.1.116\kline\qfq_kline_product_kc.pkl"
+#     adjusted_kline = pd.read_pickle(kc_kline_path)
+#     Kline_Updater(
+#         raw_dir=TUSHARE_DIR,
+#         save_path=KLINE_PATH,
+#     ).data_check(adjusted_kline)
 

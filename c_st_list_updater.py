@@ -30,7 +30,7 @@ class ST_List_Updater:
         send_email(subject=subject, content=content)
 
     def st_list_email_content(self):
-        data_name = 'st_list'
+        data_name = 'ST_list'
         if os.path.exists(self.save_path):
             df = pd.read_csv(self.save_path, index_col=0)
             print(f'{data_name} file exists')

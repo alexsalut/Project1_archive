@@ -49,7 +49,7 @@ class KC50_Weight_Updater:
 
     def kc50_weight_check(self,df):
         alert = []
-        data_name = 'kc50_weight'
+        data_name = 'KC50_weight'
         if df.empty:
             subject = rf"[{data_name}]  No data on the downloaded file"
         else:
@@ -64,6 +64,16 @@ class KC50_Weight_Updater:
             else:
                 subject = rf"[{data_name}] has successfully downloaded with alert"
         return subject, alert
+
+
+    def download_history_kc50_weight(self, start_date, end_date):
+        c.start()
+        trade_dates = c.tradedates(
+            startdate=start_date,
+            enddate=end_date,
+            options="period=1,order=1,market=CNSESH",
+        ).Dates
+        for trade_date in
 
     def c_download_kc50_weight(self, date, save_path):
         os.makedirs(self.save_dir, exist_ok=True)
@@ -88,6 +98,14 @@ class KC50_Weight_Updater:
 
         df.to_pickle(save_path)
         print(f'{save_path}', 'has downloaded.')
+
+
+
+
+if __name__ == '__main__':
+    kc50_weight_updater = KC50_Weight_Updater(save_dir=KC50_WEIGHT_DIR, today=None)
+
+    kc50_weight_updater.c_download_kc50_weight(date='20210709', save_path=rf'{KC50_WEIGHT_DIR}/20210709.pkl')
 
 
 

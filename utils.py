@@ -2,7 +2,16 @@ from EmQuantAPI import c
 
 import pandas as pd
 import smtplib
+
 from email.mime.text import MIMEText
+
+from win32com.client import Dispatch
+from datetime import datetime
+from xlrd import xldate_as_tuple
+import xlrd
+
+
+
 
 
 def c_get_trade_dates(start, end):
@@ -51,5 +60,25 @@ def send_email(subject, content):
 
     except smtplib.SMTPException as e:
         print(e)
+
+
+
+def update_excel(filepath):
+    # os.system('taskkill /IM EXCEL.exe /F')
+    xlapp = Dispatch('Excel.Application')
+    xlapp.visible = False
+    wkb = xlapp.Workbooks.open(filepath)
+    wkb.RefreshAll()
+    # time.sleep(5)
+    wkb.Save()
+    wkb.Close()
+    xlapp.quit()
+
+
+
+
+
+
+
 
 
