@@ -2,14 +2,10 @@ from EmQuantAPI import c
 
 import pandas as pd
 import smtplib
-
+import datetime
+import time
 from email.mime.text import MIMEText
-
-from win32com.client import Dispatch
-from datetime import datetime
-from xlrd import xldate_as_tuple
-import xlrd
-
+from chinese_calendar import is_workday
 
 
 
@@ -41,7 +37,6 @@ def send_email(subject, content):
 
     # 配置发送方、接收方信息
     sender = '13671217387@163.com'
-    # receivers = 'zhou.sy@yz-fund.com.cn'
     receivers = ['zhou.sy@yz-fund.com.cn', 'wu.yw@yz-fund.com.cn', 'liu.ch@yz-fund.com.cn']
 
     # 三个参数：第一个为文本内容，第二个 plain 设置文本格式，第三个 utf-8 设置编码
@@ -62,17 +57,26 @@ def send_email(subject, content):
         print(e)
 
 
+def get_next_trading_day(today=None):
+    date = today if today is not None else datetime.datetime.now().strftime('%Y%m%d')
+    tomorrow = datetime.datetime.strptime(date, '%Y%m%d') + datetime.timedelta(days=1)
+    while not (is_workday(tomorrow) and tomorrow.isoweekday() < 6):
+        tomorrow = tomorrow + datetime.timedelta(days=1)
+    next_trading_day = tomorrow.strftime('%Y%m%d')
+    print(f'next trading day is {next_trading_day}')
+    return next_trading_day
 
-def update_excel(filepath):
-    # os.system('taskkill /IM EXCEL.exe /F')
-    xlapp = Dispatch('Excel.Application')
-    xlapp.visible = False
-    wkb = xlapp.Workbooks.open(filepath)
-    wkb.RefreshAll()
-    # time.sleep(5)
-    wkb.Save()
-    wkb.Close()
-    xlapp.quit()
+def retry_save_excel(wb, file_path):
+    try:
+        wb.save(file_path)
+    except PermissionError:
+        time.sleep(60)
+        print(f'{file_path} is being used by other process, wait for 60 seconds')
+        retry_save_excel(wb, file_path)
+
+
+
+
 
 
 

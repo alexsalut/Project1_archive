@@ -18,6 +18,8 @@ from c_turnover_rate_updater import Turnover_Rate_Updater
 from ts_kline_updater import Kline_Updater
 from ts_raw_daily_bar_updater import Raw_Daily_Bar_Updater
 from emc_updater import emc_updater
+from account_updater import Account
+from monitor_updater import Monitor_Updater
 
 TUSHARE_DIR = r"\\192.168.1.116\tushare\price\daily\raw"
 CHOICE_DIR = "C:/Users/Yz02/Desktop/Data/Choice"
@@ -45,8 +47,13 @@ def run_update_data():
                 ).kc50_weight_update_and_confirm()
                 time.sleep(60)
 
+            elif current_minute == 1502:
+                Monitor_Updater().monitor_update()
+                time.sleep(60)
+
             elif current_minute == 1515:
                 emc_updater()
+                Account().account_update()
                 time.sleep(60)
 
             elif current_minute == 1600:

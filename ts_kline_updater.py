@@ -56,7 +56,7 @@ class Kline_Updater:
             {info_dict['Open&Close out of High&Low']}\n
             Extreme High&Low Difference: 
             {info_dict['Extreme High&Low Difference']}\n
-            Extreme Daily Ret: 
+            Extreme Daily Ret(>20.05%): 
             {info_dict['Extreme Daily Ret']}\n
             """
         else:
@@ -100,7 +100,7 @@ class Kline_Updater:
         elif option == 'Extreme High&Low Difference':
             return adjusted_kline[(adjusted_kline['high'] - adjusted_kline['low'])/adjusted_kline['low'] > 0.3].dropna(how='all').index.tolist()
         elif option == 'Extreme Daily Ret':
-            return adjusted_kline.query('pct_chg>0.2').index.tolist()
+            return adjusted_kline.query('abs(pct_chg)>0.2005')['pct_chg'].apply(lambda x: f'{x:.2%}')
         else:
             raise ValueError('Option not available')
 
@@ -110,11 +110,12 @@ class Kline_Updater:
             save_path=self.save_path,
         ).gen_qfq_kline()
 
-# if __name__ == '__main__':
-#     kc_kline_path = r"\\192.168.1.116\kline\qfq_kline_product_kc.pkl"
-#     adjusted_kline = pd.read_pickle(kc_kline_path)
-#     Kline_Updater(
-#         raw_dir=TUSHARE_DIR,
-#         save_path=KLINE_PATH,
-#     ).data_check(adjusted_kline)
+if __name__ == '__main__':
+    kc_kline_path = r"\\192.168.1.116\kline\qfq_kline_product_kc.pkl"
+    adjusted_kline = pd.read_pickle(kc_kline_path)
+    adjusted_kline[adjusted_kline.index.get_level_values(0)=='20230905']
+    # Kline_Updater(
+    #     raw_dir=TUSHARE_DIR,
+    #     save_path=KLINE_PATH,
+    # ).data_check(adjusted_kline)
 

@@ -73,7 +73,7 @@ class KC50_Weight_Updater:
             enddate=end_date,
             options="period=1,order=1,market=CNSESH",
         ).Dates
-        for trade_date in
+
 
     def c_download_kc50_weight(self, date, save_path):
         os.makedirs(self.save_dir, exist_ok=True)

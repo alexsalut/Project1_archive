@@ -34,9 +34,9 @@ class Raw_Daily_Bar_Updater:
 
     def raw_daily_bar_redownload_check(self, subject, save_path):
         if (
-                subject == '[Raw Daily Bar] Data downloaded with alert. Retry downloading in 5 minutes'
+                subject == '[Alert!!! Raw Daily Bar] No data available yet. Retry downloading in 5 minutes.'
                 or
-                subject == '[Raw Daily Bar] No data available yet. Retry downloading in 5 minutes.'
+                subject == '[Alert!!! Raw Daily Bar] Data downloaded. Retry downloading in 5 minutes.'
         ):
             os.remove(save_path)
             print(f'{save_path} has been removed.')
@@ -66,9 +66,9 @@ class Raw_Daily_Bar_Updater:
 
     def raw_daily_bar_check(self,raw_daily_bar):
         if raw_daily_bar.dropna(how='all').empty:
-            subject = '[Raw Daily Bar] No data available yet. Retry downloading in 5 minutes.'
+            subject = '[Alert!!! Raw Daily Bar] No data available yet. Retry downloading in 5 minutes.'
         elif len(raw_daily_bar.index) < 5000:
-            subject = '[Raw Daily Bar] Data downloaded with alert. Retry downloading in 5 minutes.'
+            subject = '[Alert!!! Raw Daily Bar] Data downloaded. Retry downloading in 5 minutes.'
         else:
             subject = '[Raw Daily Bar] Data downloaded successfully.'
 
