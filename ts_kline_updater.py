@@ -111,11 +111,11 @@ class Kline_Updater:
         ).gen_qfq_kline()
 
 if __name__ == '__main__':
-    kc_kline_path = r"\\192.168.1.116\kline\qfq_kline_product_kc.pkl"
-    adjusted_kline = pd.read_pickle(kc_kline_path)
-    adjusted_kline[adjusted_kline.index.get_level_values(0)=='20230905']
+    df = pd.read_pickle(KLINE_PATH)
+    print()
+
     # Kline_Updater(
     #     raw_dir=TUSHARE_DIR,
     #     save_path=KLINE_PATH,
-    # ).data_check(adjusted_kline)
+    # ).adjusted_kline_update_and_confirm()
 

@@ -3,6 +3,7 @@ import os
 
 import pandas as pd
 import xlwings as xw
+import pywintypes
 
 from EmQuantAPI import c
 from account import read_account_info
@@ -50,21 +51,25 @@ class Account:
         wb = xw.books.open(self.account_path)
         sheet = wb.sheets[sheet_name]
         last_row = sheet.cells(sheet.cells.last_cell.row, 1).end('up').row+1
-
-        sheet.range(f'A{last_row}').value = self.date  # date
-        sheet.range(f'B{last_row}').value = account_info_s['总资产']  # 总资产
-        sheet.range(f'C{last_row}').formula = f'=B{last_row}-B{last_row-1}-O{last_row-1}' # 当日盈亏
-        sheet.range(f'D{last_row}').formula = f'=C{last_row}/(B{last_row-1}+O{last_row-1})' # 当日盈亏率
-        sheet.range(f'E{last_row}').value = index_ret # 指数收益率
-        sheet.range(f'F{last_row}').formula = f'=D{last_row}-E{last_row}' # 当日超额
-        sheet.range(f'G{last_row}').formula = f'=G{last_row-1}*(1+D{last_row})' # 多头净值
-        sheet.range(f'H{last_row}').formula = f'=H{last_row-1}*(1+E{last_row})' # 指数净值
-        sheet.range(f'I{last_row}').formula = f'=G{last_row}/H{last_row}-1' # 累计超额
-        sheet.range(f'J{last_row}').formula = f'=I{last_row}-MAX(I2:I{last_row})' # 超额回撤
-        sheet.range(f'K{last_row}').value = account_info_s['股票总市值']  # 总市值
-        sheet.range(f'L{last_row}').formula = f'=K{last_row}/B{last_row}' # 总仓位
-        sheet.range(f'M{last_row}').value = account_info_s['成交额']  # 成交额
-        sheet.range(f'N{last_row}').formula = f'=M{last_row}/B{last_row-1}' # 双边换手率
+        try:
+            sheet.range(f'A{last_row}').value = self.date  # date
+            sheet.range(f'B{last_row}').value = account_info_s['总资产']  # 总资产
+            sheet.range(f'C{last_row}').formula = f'=B{last_row}-B{last_row-1}-O{last_row-1}' # 当日盈亏
+            sheet.range(f'D{last_row}').formula = f'=C{last_row}/(B{last_row-1}+O{last_row-1})' # 当日盈亏率
+            sheet.range(f'E{last_row}').value = index_ret # 指数收益率
+            sheet.range(f'F{last_row}').formula = f'=D{last_row}-E{last_row}' # 当日超额
+            sheet.range(f'G{last_row}').formula = f'=G{last_row-1}*(1+D{last_row})' # 多头净值
+            sheet.range(f'H{last_row}').formula = f'=H{last_row-1}*(1+E{last_row})' # 指数净值
+            sheet.range(f'I{last_row}').formula = f'=G{last_row}/H{last_row}-1' # 累计超额
+            sheet.range(f'J{last_row}').formula = f'=I{last_row}-MAX(I2:I{last_row})' # 超额回撤
+            sheet.range(f'K{last_row}').value = account_info_s['股票总市值']  # 总市值
+            sheet.range(f'L{last_row}').formula = f'=K{last_row}/B{last_row}' # 总仓位
+            sheet.range(f'M{last_row}').value = account_info_s['成交额']  # 成交额
+            sheet.range(f'N{last_row}').formula = f'=M{last_row}/B{last_row-1}' # 双边换手率
+        except:
+            print(f'{self.account_path} with sheet name {sheet_name} is being used, retry in 1 minute')
+            time.sleep(60)
+            self.account_talang_update(sheet_name=sheet_name)
 
         retry_save_excel(wb=wb, file_path=self.account_path)
         wb.close()
@@ -118,6 +123,10 @@ class Account:
         monitor_data['excess_ret'] = monitor_df.iloc[0, 8]
         monitor_data['sub_excess_ret'] = monitor_df.iloc[2, 8]
         return monitor_data
+
+if __name__ == '__main__':
+    Account().account_talang_update(sheet_name='踏浪2号')
+    Account().account_talang_update(sheet_name='踏浪3号')
 
 
 
