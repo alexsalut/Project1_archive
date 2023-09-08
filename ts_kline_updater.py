@@ -17,10 +17,11 @@ KLINE_PATH = r"\\192.168.1.116\kline\qfq_kline_product.pkl"
 ST_PATH = r'\\192.168.1.116\kline\st_list.csv'
 KC50_WEIGHT_DIR = r"\\192.168.1.116\choice\reference\index_weight\sh000688\cache"
 
-class Kline_Updater:
-    def __init__(self, raw_dir, save_path):
-        self.raw_dir = raw_dir
-        self.save_path = save_path
+
+class KlineUpdater:
+    def __init__(self):
+        self.raw_dir = TUSHARE_DIR
+        self.save_path = KLINE_PATH
         self.today = time.strftime('%Y%m%d')
         self.kc_path = self.save_path.replace('.pkl', '_kc.pkl')
 
@@ -29,35 +30,37 @@ class Kline_Updater:
         self.generate_email()
         self.redownload_check()
 
-
     def redownload_check(self):
         if not os.path.exists(self.kc_path) or os.path.getsize(self.kc_path) <= 80000:
             print(f'{self.kc_path} does not exist or no sufficient data.')
             time.sleep(300)
             self.adjusted_kline_update_and_confirm()
 
-
     def generate_email(self):
         if os.path.exists(self.kc_path):
             subject = '[Adjusted Kline] Data finish processing'
             adjusted_kline = pd.read_pickle(self.kc_path)
             print(f'{self.kc_path} exists.')
+            adjusted_kline.query('ticker=="sh688086"')
             info_dict = self.data_check(adjusted_kline)
             content = f"""
             Today's adjusted kline has been generated.
-            Number of stocks for KC stocks today is {info_dict['Total_Number of Stocks']}\n
+            File path:
+                {self.kc_path}
+            Number of KC stocks today:
+                 {info_dict['Total Number of Stocks']}
             NaN: 
-            {info_dict['NaN']}\n
+                {info_dict['NaN']}
             Negative: 
-            {info_dict['Negative']}\n
+                {info_dict['Negative']}
             Zero: 
-            {info_dict['Zero']}\n
+                {info_dict['Zero']}
             Open&Close out of High&Low: 
-            {info_dict['Open&Close out of High&Low']}\n
-            Extreme High&Low Difference: 
-            {info_dict['Extreme High&Low Difference']}\n
+                {info_dict['Open&Close out of High&Low']}
+            Extreme High&Low Difference(>30%): 
+                {info_dict['Extreme High&Low Difference']}
             Extreme Daily Ret(>20.05%): 
-            {info_dict['Extreme Daily Ret']}\n
+                {info_dict['Extreme Daily Ret']}
             """
         else:
             subject = '[Adjusted Kline] File is non-existent. Retry downloading in 5 minutes.'
@@ -66,27 +69,23 @@ class Kline_Updater:
 
     def data_check(self, adjusted_kline):
         keys = [
-            'Total_Number of Stocks',
+            'Total Number of Stocks',
             'NaN',
             'Negative',
             'Zero',
             'Open&Close out of High&Low',
             'Extreme High&Low Difference',
-            'Extreme Daily Ret']
-        dict = {key: None for key in keys}
-
-        for key in dict.keys():
-            if key == 'Total_Number of Stocks':
-                dict[key] = len(adjusted_kline[adjusted_kline.index.get_level_values(0) == self.today])
-            else:
-                dict[key] = self.df_check(adjusted_kline, option=key)
-                # dict[key] = adjusted_kline.apply(lambda row: self.row_check(row, option=key), axis=1).dropna()
-        return dict
+            'Extreme Daily Ret',
+        ]
+        info_dict = {key: self.df_check(adjusted_kline, option=key) for key in keys}
+        return info_dict
 
     def df_check(self, adjusted_kline, option):
         print(option)
         if option == 'NaN':
             return adjusted_kline[adjusted_kline.isna()].dropna(how='all').index.tolist()
+        elif option == 'Total Number of Stocks':
+            return len(adjusted_kline.loc[self.today])
         elif option == 'Negative':
             return adjusted_kline[(adjusted_kline<0)].iloc[:,[0,1,2,3,4,5,-1]].dropna(how='all').index.tolist()
         elif option == 'Zero':
@@ -111,11 +110,4 @@ class Kline_Updater:
         ).gen_qfq_kline()
 
 if __name__ == '__main__':
-    df = pd.read_pickle(KLINE_PATH)
-    print()
-
-    # Kline_Updater(
-    #     raw_dir=TUSHARE_DIR,
-    #     save_path=KLINE_PATH,
-    # ).adjusted_kline_update_and_confirm()
-
+    KlineUpdater().generate_email()

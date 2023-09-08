@@ -20,51 +20,47 @@ KLINE_PATH = r"\\192.168.1.116\kline\qfq_kline_product.pkl"
 ST_PATH = r'\\192.168.1.116\kline\st_list.csv'
 KC50_WEIGHT_DIR = r"\\192.168.1.116\choice\reference\index_weight\sh000688\cache"
 
-class KC50_Weight_Updater:
-    def __init__(self, save_dir, today):
-        self.save_dir = save_dir
+
+class KC50WeightUpdater:
+    def __init__(self, today=None):
+        self.save_dir = KC50_WEIGHT_DIR
         self.today = time.strftime('%Y%m%d') if today is None else today
 
     def kc50_weight_update_and_confirm(self):
+        self.download_history_kc50_weight(start_date='20200909', end_date=self.today)
         save_path = os.path.join(self.save_dir, f'{self.today}.pkl')
-        self.c_download_kc50_weight(self.today, save_path)
-        subject, content = self.kc50_weight_email_content(save_path=save_path)
-        send_email(subject=subject, content=content)
+        self.kc50_redownload_check(save_path=save_path)
 
-    def kc50_weight_email_content(self, save_path):
-        data_name = 'kc50_weight'
-        alert = []
+    def kc50_redownload_check(self, save_path):
+        error_list = self.kc50_weight_check(save_path=save_path)
+        if len(error_list) == 0:
+            print(f'[kc50 weight] no error found, downloaded successfully')
+            subject = f'[kc50 weight] downloaded successfully'
+            content = f"""
+            kc50 weight file has been downloaded.
+            """
+            send_email(subject=subject, content=content)
+        else:
+            print(f'[kc50 weight] error found, retry downloading in 10 seconds')
+            time.sleep(10)
+            self.kc50_weight_update_and_confirm()
+
+    def kc50_weight_check(self, save_path):
+        error_list = []
         if os.path.exists(save_path):
-            df = pd.read_pickle(save_path)
-            print(f'{data_name} file exists')
-            subject, alert = self.kc50_weight_check(df)
-        else:
-            subject = rf'[{data_name}] has not downloaded yet'
-        content = f"""
-        {data_name} update on {self.today}.
-        Download path: {save_path}
-        Data alert check if any: {alert}
-        """
-        return subject, content
-
-    def kc50_weight_check(self,df):
-        alert = []
-        data_name = 'KC50_weight'
-        if df.empty:
-            subject = rf"[{data_name}]  No data on the downloaded file"
-        else:
-            if abs(df.WEIGHT.sum()-1) > 0.00001:
-                alert.append('Sum of weight is not 1')
-            if df.shape[0] != 50:
-                alert.append('Number of stocks is not 50')
-            if not all(value > 0 for value in df.WEIGHT):
-                alert.append('Weight has negative value')
-            if len(alert) == 0:
-                subject = rf"[{data_name}] has successfully downloaded"
+            kc50_df = pd.read_pickle(save_path)
+            if kc50_df.empty:
+                error_list.append(f'[kc50 weight check]{save_path} is empty')
             else:
-                subject = rf"[{data_name}] has successfully downloaded with alert"
-        return subject, alert
-
+                if abs(kc50_df.WEIGHT.sum()-1) > 0.00001:
+                    error_list.append(f'[kc50 weight check]{save_path} weight sum is not 1')
+                if kc50_df.shape[0] != 50:
+                    error_list.append(f'[kc50 weight check]{save_path} weight count is not 50')
+                if not all(value > 0 for value in kc50_df.WEIGHT):
+                    error_list.append(f'[kc50 weight check]{save_path} weight has negative value')
+        else:
+            error_list.append(f'[kc50 weight check]{save_path} does not exist')
+        return error_list
 
     def download_history_kc50_weight(self, start_date, end_date):
         c.start()
@@ -73,7 +69,13 @@ class KC50_Weight_Updater:
             enddate=end_date,
             options="period=1,order=1,market=CNSESH",
         ).Dates
-
+        trade_dates = pd.to_datetime(trade_dates).strftime('%Y%m%d')
+        for date in trade_dates:
+            save_path = os.path.join(self.save_dir, f'{date}.pkl')
+            if not os.path.exists(save_path):
+                self.c_download_kc50_weight(date, save_path)
+            else:
+                print(f'[kc50 weight] {save_path} exists')
 
     def c_download_kc50_weight(self, date, save_path):
         os.makedirs(self.save_dir, exist_ok=True)
@@ -86,7 +88,6 @@ class KC50_Weight_Updater:
     def c_download_index_weight(self, index_ticker, date, save_path):
         print("Downloading Index Composition Weight")
         print("-----------------------------------")
-        jy_ticker = transfer_to_jy_ticker([index_ticker])[0]
 
         c.start("ForceLogin=1")
         df = c.ctr(
@@ -97,16 +98,9 @@ class KC50_Weight_Updater:
         c.stop()
 
         df.to_pickle(save_path)
-        print(f'{save_path}', 'has downloaded.')
-
-
-
+        print(f'[{index_ticker} weight] {date} file has downloaded.')
 
 if __name__ == '__main__':
-    kc50_weight_updater = KC50_Weight_Updater(save_dir=KC50_WEIGHT_DIR, today=None)
+    kc50_weight_updater = KC50WeightUpdater()
 
-    kc50_weight_updater.c_download_kc50_weight(date='20210709', save_path=rf'{KC50_WEIGHT_DIR}/20210709.pkl')
-
-
-
-
+    kc50_weight_updater.download_history_kc50_weight(start_date='20200909', end_date='20230908')

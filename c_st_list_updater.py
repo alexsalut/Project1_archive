@@ -19,41 +19,37 @@ ST_PATH = r'\\192.168.1.116\kline\st_list.csv'
 KC50_WEIGHT_DIR = r"\\192.168.1.116\choice\reference\index_weight\sh000688\cache"
 
 class ST_List_Updater:
-    def __init__(self, save_path, today, stock_default_count):
-        self.save_path = save_path
+    def __init__(self, today=None):
+        self.save_path = ST_PATH
         self.today = time.strftime('%Y%m%d') if today is None else today
-        self.stock_default_count = stock_default_count
+        self.stock_default_count = 0
 
     def st_list_update_and_confirm(self):
         self.c_download_st_list()
-        subject, content = self.st_list_email_content()
-        send_email(subject=subject, content=content)
+        self.check_st_list()
 
-    def st_list_email_content(self):
+
+    def check_st_list(self):
         data_name = 'ST_list'
         if os.path.exists(self.save_path):
             df = pd.read_csv(self.save_path, index_col=0)
-            print(f'{data_name} file exists')
-            stock_count = len(df[df.index == int(self.today)])
-            if df.empty:
-                subject = f"No data on the downloaded {data_name} file"
-            elif stock_count > self.stock_default_count:
+            print('[ST list] file exists')
+            today_stock_count = len(df[df.index == int(self.today)])
+            if today_stock_count > self.stock_default_count:
                 subject = rf"[{data_name}]   today file is updated"
+                content = rf""""
+                {self.today} st list has been accessed and the info is as follows:
+                Download path:
+                    {self.save_path}
+                Number of st stocks today: 
+                    {today_stock_count}
+                """
+                send_email(subject=subject, content=content)
+                print('[ST list check] data is updated and email sent')
             else:
-                subject = rf"[{data_name}]   today file is updated with alert"
-            content = rf""""
-            {self.today} {data_name} has been accessed and the info is as follows:
-            Download path:
-            {self.save_path}
-            Number of stocks included today: {stock_count}
-    
-            """
-        else:
-            subject = f"{data_name} file does not exist"
-            content = f""""
-            {self.today} {data_name} has not been accessed successfully
-            """
-        return subject, content
+                print('[ST list check] today st stock data is not sufficient, retry downloading in 10 seconds')
+                time.sleep(10)
+                self.st_list_update_and_confirm()
 
     def c_download_st_list(self):
         self.c_download_index_list(
@@ -82,7 +78,7 @@ class ST_List_Updater:
         all_st_s = all_st_s.str[-2:].str.lower() + all_st_s.str[:6]
         all_st_s.index = pd.to_datetime(all_st_s.index).strftime("%Y%m%d")
         all_st_s.to_csv(self.save_path)
-        print(rf"{index_ticker} list updated and new .csv file generated ")
+        print(rf"[{index_ticker} list] updated and new .csv file generated ")
 
 
 

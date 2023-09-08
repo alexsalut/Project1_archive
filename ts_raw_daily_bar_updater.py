@@ -8,8 +8,10 @@ import os
 import time
 import pandas as pd
 import tushare as ts
+import rqdatac
 
-from utils import c_get_trade_dates, send_email
+from EmQuantAPI import c
+from utils import c_get_trade_dates, send_email, send_email_with_alert
 
 TUSHARE_DIR = r"\\192.168.1.116\tushare\price\daily\raw"
 CHOICE_DIR = "C:/Users/Yz02/Desktop/Data/Choice"
@@ -17,64 +19,20 @@ KLINE_PATH = r"\\192.168.1.116\kline\qfq_kline_product.pkl"
 ST_PATH = r'\\192.168.1.116\kline\st_list.csv'
 KC50_WEIGHT_DIR = r"\\192.168.1.116\choice\reference\index_weight\sh000688\cache"
 
-class Raw_Daily_Bar_Updater:
-    def __init__(self, save_dir, today=None):
-        self.save_dir = save_dir
-        self.today = time.strftime('%Y%m%d') if today is None else today
 
-    def raw_daily_bar_update_and_confirm(self):
+class RawDailyBarUpdater:
+    def __init__(self,today=None):
+        self.save_dir = TUSHARE_DIR
+
+    def update_and_confirm_raw_daily_bar(self, today=None):
+        today = time.strftime('%Y%m%d') if today is None else today
         self.ts_download_raw_daily_bar_history(
             start_date='20220630',
-            end_date=self.today
+            end_date=today,
         )
-        save_path = rf'{TUSHARE_DIR}/{self.today[:4]}/{self.today[:6]}/raw_daily_{self.today}.csv'
-        subject, content = self.raw_daily_bar_email_content(save_path)
-        send_email(subject, content)
-        self.raw_daily_bar_redownload_check(subject, save_path)
+        tushare_path = rf'{TUSHARE_DIR}/{today[:4]}/{today[:6]}/raw_daily_{today}.csv'
+        self.retry_download_check(tushare_path=tushare_path,date=today)
 
-    def raw_daily_bar_redownload_check(self, subject, save_path):
-        if (
-                subject == '[Alert!!! Raw Daily Bar] No data available yet. Retry downloading in 5 minutes.'
-                or
-                subject == '[Alert!!! Raw Daily Bar] Data downloaded. Retry downloading in 5 minutes.'
-        ):
-            os.remove(save_path)
-            print(f'{save_path} has been removed.')
-            time.sleep(300)
-            self.raw_daily_bar_update_and_confirm()
-
-
-    def raw_daily_bar_email_content(self,save_path):
-        if os.path.exists(save_path):
-            raw_daily_bar = pd.read_csv(save_path)
-            print(f'{save_path} exists.')
-            subject, stock_count, na_stock = self.raw_daily_bar_check(raw_daily_bar)
-        else:
-            subject = f'[raw_daily_bar] file does not exist.'
-            stock_count = 0
-            na_stock = []
-            save_path = None
-        content = f"""
-            Latest raw daily bar info is as follows if any:
-        Download path:
-        {save_path}
-        Number of stocks included:            {stock_count}  
-        Details(Code) of stocks with missing values:
-        {na_stock}
-        """
-        return subject, content
-
-    def raw_daily_bar_check(self,raw_daily_bar):
-        if raw_daily_bar.dropna(how='all').empty:
-            subject = '[Alert!!! Raw Daily Bar] No data available yet. Retry downloading in 5 minutes.'
-        elif len(raw_daily_bar.index) < 5000:
-            subject = '[Alert!!! Raw Daily Bar] Data downloaded. Retry downloading in 5 minutes.'
-        else:
-            subject = '[Raw Daily Bar] Data downloaded successfully.'
-
-        stock_count = len(raw_daily_bar.index)
-        na_stock = raw_daily_bar[raw_daily_bar.isna().any(axis=1)].index.tolist()
-        return subject, stock_count, na_stock
 
     def ts_download_raw_daily_bar_history(self, start_date, end_date):
         trade_dates = c_get_trade_dates(start_date, end_date)
@@ -115,9 +73,63 @@ class Raw_Daily_Bar_Updater:
         raw_daily_bar.to_csv(save_path)
         print(save_path, 'has downloaded.')
 
+    def retry_download_check(self,tushare_path,date):
+        check_raw_daily_bar_info = self.check_daily_info(tushare_path=tushare_path,date=date)
+        if len(check_raw_daily_bar_info['missed_unsuspended_stock_list']):
+            print(f"Missed stock list is not empty, missed stocks are {check_raw_daily_bar_info['missed_stock_list']}. Retry downloading {date}")
+            os.remove(tushare_path)
+            send_email_with_alert(
+                subject='[Alert!!Raw Daily Bar] Unsuspended stock missed',
+                content=f"Missed stock list is not empty, missed stocks are {check_raw_daily_bar_info['missed_stock_list']}. Retry downloading",
+            )
+            self.update_and_confirm_raw_daily_bar(today=date)
+        else:
+            self.notify_with_email(info_dict=check_raw_daily_bar_info)
+
+    def notify_with_email(self, info_dict):
+        subject = '[Raw Daily Bar] Data downloaded successfully'
+        content = f"""
+        Latest raw daily bar info is as follows:
+
+        Download path: 
+            {info_dict['tushare_path']}
+        Number of TuShare stocks: 
+            {info_dict['tushare_stock_count']}
+        Number of RiceQuant stocks: 
+            {info_dict['rice_quant_stock_count']}
+        Missed stock list: 
+            {info_dict['missed_stock_list']}
+        NA stocks: 
+            {info_dict['na_stock_list']}
+        """
+        send_email(subject=subject, content=content)
+
+    def check_daily_info(self,tushare_path,date):
+        tushare_df = pd.read_csv(tushare_path)
+        rqdatac.init()
+        ricequant_df = rqdatac.all_instruments(type='CS', market='cn', date=date)
+
+        ricequant_df.index = ricequant_df['order_book_id'].str[:6]
+        tushare_df.index = tushare_df['ts_code'].str[:6]
+        tushare_missed_stock = ricequant_df.index.difference(tushare_df.index)
+        tushare_missed_stock_list = ricequant_df.loc[tushare_missed_stock,'order_book_id'].tolist()
+
+        tushare_missed_stock_s =  rqdatac.is_suspended(tushare_missed_stock_list,date,date).loc[date]
+        rqdatac.reset()
+
+        check_dict = {
+            'date': date,
+            'tushare_path': tushare_path,
+            'tushare_stock_count': len(tushare_df),
+            'rice_quant_stock_count': len(ricequant_df),
+            'missed_stock_list': tushare_missed_stock_s.index.tolist(),
+            'na_stock_list': tushare_df[tushare_df.isna().any(axis=1)].index.tolist(),
+            'missed_unsuspended_stock_list': tushare_missed_stock_s[tushare_missed_stock_s==False].index.tolist(),
+        }
+        return check_dict
+
 
 if __name__ == '__main__':
-    Raw_Daily_Bar_Updater(
-        save_dir=TUSHARE_DIR,
-        today=time.strftime('%Y%m%d')
-    ).raw_daily_bar_update_and_confirm()
+    RawDailyBarUpdater().update_and_confirm_raw_daily_bar(today='20230907')
+
+

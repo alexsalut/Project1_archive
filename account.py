@@ -22,9 +22,10 @@ def read_account_info(date, account):
     try:
         info = pd.read_csv(f'Account-{date}.csv', encoding='gbk').loc[0]
         trades = pd.read_csv(f'Deal-{date}.csv', encoding='gbk')
-    except FileNotFoundError:
-        print(f'Account-{date}.csv not found, retry in 1 minute')
-        time.sleep(60)
+    except Exception as e:
+        print(e)
+        print(f'Account-{date}.csv or Deal-{date}.csv access failed, retry in 20 seconds')
+        time.sleep(20)
         read_account_info(date=date, account=account)
 
     account_info_s = pd.Series({
