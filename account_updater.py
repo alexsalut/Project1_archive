@@ -4,7 +4,7 @@ import xlwings as xw
 import rqdatac as rq
 
 from account import read_account_info
-from utils import send_email
+from utils import send_email, SendEmailInfo
 
 
 class Account:
@@ -16,16 +16,31 @@ class Account:
         # self.account_path = r'C:\Users\Yz02\Desktop\strategy_update_copy\cnn策略观察.xlsx'
         # self.remote_account_path = r'C:\Users\Yz02\Desktop\strategy_update_remote\cnn策略观察.xlsx'
         self.monitor_path = rf'C:\Users\Yz02\Desktop\strategy_update\monitor_{self.date}.xlsx'
+        self.panlan_dir = r'\\192.168.1.116\trade\broker\cats\account'
 
-    def account_update(self):
-        self.account_monitor_update(sheet_name='单策略超额')
-        self.account_monitor_update(sheet_name='多策略超额')
-        self.account_talang_update(sheet_name='踏浪2号')
-        self.account_talang_update(sheet_name='踏浪3号')
-        self.account_remote_update()
-        send_email(subject='[CNN 策略观察] 更新完成', content=None)
+    def update_account(self):
+        self.update_account_monitor(sheet_name='单策略超额')
+        self.update_account_monitor(sheet_name='多策略超额')
+        self.update_account_talang(sheet_name='踏浪2号')
+        self.update_account_talang(sheet_name='踏浪3号')
+        self.update_account_panlan1()
+        self.update_account_remote()
 
-    def account_remote_update(self):
+        content = rf"""
+        文件路径: 
+        {self.account_path}
+        {self.remote_account_path}
+        更新内容：
+        单策略超额
+        多策略超额
+        踏浪2号
+        踏浪3号
+        盼澜1号
+        """
+
+        send_email(subject='[CNN 策略观察] 更新完成', content=None, receiver=SendEmailInfo.department['research'])
+
+    def update_account_remote(self):
         try:
             app = xw.App(visible=False, add_book=False)
             wb = xw.books.open(self.account_path)
@@ -37,24 +52,63 @@ class Account:
             print(e)
             print(f'{self.account_path} remote updating failed, retry in 10 seconds')
             time.sleep(10)
-            self.account_remote_update()
+            self.update_account_remote()
 
-    def account_talang_update(self, sheet_name):
+    def update_account_panlan1(self, today=None):
+        try:
+            today = time.strftime('%Y-%m-%d') if today is None else today
+            option_df = pd.read_csv(rf'{self.panlan_dir}/OptionFund_{today}.csv', index_col=False)
+            stock_df = pd.read_csv(rf'{self.panlan_dir}/StockFund_{today}.csv', index_col=False)
+            transaction_df = pd.read_csv(rf'{self.panlan_dir}/TransactionsStatisticsDaily_{today}.csv', index_col=False)
+            app = xw.App(visible=False, add_book=False)
+            wb = xw.books.open(self.account_path)
+            sheet = wb.sheets['盼澜1号']
+            last_row = sheet.cells(sheet.cells.last_cell.row, 1).end('up').row + 1
+            sheet.range(f'A{last_row}').value = today  # date
+            sheet.range(f'B{last_row}').formula = f'=H{last_row}+N{last_row}'  # 总资产
+            sheet.range(f'C{last_row}').formula = f'=I{last_row}+O{last_row}'
+            sheet.range(f'D{last_row}').formula = f'=C{last_row}/(B{last_row-1}+P{last_row}+Q{last_row})'  # 当日收益率
+            sheet.range(f'E{last_row}').formula = f'=(E{last_row-1}+1)*(1+D{last_row})-1'  # 累计收益率
+            sheet.range(f'G{last_row}').formula = f'=E{last_row}-MAX($E$2:E{last_row})'  # 累计回撤
+            sheet.range(f'H{last_row}').value = stock_df['账户资产'].iloc[0]
+            sheet.range(f'I{last_row}').formula = f'=H{last_row}-H{last_row-1}-P{last_row}'
+            sheet.range(f'J{last_row}').value = stock_df['证券市值'].iloc[0]
+            sheet.range(f'K{last_row}').formula = f'=J{last_row}/H{last_row}'
+            sheet.range(f'L{last_row}').value = transaction_df['成交额'].sum()
+            sheet.range(f'M{last_row}').formula = f'=L{last_row}/H{last_row-1}'
+            sheet.range(f'N{last_row}').value = option_df['客户总权益'].iloc[0]
+            sheet.range(f'O{last_row}').formula = f'=N{last_row}-N{last_row-1}-Q{last_row}'
+
+            wb.save(self.account_path)
+            wb.close()
+            app.quit()
+            print(f'{self.account_path} 盼澜1号 updating finished')
+        except Exception as e:
+            print(e)
+            print(f'{self.account_path} 盼澜1号 updating failed. retry in 2 seconds')
+            time.sleep(2)
+            self.update_account_panlan1(today=today)
+
+    def update_account_talang(self, sheet_name):
         index_ret = self.get_index_ret(sheet_name=sheet_name)
         account = 'tanglang2' if sheet_name == '踏浪2号' else 'tanglang3'
         account_info_s = read_account_info(date=self.date, account=account)
 
         try:
-            self.talang_account_cell_value(sheet_name=sheet_name, account_info_s=account_info_s, index_ret=index_ret)
+            self.input_talang_account_cell_value(
+                sheet_name=sheet_name,
+                account_info_s=account_info_s,
+                index_ret=index_ret
+            )
         except Exception as e:
             print(e)
             print(f'{self.account_path} with sheet name {sheet_name} updating failed, retry in 10 seconds')
             time.sleep(10)
-            self.account_talang_update(sheet_name=sheet_name)
+            self.update_account_talang(sheet_name=sheet_name)
 
-    def talang_account_cell_value(self, sheet_name, account_info_s, index_ret):
+    def input_talang_account_cell_value(self, sheet_name, account_info_s, index_ret):
         app = xw.App(visible=False, add_book=False)
-        wb = xw.books.open(self.account_path)
+        wb = app.books.open(self.account_path)
         time.sleep(10)
         sheet = wb.sheets[sheet_name]
         last_row = sheet.cells(sheet.cells.last_cell.row, 1).end('up').row + 1
@@ -85,11 +139,11 @@ class Account:
         print(f'{index_code} return is {index_ret:.2%}')
         return index_ret
 
-    def account_monitor_update(self, sheet_name):
+    def update_account_monitor(self, sheet_name):
         monitor_data = self.get_monitor_data()
         try:
             app = xw.App(visible=False, add_book=False)
-            wb = xw.books.open(self.account_path)
+            wb = app.books.open(self.account_path)
             sheet = wb.sheets[sheet_name]
             last_row = sheet.cells(sheet.cells.last_cell.row, 1).end('up').row+1
             sheet.range(f'A{last_row}').value = self.date  # date
@@ -117,7 +171,7 @@ class Account:
             print(e)
             print(f'{self.account_path} with sheet name {sheet_name} updating failed, retry in 10 seconds')
             time.sleep(10)
-            self.account_monitor_update(sheet_name=sheet_name)
+            self.update_account_monitor(sheet_name=sheet_name)
 
     def get_monitor_data(self):
 
@@ -140,4 +194,4 @@ class Account:
             return monitor_data
 
 if __name__ == '__main__':
-    Account().account_update()
+    Account().update_account()
