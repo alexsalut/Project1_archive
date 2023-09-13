@@ -11,7 +11,7 @@ import pandas as pd
 
 from EmQuantAPI import c
 
-from utils import transfer_to_jy_ticker, send_email
+from utils import send_email, SendEmailInfo
 
 
 TUSHARE_DIR = r"\\192.168.1.116\tushare\price\daily\raw"
@@ -39,7 +39,7 @@ class KC50WeightUpdater:
             content = f"""
             kc50 weight file has been downloaded.
             """
-            send_email(subject=subject, content=content)
+            send_email(subject=subject, content=content, receiver=SendEmailInfo.department['research'])
         else:
             print(f'[kc50 weight] error found, retry downloading in 10 seconds')
             time.sleep(10)
@@ -99,6 +99,7 @@ class KC50WeightUpdater:
 
         df.to_pickle(save_path)
         print(f'[{index_ticker} weight] {date} file has downloaded.')
+
 
 if __name__ == '__main__':
     kc50_weight_updater = KC50WeightUpdater()

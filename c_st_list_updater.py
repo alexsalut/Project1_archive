@@ -10,7 +10,7 @@ import pandas as pd
 
 from EmQuantAPI import c
 
-from utils import send_email
+from utils import send_email, SendEmailInfo
 
 TUSHARE_DIR = r"\\192.168.1.116\tushare\price\daily\raw"
 CHOICE_DIR = "C:/Users/Yz02/Desktop/Data/Choice"
@@ -44,7 +44,7 @@ class ST_List_Updater:
                 Number of st stocks today: 
                     {today_stock_count}
                 """
-                send_email(subject=subject, content=content)
+                send_email(subject=subject, content=content, receiver=SendEmailInfo.department['research'])
                 print('[ST list check] data is updated and email sent')
             else:
                 print('[ST list check] today st stock data is not sufficient, retry downloading in 10 seconds')

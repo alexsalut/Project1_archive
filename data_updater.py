@@ -14,9 +14,9 @@ from c_kc50_weight_updater import KC50WeightUpdater
 from c_turnover_rate_updater import TurnoverRateUpdater
 from ts_kline_updater import KlineUpdater
 from ts_raw_daily_bar_updater import RawDailyBarUpdater
-from emc_updater_v0 import emc_updater
+from position_check_v1 import position_check
 from account_updater import Account
-from monitorupdater import MonitorUpdater
+from strategy_monitor import StrategyMonitor
 
 TUSHARE_DIR = r"\\192.168.1.116\tushare\price\daily\raw"
 CHOICE_DIR = "C:/Users/Yz02/Desktop/Data/Choice"
@@ -25,7 +25,7 @@ ST_PATH = r'\\192.168.1.116\kline\st_list.csv'
 KC50_WEIGHT_DIR = r"\\192.168.1.116\choice\reference\index_weight\sh000688\cache"
 
 
-def run_update_data():
+def run_daily_update():
     while True:
         current_time = datetime.datetime.now()
         print(current_time)
@@ -36,14 +36,18 @@ def run_update_data():
                 KC50WeightUpdater().kc50_weight_update_and_confirm()
                 time.sleep(60)
 
-            # elif current_minute == 1502:
-            #     MonitorUpdater().update_monitor()
-            #     Account().account_update()
-            #     time.sleep(60)
+            elif current_minute == 1452:
+                position_check()
 
-            # elif current_minute == 1515:
-            #     emc_updater()
-            #     time.sleep(60)
+            elif current_minute == 1504:
+                position_check()
+                StrategyMonitor().update_monitor_next_trading_day()
+                time.sleep(60)
+
+            elif current_minute == 1518:
+                # StrategyMonitor().archive_monitor_today()
+                time.sleep(60)
+                Account().update_account()
 
             elif current_minute == 1600:
                 TurnoverRateUpdater().turnover_rate_update_and_confirm()
@@ -59,4 +63,4 @@ def run_update_data():
 
 
 if __name__ == '__main__':
-    run_update_data()
+    run_daily_update()
