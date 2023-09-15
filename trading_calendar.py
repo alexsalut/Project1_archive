@@ -109,6 +109,13 @@ class TradingCalendar:
         except Exception as e:
             print(e)
 
+    def check_is_trading_day(self, date):
+        try:
+            date = pd.to_datetime(date).strftime('%Y%m%d')
+            return date in self.trading_calendar
+        except Exception as e:
+            print(e)
+
 
 if __name__ == '__main__':
     from trading_calendar import TradingCalendar as td

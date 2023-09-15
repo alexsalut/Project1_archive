@@ -17,6 +17,7 @@ from ts_raw_daily_bar_updater import RawDailyBarUpdater
 from position_check_v1 import position_check
 from account_updater import Account
 from strategy_monitor import StrategyMonitor
+from risk_exposure import gen_expo_df
 
 TUSHARE_DIR = r"\\192.168.1.116\tushare\price\daily\raw"
 CHOICE_DIR = "C:/Users/Yz02/Desktop/Data/Choice"
@@ -38,23 +39,27 @@ def run_daily_update():
 
             elif current_minute == 1452:
                 position_check()
+                time.sleep(60)
 
-            elif current_minute == 1504:
+            elif current_minute == 1501:
                 position_check()
                 StrategyMonitor().update_monitor_next_trading_day()
                 time.sleep(60)
 
-            elif current_minute == 1518:
+            elif current_minute == 1522:
                 # StrategyMonitor().archive_monitor_today()
-                time.sleep(60)
                 Account().update_account()
+                time.sleep(60)
 
             elif current_minute == 1600:
                 TurnoverRateUpdater().turnover_rate_update_and_confirm()
                 RawDailyBarUpdater().update_and_confirm_raw_daily_bar()
-                KlineUpdater().adjusted_kline_update_and_confirm()
+                KlineUpdater().update_confirm_adjusted_kline()
                 time.sleep(60)
-            elif current_minute > 1800 or current_minute < 800:
+            elif current_minute == 1830:
+                gen_expo_df(time.strftime('%Y%m%d'))
+                time.sleep(60)
+            elif current_minute > 1900 or current_minute < 800:
                 time.sleep(60*60)
             else:
                 time.sleep(30)

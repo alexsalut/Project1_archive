@@ -8,7 +8,7 @@ import os
 import time
 import pandas as pd
 
-from utils import send_email
+from utils import send_email, SendEmailInfo
 from fq_kline import FqKLine
 
 TUSHARE_DIR = r"\\192.168.1.116\tushare\price\daily\raw"
@@ -25,7 +25,7 @@ class KlineUpdater:
         self.today = time.strftime('%Y%m%d')
         self.kc_path = self.save_path.replace('.pkl', '_kc.pkl')
 
-    def adjusted_kline_update_and_confirm(self):
+    def update_confirm_adjusted_kline(self):
         self.update_adjusted_kline()
         self.generate_email()
         self.redownload_check()
@@ -34,14 +34,13 @@ class KlineUpdater:
         if not os.path.exists(self.kc_path) or os.path.getsize(self.kc_path) <= 80000:
             print(f'{self.kc_path} does not exist or no sufficient data.')
             time.sleep(300)
-            self.adjusted_kline_update_and_confirm()
+            self.update_confirm_adjusted_kline()
 
     def generate_email(self):
         if os.path.exists(self.kc_path):
             subject = '[Adjusted Kline] Data finish processing'
             adjusted_kline = pd.read_pickle(self.kc_path)
             print(f'{self.kc_path} exists.')
-            adjusted_kline.query('ticker=="sh688086"')
             info_dict = self.data_check(adjusted_kline)
             content = f"""
             Today's adjusted kline has been generated.
@@ -65,7 +64,7 @@ class KlineUpdater:
         else:
             subject = '[Adjusted Kline] File is non-existent. Retry downloading in 5 minutes.'
             content = None
-        send_email(subject, content)
+        send_email(subject, content, receiver=SendEmailInfo.department['research'])
 
     def data_check(self, adjusted_kline):
         keys = [
@@ -87,19 +86,21 @@ class KlineUpdater:
         elif option == 'Total Number of Stocks':
             return len(adjusted_kline.loc[self.today])
         elif option == 'Negative':
-            return adjusted_kline[(adjusted_kline<0)].iloc[:,[0,1,2,3,4,5,-1]].dropna(how='all').index.tolist()
+            return adjusted_kline[(adjusted_kline < 0)].iloc[:, [0, 1, 2, 3, 4, 5, -1]].dropna(how='all').index.tolist()
         elif option == 'Zero':
-            df = (adjusted_kline.loc[:,:'amount']==0)
+            df = (adjusted_kline.loc[:, :'amount'] == 0)
             return df[df].dropna().index.tolist()
         elif option == 'Open&Close out of High&Low':
-            return adjusted_kline[(adjusted_kline['close'] > adjusted_kline['high'])|
-                                  (adjusted_kline['open'] > adjusted_kline['high'])|
+            return adjusted_kline[(adjusted_kline['close'] > adjusted_kline['high']) |
+                                  (adjusted_kline['open'] > adjusted_kline['high']) |
                                   (adjusted_kline['close'] < adjusted_kline['low']) |
                                   (adjusted_kline['open'] < adjusted_kline['low'])].dropna(how='all').index.tolist()
         elif option == 'Extreme High&Low Difference':
-            return adjusted_kline[(adjusted_kline['high'] - adjusted_kline['low'])/adjusted_kline['low'] > 0.3].dropna(how='all').index.tolist()
+            return adjusted_kline[
+                (adjusted_kline['high'] - adjusted_kline['low']) / adjusted_kline['low'] > 0.3].dropna(
+                how='all').index.tolist()
         elif option == 'Extreme Daily Ret':
-            return adjusted_kline.query('abs(pct_chg)>0.2005')['pct_chg'].apply(lambda x: f'{x:.2%}')
+            return adjusted_kline.query('abs(pct_chg)>0.2005')['pct_chg'].apply(lambda x: f'{x:.2%}').index.tolist()
         else:
             raise ValueError('Option not available')
 
@@ -109,5 +110,6 @@ class KlineUpdater:
             save_path=self.save_path,
         ).gen_qfq_kline()
 
+
 if __name__ == '__main__':
-    KlineUpdater().generate_email()
+    KlineUpdater().update_confirm_adjusted_kline()

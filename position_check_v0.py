@@ -3,7 +3,7 @@ import datetime
 import os
 import time
 
-from utils import send_email
+from utils import send_email, SendEmailInfo
 
 def emc_updater(date=None):
     today = datetime.datetime.now().strftime('%Y%m%d') if date is None else date
@@ -36,7 +36,7 @@ def emc_updater(date=None):
     """
     print(subject)
     print(content)
-    send_email(subject, content)
+    send_email(subject, content, receiver=SendEmailInfo.department['research'] + SendEmailInfo.department['tech'][1])
 
 
 def check_file(actual_file_path, target_file_path):

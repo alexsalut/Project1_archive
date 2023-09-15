@@ -35,12 +35,14 @@ def read_account_info(date, account):
         '股票总市值': info['股票总市值'],
         '成交额': trades['成交金额'].sum()
     })
-    return account_info_s
     print(account_info_s)
+    return account_info_s
 
-#
-# if __name__ == '__main__':
-#     read_account_info(date='20230906', account='tanglang2')
+
+
+if __name__ == '__main__':
+    read_account_info(date='20230911', account='tanglang2')
+    read_account_info(date='20230911', account='tanglang3')
 
 
 
