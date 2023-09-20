@@ -6,8 +6,7 @@ from trading_calendar import TradingCalendar as TC
 
 
 class AccountMonitor:
-    def __init__(self, date=None):
-        self.date = date if date is not None else time.strftime('%Y-%m-%d')
+    def __init__(self):
         self.save_dir = r'\\192.168.1.116\target_position\monitor'
         self.panlan1_account_dir = r'\\192.168.1.116\trade\broker\cats\account'
         self.tinglian2_account_dir = r'\\192.168.1.116\trade\broker\emc\account'
@@ -18,7 +17,8 @@ class AccountMonitor:
             if TC().check_is_trading_day(time.strftime('%Y%m%d')):
                 current_minute = int(time.strftime('%H%M'))
                 try:
-                    account_last_info_dict = self.get_all_account_info(account_list=self.account_list, date=-1)
+                    last_trading_day = TC().get_n_trading_day(time.strftime('%Y%m%d'), -1).strftime('%Y%m%d')
+                    account_last_info_dict = self.get_all_account_info(account_list=self.account_list, date=last_trading_day)
                     if 900 < current_minute < 1502:
                         self.gen_account_overview(account_last_info_dict, account_inflow_list)
                     else:
@@ -92,15 +92,14 @@ class AccountMonitor:
                 stock_s = pd.DataFrame(iter(DBF(rf'{self.panlan1_account_dir}/StockFund.dbf'))).set_index('ACCT').loc['4082225']
                 col_list = ['TOTEQUITY', 'ASSET', 'MARGINRP']
             else:
-                last_trading_day = TC().get_n_trading_day(time.strftime('%Y-%m-%d'), -1).strftime('%Y-%m-%d')
-                option_s = pd.read_csv(rf'{self.panlan1_account_dir}/OptionFund_{last_trading_day}.csv',
+                date = pd.to_datetime(date).strftime('%Y-%m-%d')
+                option_s = pd.read_csv(rf'{self.panlan1_account_dir}/OptionFund_{date}.csv',
                                         index_col=False).set_index('账户').loc[9008023342]
-                stock_s = pd.read_csv(rf'{self.panlan1_account_dir}/StockFund_{last_trading_day}.csv',
+                stock_s = pd.read_csv(rf'{self.panlan1_account_dir}/StockFund_{date}.csv',
                                        index_col=False).set_index('账户').loc[4082225]
                 col_list = ['客户总权益', '账户资产', '保证金风险度']
         else:  # 听涟2号
-            date = time.strftime('%Y%m%d') if date is None else TC().get_n_trading_day(time.strftime('%Y-%m-%d'),
-                                                                                       -1).strftime('%Y%m%d')
+            date = time.strftime('%Y%m%d') if date is None else pd.to_datetime(date).strftime('%Y%m%d')
             option_s = pd.read_csv(rf'{self.tinglian2_account_dir}/310317000090_OPTION_FUND.{date}.csv',
                                     encoding='gbk',
                                     index_col=False).iloc[0]
