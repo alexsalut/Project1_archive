@@ -81,7 +81,8 @@ class RawDailyBarUpdater:
             send_email(
                 subject='[Alert!!Raw Daily Bar] Unsuspended stock missed',
                 content=f"Missed stock list is not empty, "
-                        f"missed stocks are {check_raw_daily_bar_info['missed_stock_list']}. "
+                        f"missed stocks are {check_raw_daily_bar_info['missed_stock_list']}, "
+                        f"missed unsuspended stocks are {check_raw_daily_bar_info['missed_unsuspended_stock_list']}."
                         f"Retry downloading",
                 receiver=SendEmailInfo.department['research'][0]
             )
@@ -97,12 +98,14 @@ class RawDailyBarUpdater:
 
         Download path: 
             {info_dict['tushare_path']}
-        Number of TuShare stocks: 
-            {info_dict['tushare_stock_count']}
-        Number of RiceQuant stocks: 
-            {info_dict['rice_quant_stock_count']}
+        Number of TuShare stocks(a, kc): 
+            ({info_dict['tushare_stock_count']}, {info_dict['tushare_kc_stock_count']})
+        Number of RiceQuant stocks(a, kc): 
+            ({info_dict['rice_quant_stock_count']}, {info_dict['rice_quant_kc_stock_count']})
         Missed stock list: 
             {info_dict['missed_stock_list']}
+        Missed kc stock list:
+            {info_dict['missed_kc_stock_list']}
         NA stocks: 
             {info_dict['na_stock_list']}
         """
@@ -112,26 +115,49 @@ class RawDailyBarUpdater:
         tushare_df = pd.read_csv(tushare_path)
         rqdatac.init()
         ricequant_df = rqdatac.all_instruments(type='CS', market='cn', date=date)
-
-        ricequant_df.index = ricequant_df['order_book_id'].str[:6]
-        tushare_df.index = tushare_df['ts_code'].str[:6]
-        tushare_missed_stock = ricequant_df.index.difference(tushare_df.index)
-        tushare_missed_stock_list = ricequant_df.loc[tushare_missed_stock, 'order_book_id'].tolist()
-
-        tushare_missed_stock_s = rqdatac.is_suspended(tushare_missed_stock_list, date, date).loc[date]
-        rqdatac.reset()
+        a_num, tushare_missed_a_stock_s = self.crosscheck_with_ricequant(ricequant_df=ricequant_df, tushare_df=tushare_df, date=date)
+        kc_df = tushare_df[tushare_df['ts_code'].str.startswith('68')]
+        kc_num, tushare_missed_kc_stock_s = self.crosscheck_with_ricequant(
+            ricequant_df=ricequant_df,
+            tushare_df=kc_df,
+            board_type='KSH',
+            date=date)
 
         check_dict = {
             'date': date,
             'tushare_path': tushare_path,
             'tushare_stock_count': len(tushare_df),
-            'rice_quant_stock_count': len(ricequant_df),
-            'missed_stock_list': tushare_missed_stock_s.index.tolist(),
+            'rice_quant_stock_count': a_num,
+            'missed_stock_list': tushare_missed_a_stock_s.index.tolist(),
             'na_stock_list': tushare_df[tushare_df.isna().any(axis=1)].index.tolist(),
-            'missed_unsuspended_stock_list': tushare_missed_stock_s[~tushare_missed_stock_s].index.tolist(),
+            'missed_unsuspended_stock_list': tushare_missed_a_stock_s[~tushare_missed_a_stock_s].index.tolist(),
+            'tushare_kc_stock_count': len(kc_df),
+            'rice_quant_kc_stock_count': kc_num,
+            'missed_kc_stock_list': tushare_missed_kc_stock_s.index.tolist(),
+            'missed_unsuspended_kc_stock_list': tushare_missed_kc_stock_s[~tushare_missed_kc_stock_s].index.tolist(),
         }
         return check_dict
 
+    def crosscheck_with_ricequant(self, ricequant_df, tushare_df, date, board_type=None):
+        if board_type == 'KSH':
+            ricequant_stock_df = ricequant_df.query("board_type == 'KSH'")
+        else:
+            ricequant_stock_df = ricequant_df.copy()
 
-# if __name__ == '__main__':
-#     RawDailyBarUpdater().update_and_confirm_raw_daily_bar(today='20230907')
+        ricequant_stock_df.index = ricequant_stock_df['order_book_id'].str[:6]
+        tushare_df.index = tushare_df['ts_code'].str[:6]
+        tushare_missed_stock = ricequant_stock_df.index.difference(tushare_df.index)
+        tushare_missed_stock_list = ricequant_stock_df.loc[tushare_missed_stock, 'order_book_id'].tolist()
+
+        if tushare_missed_stock_list:
+            tushare_missed_stock_s = rqdatac.is_suspended(tushare_missed_stock_list, date, date).loc[date]
+        else:
+            tushare_missed_stock_s = pd.Series()
+        return len(ricequant_stock_df), tushare_missed_stock_s
+
+
+
+if __name__ == '__main__':
+    RawDailyBarUpdater().update_and_confirm_raw_daily_bar(today='20230912')
+
+

@@ -1,5 +1,5 @@
 import pandas as pd
-import datetime
+
 
 class TradingCalendar:
     def __init__(self):
@@ -118,6 +118,4 @@ class TradingCalendar:
 
 
 if __name__ == '__main__':
-    from trading_calendar import TradingCalendar as td
-    print(td().get_n_trading_day(date=pd.to_datetime('20230824'),n=1))
-
+    print(TradingCalendar().get_n_trading_day(date=pd.to_datetime('20230824'), n=1))

@@ -4,7 +4,7 @@ import datetime
 import pandas as pd
 import xlwings as xw
 
-from utils import retry_save_excel, retry_remove_excel
+from utils import retry_save_excel, retry_remove_excel, send_email
 from trading_calendar import TradingCalendar as tc
 
 
@@ -57,6 +57,11 @@ class StrategyMonitor:
             wb.close()
             app.quit()
             print('[Monitor Next trading day update]Updated successfully')
+            send_email(
+                subject=f'Monitor next trading day updated, archive today monitor now',
+                content='',
+                receiver='zhou.sy@yz-fund.com.cn'
+            )
 
         except Exception as e:
             print(e)
@@ -117,5 +122,4 @@ class StrategyMonitor:
             time.sleep(20)
             self.renew_stock_list()
 
-# if __name__ == '__main__':
-#     StrategyMonitor().update_monitor()
+

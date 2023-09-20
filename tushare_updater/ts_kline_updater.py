@@ -9,7 +9,7 @@ import time
 import pandas as pd
 
 from utils import send_email, SendEmailInfo
-from fq_kline import FqKLine
+from tushare_updater.fq_kline import FqKLine
 
 TUSHARE_DIR = r"\\192.168.1.116\tushare\price\daily\raw"
 CHOICE_DIR = "C:/Users/Yz02/Desktop/Data/Choice"
@@ -19,10 +19,10 @@ KC50_WEIGHT_DIR = r"\\192.168.1.116\choice\reference\index_weight\sh000688\cache
 
 
 class KlineUpdater:
-    def __init__(self):
+    def __init__(self, today=None):
         self.raw_dir = TUSHARE_DIR
         self.save_path = KLINE_PATH
-        self.today = time.strftime('%Y%m%d')
+        self.today = time.strftime('%Y%m%d') if today is None else today
         self.kc_path = self.save_path.replace('.pkl', '_kc.pkl')
 
     def update_confirm_adjusted_kline(self):
@@ -60,6 +60,8 @@ class KlineUpdater:
                 {info_dict['Extreme High&Low Difference']}
             Extreme Daily Ret(>20.05%): 
                 {info_dict['Extreme Daily Ret']}
+            Missing kc stocks compared with raw daily bar:
+                {info_dict['Missing kc stocks compared with Tushare']}
             """
         else:
             subject = '[Adjusted Kline] File is non-existent. Retry downloading in 5 minutes.'
@@ -75,6 +77,7 @@ class KlineUpdater:
             'Open&Close out of High&Low',
             'Extreme High&Low Difference',
             'Extreme Daily Ret',
+            'Missing kc stocks compared with Tushare',
         ]
         info_dict = {key: self.df_check(adjusted_kline, option=key) for key in keys}
         return info_dict
@@ -101,6 +104,16 @@ class KlineUpdater:
                 how='all').index.tolist()
         elif option == 'Extreme Daily Ret':
             return adjusted_kline.query('abs(pct_chg)>0.2005')['pct_chg'].apply(lambda x: f'{x:.2%}').index.tolist()
+        elif option == 'Missing kc stocks compared with Tushare':
+            raw_path = rf'{TUSHARE_DIR}/{self.today[:4]}/{self.today[:6]}/raw_daily_{self.today}.csv'
+            if os.path.exists(raw_path):
+                raw_df = pd.read_csv(raw_path)
+                kline = adjusted_kline.loc[self.today]
+                raw_stock = raw_df[raw_df['ts_code'].str.startswith('68')]['ts_code'].str[:6].tolist()
+                kline_stock = [stock[2:] for stock in kline.index.tolist()]
+                return(list(set(raw_stock) - set(kline_stock)))
+            else:
+                print(f'{raw_path} does not exist. Download raw daily bar first.')
         else:
             raise ValueError('Option not available')
 
@@ -112,4 +125,4 @@ class KlineUpdater:
 
 
 if __name__ == '__main__':
-    KlineUpdater().update_confirm_adjusted_kline()
+    KlineUpdater('20230918').update_confirm_adjusted_kline()

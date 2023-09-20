@@ -3,7 +3,7 @@ import pandas as pd
 import xlwings as xw
 import rqdatac as rq
 
-from account import read_account_info
+from account_updater.account import read_account_info
 from utils import send_email, SendEmailInfo
 
 
@@ -91,7 +91,7 @@ class Account:
 
     def update_account_talang(self, sheet_name):
         index_ret = self.get_index_ret(sheet_name=sheet_name)
-        account = 'tanglang2' if sheet_name == '踏浪2号' else 'tanglang3'
+        account = 'talang2' if sheet_name == '踏浪2号' else 'talang3'
         account_info_s = read_account_info(date=self.date, account=account)
 
         try:
@@ -193,5 +193,3 @@ class Account:
             return monitor_data
 
 
-if __name__ == '__main__':
-    Account().update_panlan1(sheet_name='单策略超额')

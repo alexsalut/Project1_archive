@@ -1,7 +1,6 @@
 import pandas as pd
 
 
-
 if __name__ == '__main__':
 
     file_path = r'C:\Users\Yz02\Desktop\盼澜交割单.xlsx'

@@ -37,7 +37,8 @@ class KC50WeightUpdater:
             print(f'[kc50 weight] no error found, downloaded successfully')
             subject = f'[kc50 weight] downloaded successfully'
             content = f"""
-            kc50 weight file has been downloaded.
+            Download path:
+            {save_path}
             """
             send_email(subject=subject, content=content, receiver=SendEmailInfo.department['research'])
         else:
@@ -104,4 +105,6 @@ class KC50WeightUpdater:
 if __name__ == '__main__':
     kc50_weight_updater = KC50WeightUpdater()
 
-    kc50_weight_updater.download_history_kc50_weight(start_date='20200909', end_date='20230908')
+    # kc50_weight_updater.download_history_kc50_weight(start_date='20200909', end_date='20230908')
+    # kc50_weight_updater.c_download_kc50_weight('20230911',r'kc5020230911.pkl')
+
