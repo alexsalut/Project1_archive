@@ -1,3 +1,5 @@
+import time
+
 import pandas as pd
 
 
@@ -101,18 +103,18 @@ class TradingCalendar:
                                  '20241218', '20241219', '20241220', '20241223', '20241224',
                                  '20241225', '20241226', '20241227', '20241230', '20241231']
 
-    def get_n_trading_day(self, date, n):
+    def get_n_trading_day(self, date=None, n=1):
         try:
-            date = pd.to_datetime(date).strftime('%Y%m%d')
-            index = self.trading_calendar.index(date)
+            formatted_date = pd.to_datetime(date).strftime('%Y%m%d') if date is not None else time.strftime('%Y%m%d')
+            index = self.trading_calendar.index(formatted_date)
             return pd.to_datetime(self.trading_calendar[index + n])
         except Exception as e:
             print(e)
 
-    def check_is_trading_day(self, date):
+    def check_is_trading_day(self, date=None):
         try:
-            date = pd.to_datetime(date).strftime('%Y%m%d')
-            return date in self.trading_calendar
+            formatted_date = pd.to_datetime(date).strftime('%Y%m%d') if date is not None else time.strftime('%Y%m%d')
+            return formatted_date in self.trading_calendar
         except Exception as e:
             print(e)
 

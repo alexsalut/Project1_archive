@@ -10,24 +10,19 @@ import pandas as pd
 
 from EmQuantAPI import c
 
-from utils import send_email, SendEmailInfo
+from util.utils import send_email, SendEmailInfo
+from file_location import FileLocation as FL
 
-TUSHARE_DIR = r"\\192.168.1.116\tushare\price\daily\raw"
-CHOICE_DIR = "C:/Users/Yz02/Desktop/Data/Choice"
-KLINE_PATH = r"\\192.168.1.116\kline\qfq_kline_product.pkl"
-ST_PATH = r'\\192.168.1.116\kline\st_list.csv'
-KC50_WEIGHT_DIR = r"\\192.168.1.116\choice\reference\index_weight\sh000688\cache"
 
 class ST_List_Updater:
     def __init__(self, today=None):
-        self.save_path = ST_PATH
+        self.save_path = FL().st_list_path
         self.today = time.strftime('%Y%m%d') if today is None else today
         self.stock_default_count = 0
 
     def st_list_update_and_confirm(self):
         self.c_download_st_list()
         self.check_st_list()
-
 
     def check_st_list(self):
         data_name = 'ST_list'
@@ -79,7 +74,3 @@ class ST_List_Updater:
         all_st_s.index = pd.to_datetime(all_st_s.index).strftime("%Y%m%d")
         all_st_s.to_csv(self.save_path)
         print(rf"[{index_ticker} list] updated and new .csv file generated ")
-
-
-
-

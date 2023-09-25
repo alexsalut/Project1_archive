@@ -6,35 +6,32 @@
 
 import datetime
 import time
-
-from chinese_calendar import is_workday
+import multiprocessing
 
 from c_updater.c_st_list_updater import ST_List_Updater
 from c_updater.c_kc50_weight_updater import KC50WeightUpdater
 from c_updater.c_turnover_rate_updater import TurnoverRateUpdater
 from c_updater.kc50_composition import download_check_kc50_composition
+
 from tushare_updater.ts_kline_updater import KlineUpdater
 from tushare_updater.ts_raw_daily_bar_updater import RawDailyBarUpdater
-from position_check_v1 import position_check
-from account_updater.account_updater import Account
-from account_updater.account import check_account_info
-from account_updater.monitor_updater import StrategyMonitor
-from rice_quant_updater.risk_exposure import gen_expo_df
-from index_futures import update_daily_futures
-from utils import send_email
 
-TUSHARE_DIR = r"\\192.168.1.116\tushare\price\daily\raw"
-CHOICE_DIR = "C:/Users/Yz02/Desktop/Data/Choice"
-KLINE_PATH = r"\\192.168.1.116\kline\qfq_kline_product.pkl"
-ST_PATH = r'\\192.168.1.116\kline\st_list.csv'
-KC50_WEIGHT_DIR = r"\\192.168.1.116\choice\reference\index_weight\sh000688\cache"
+from account_position.position_check import check_notify_position
+
+from account_record.account_recorder import account_recorder
+from daily_cnn_record.cnn_daily_record import CnnDailyRecord
+
+from rice_quant_updater.risk_exposure import gen_expo_df
+
+from web_data_updater.index_futures import update_daily_futures
+from util.trading_calendar import TradingCalendar as TC
 
 
 def run_daily_update():
     while True:
         current_time = datetime.datetime.now()
         print(current_time)
-        if is_workday(current_time) and current_time.isoweekday() < 6:
+        if TC().check_is_trading_day(current_time.strftime('%Y%m%d')):
             current_minute = int(current_time.strftime('%H%M'))
             if current_minute == 1400:
                 ST_List_Updater().st_list_update_and_confirm()
@@ -42,19 +39,16 @@ def run_daily_update():
                 time.sleep(60)
 
             elif current_minute == 1452:
-                position_check()
+                check_notify_position()
                 time.sleep(60)
 
-            elif current_minute == 1500:
-                StrategyMonitor().update_monitor_next_trading_day()
-                position_check()
-                check_account_info()
-                send_email(subject='monitor today archive', content='', receiver='zhou.sy@yz-fund.com.cn')
+            elif current_minute == 1505:
+                check_notify_position()
+                CnnDailyRecord().update_monitor()
                 time.sleep(60)
-
 
             elif current_minute == 1520:
-                Account().update_account()
+                account_recorder()
                 time.sleep(60)
 
             elif current_minute == 1630:
@@ -62,10 +56,7 @@ def run_daily_update():
                 TurnoverRateUpdater().turnover_rate_update_and_confirm()
                 RawDailyBarUpdater().update_and_confirm_raw_daily_bar()
                 KlineUpdater().update_confirm_adjusted_kline()
-                update_daily_futures(
-                    cffe_dir=r'\\192.168.1.116\cffe',
-                )
-                StrategyMonitor().archive_monitor_today()
+                update_daily_futures()
                 time.sleep(60)
 
             elif current_minute == 1830:

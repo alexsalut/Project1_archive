@@ -13,11 +13,12 @@ import requests
 
 import pandas as pd
 
+from file_location import FileLocation as FL
 
 def update_daily_futures(
-        cffe_dir,
         month=None
 ):
+    cffe_dir = FL().future_dir
     obj = CffeFutures(cffe_dir=cffe_dir)
 
     if month is None:

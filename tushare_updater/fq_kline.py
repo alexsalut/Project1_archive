@@ -14,7 +14,7 @@ import glob
 
 import pandas as pd
 
-from utils import transfer_to_jy_ticker
+from util.utils import transfer_to_jy_ticker
 
 
 class FqKLine:

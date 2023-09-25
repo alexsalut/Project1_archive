@@ -8,20 +8,15 @@ import os
 import time
 import pandas as pd
 
-from utils import send_email, SendEmailInfo
+from util.utils import send_email, SendEmailInfo
 from tushare_updater.fq_kline import FqKLine
-
-TUSHARE_DIR = r"\\192.168.1.116\tushare\price\daily\raw"
-CHOICE_DIR = "C:/Users/Yz02/Desktop/Data/Choice"
-KLINE_PATH = r"\\192.168.1.116\kline\qfq_kline_product.pkl"
-ST_PATH = r'\\192.168.1.116\kline\st_list.csv'
-KC50_WEIGHT_DIR = r"\\192.168.1.116\choice\reference\index_weight\sh000688\cache"
+from file_location import FileLocation as FL
 
 
 class KlineUpdater:
     def __init__(self, today=None):
-        self.raw_dir = TUSHARE_DIR
-        self.save_path = KLINE_PATH
+        self.raw_dir = FL().raw_daily_dir
+        self.save_path = FL().kline_path
         self.today = time.strftime('%Y%m%d') if today is None else today
         self.kc_path = self.save_path.replace('.pkl', '_kc.pkl')
 
@@ -105,13 +100,13 @@ class KlineUpdater:
         elif option == 'Extreme Daily Ret':
             return adjusted_kline.query('abs(pct_chg)>0.2005')['pct_chg'].apply(lambda x: f'{x:.2%}').index.tolist()
         elif option == 'Missing kc stocks compared with Tushare':
-            raw_path = rf'{TUSHARE_DIR}/{self.today[:4]}/{self.today[:6]}/raw_daily_{self.today}.csv'
+            raw_path = rf'{self.raw_dir}/{self.today[:4]}/{self.today[:6]}/raw_daily_{self.today}.csv'
             if os.path.exists(raw_path):
                 raw_df = pd.read_csv(raw_path)
                 kline = adjusted_kline.loc[self.today]
                 raw_stock = raw_df[raw_df['ts_code'].str.startswith('68')]['ts_code'].str[:6].tolist()
                 kline_stock = [stock[2:] for stock in kline.index.tolist()]
-                return(list(set(raw_stock) - set(kline_stock)))
+                return (list(set(raw_stock) - set(kline_stock)))
             else:
                 print(f'{raw_path} does not exist. Download raw daily bar first.')
         else:

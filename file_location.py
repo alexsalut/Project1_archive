@@ -1,0 +1,47 @@
+#!/usr/bin/env python
+# -*- coding: utf-8 -*-
+# @Time    : 2023/9/22 9:55
+# @Author  : Suying
+# @Site    : 
+# @File    : file_location.py
+
+class FileLocation:
+# 账户信息文件路径
+    talang2_account_dir = r'\\192.168.1.116\trade\broker\qmt_gf\account\Stock'
+    talang3_account_dir = r'\\192.168.1.116\trade\broker\iQuant\account\Stock'
+    panlan1_cats_dir = r'\\192.168.1.116\trade\broker\cats\account'
+    panlan1_cats_account_number = '4082225'
+    tinglian2_emc_dir = r'\\192.168.1.116\trade\broker\emc\account'
+
+
+# cnn策略观察文件路径， monitor文件路径
+    monitor_dir = r'C:\Users\Yz02\Desktop\strategy_update'
+    remote_monitor_dir = r'\\192.168.1.116\target_position\monitor'
+    remote_summary_dir = r'\\192.168.1.116\target_position\summary'
+    remote_target_pos_dir = r'\\192.168.1.116\trade\target_position\account'
+
+# choice终端获取数据存储路径
+    kc50_weight_dir = r"\\192.168.1.116\choice\reference\index_weight\sh000688\cache"
+    st_list_path = r'\\192.168.1.116\kline\st_list.csv'
+    turnover_dir = "C:/Users/Yz02/Desktop/Data/Choice"
+    kc50_composition_dir = r'\\192.168.1.116\choice\reference\sh000688'
+
+# 米匡数据存储路径
+    exposure_dir = r'\\192.168.1.116\trade\target_position\exposure'
+
+# tushare数据存储路径
+    raw_daily_dir = r"\\192.168.1.116\tushare\price\daily\raw"
+    kline_path = r"\\192.168.1.116\kline\qfq_kline_product.pkl"
+
+# web期货数据存储路径
+    future_dir = r'\\192.168.1.116\cffe'
+
+
+
+
+
+
+print(FileLocation())
+
+
+

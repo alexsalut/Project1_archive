@@ -6,25 +6,17 @@
 
 import os
 import time
-import datetime
 import pandas as pd
-
 
 from EmQuantAPI import c
 
-from utils import transfer_to_jy_ticker, send_email, SendEmailInfo
-
-
-TUSHARE_DIR = r"\\192.168.1.116\tushare\price\daily\raw"
-CHOICE_DIR = "C:/Users/Yz02/Desktop/Data/Choice"
-KLINE_PATH = r"\\192.168.1.116\kline\qfq_kline_product.pkl"
-ST_PATH = r'\\192.168.1.116\kline\st_list.csv'
-KC50_WEIGHT_DIR = r"\\192.168.1.116\choice\reference\index_weight\sh000688\cache"
+from util.utils import transfer_to_jy_ticker, send_email, SendEmailInfo
+from file_location import FileLocation as FL
 
 
 class TurnoverRateUpdater:
     def __init__(self, today=None):
-        self.save_dir = CHOICE_DIR
+        self.save_dir = FL().turnover_dir
         self.today = time.strftime('%Y%m%d') if today is None else today
 
     def turnover_rate_update_and_confirm(self):

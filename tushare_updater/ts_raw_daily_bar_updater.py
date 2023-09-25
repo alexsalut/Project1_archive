@@ -10,18 +10,13 @@ import pandas as pd
 import tushare as ts
 import rqdatac
 
-from utils import c_get_trade_dates, send_email, SendEmailInfo
-
-TUSHARE_DIR = r"\\192.168.1.116\tushare\price\daily\raw"
-CHOICE_DIR = "C:/Users/Yz02/Desktop/Data/Choice"
-KLINE_PATH = r"\\192.168.1.116\kline\qfq_kline_product.pkl"
-ST_PATH = r'\\192.168.1.116\kline\st_list.csv'
-KC50_WEIGHT_DIR = r"\\192.168.1.116\choice\reference\index_weight\sh000688\cache"
+from util.utils import c_get_trade_dates, send_email, SendEmailInfo
+from file_location import FileLocation as FL
 
 
 class RawDailyBarUpdater:
     def __init__(self):
-        self.save_dir = TUSHARE_DIR
+        self.save_dir = FL().raw_daily_dir
 
     def update_and_confirm_raw_daily_bar(self, today=None):
         today = time.strftime('%Y%m%d') if today is None else today
@@ -29,7 +24,7 @@ class RawDailyBarUpdater:
             start_date='20220630',
             end_date=today,
         )
-        tushare_path = rf'{TUSHARE_DIR}/{today[:4]}/{today[:6]}/raw_daily_{today}.csv'
+        tushare_path = rf'{self.save_dir}/{today[:4]}/{today[:6]}/raw_daily_{today}.csv'
         self.retry_download_check(tushare_path=tushare_path, date=today)
 
     def ts_download_raw_daily_bar_history(self, start_date, end_date):
@@ -115,7 +110,8 @@ class RawDailyBarUpdater:
         tushare_df = pd.read_csv(tushare_path)
         rqdatac.init()
         ricequant_df = rqdatac.all_instruments(type='CS', market='cn', date=date)
-        a_num, tushare_missed_a_stock_s = self.crosscheck_with_ricequant(ricequant_df=ricequant_df, tushare_df=tushare_df, date=date)
+        a_num, tushare_missed_a_stock_s = self.crosscheck_with_ricequant(ricequant_df=ricequant_df,
+                                                                         tushare_df=tushare_df, date=date)
         kc_df = tushare_df[tushare_df['ts_code'].str.startswith('68')]
         kc_num, tushare_missed_kc_stock_s = self.crosscheck_with_ricequant(
             ricequant_df=ricequant_df,
@@ -156,8 +152,5 @@ class RawDailyBarUpdater:
         return len(ricequant_stock_df), tushare_missed_stock_s
 
 
-
 if __name__ == '__main__':
     RawDailyBarUpdater().update_and_confirm_raw_daily_bar(today='20230912')
-
-

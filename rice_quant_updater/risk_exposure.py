@@ -7,18 +7,39 @@ import time
 import rqdatac
 import pandas as pd
 
+from util.utils import send_email, SendEmailInfo
+from file_location import FileLocation as FL
+
 rqdatac.init()
 
-
+exposure_save_dir = FL().exposure_dir
 def gen_expo_df(date):
     products = ['talang2', 'talang3', 'panlan']
     data = []
-    for p in products:
-        print(p)
-        data.append(get_port_excess_exposure(date=date, product=p))
+    try:
+        for p in products:
+            print(p)
+            data.append(get_port_excess_exposure(date=date, product=p))
+        expo_df = pd.concat(data, axis=1, keys=products)
+        expo_df.to_csv(fr'{exposure_save_dir}\expo_{date}.csv', encoding='gbk')
+        expo_text = expo_df.to_string()
+        print(fr'[Strategy Exposure] File generated for {date}')
+        send_email(
+            subject=f'[Strategy Exposure] File generated for {date}',
+            content=fr"""
+            文件路径:
+            {exposure_save_dir}\expo_{date}.csv
+            文件内容：
+            {expo_text}
+            """,
+            receiver=SendEmailInfo.department['research'])
+    except Exception as e:
+        print(e)
+        print(f'Error in gen_expo_df, retry in 5 minutes')
+        time.sleep(300)
+        gen_expo_df(date=date)
 
-    expo_df = pd.concat(data, axis=1, keys=products)
-    expo_df.to_csv(fr'\\192.168.1.116\trade\target_position\exposure\expo_{date}.csv', encoding='gbk')
+
 
 
 def get_port_excess_exposure(date, product):
@@ -103,4 +124,4 @@ def rq_get_index_exposure(date, index_ticker):
 
 if __name__ == '__main__':
     today = time.strftime('%Y%m%d')
-    gen_expo_df(date='20230913')
+    gen_expo_df(date='20230921')

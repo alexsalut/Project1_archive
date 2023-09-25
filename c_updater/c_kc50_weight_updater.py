@@ -8,22 +8,15 @@ import os
 import time
 import pandas as pd
 
-
 from EmQuantAPI import c
 
-from utils import send_email, SendEmailInfo
-
-
-TUSHARE_DIR = r"\\192.168.1.116\tushare\price\daily\raw"
-CHOICE_DIR = "C:/Users/Yz02/Desktop/Data/Choice"
-KLINE_PATH = r"\\192.168.1.116\kline\qfq_kline_product.pkl"
-ST_PATH = r'\\192.168.1.116\kline\st_list.csv'
-KC50_WEIGHT_DIR = r"\\192.168.1.116\choice\reference\index_weight\sh000688\cache"
+from util.utils import send_email, SendEmailInfo
+from file_location import FileLocation as FL
 
 
 class KC50WeightUpdater:
     def __init__(self, today=None):
-        self.save_dir = KC50_WEIGHT_DIR
+        self.save_dir = FL().kc50_weight_dir
         self.today = time.strftime('%Y%m%d') if today is None else today
 
     def kc50_weight_update_and_confirm(self):
@@ -53,7 +46,7 @@ class KC50WeightUpdater:
             if kc50_df.empty:
                 error_list.append(f'[kc50 weight check]{save_path} is empty')
             else:
-                if abs(kc50_df.WEIGHT.sum()-1) > 0.00001:
+                if abs(kc50_df.WEIGHT.sum() - 1) > 0.00001:
                     error_list.append(f'[kc50 weight check]{save_path} weight sum is not 1')
                 if kc50_df.shape[0] != 50:
                     error_list.append(f'[kc50 weight check]{save_path} weight count is not 50')
@@ -104,7 +97,3 @@ class KC50WeightUpdater:
 
 if __name__ == '__main__':
     kc50_weight_updater = KC50WeightUpdater()
-
-    # kc50_weight_updater.download_history_kc50_weight(start_date='20200909', end_date='20230908')
-    # kc50_weight_updater.c_download_kc50_weight('20230911',r'kc5020230911.pkl')
-
