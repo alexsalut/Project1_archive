@@ -30,7 +30,12 @@ class KC50WeightUpdater:
             print(f'[kc50 weight] no error found, downloaded successfully')
             subject = f'[kc50 weight] downloaded successfully'
             content = f"""
-            Download path:
+            <table width="800" border="0" cellspacing="0" cellpadding="4">
+            <tr>
+            <td bgcolor="#CECFAD" height="30" style="font-size:21px"><b>KC50 Weight generated successfully</b></td>
+            </tr>
+            <td bgcolor="#EFEBDE" height="100" style="font-size:13px">
+            <p>Download path:</p>
             {save_path}
             """
             send_email(subject=subject, content=content, receiver=SendEmailInfo.department['research'])

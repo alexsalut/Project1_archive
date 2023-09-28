@@ -38,10 +38,13 @@ def send_email(subject, content, receiver):
     receivers = receiver
 
     # 三个参数：第一个为文本内容，第二个 plain 设置文本格式，第三个 utf-8 设置编码
-    message = MIMEText(content, 'plain', 'utf-8')
+    # content_html = markdown.markdown(content)
+    message = MIMEText(content, "html", "utf-8")
+
+    # message = MIMEText(content_html, 'html', 'utf-8')
     message['From'] = sender  # 发送者
     message['To'] = ','.join(receivers)  # 接收者
-    message['Subject'] = subject
+    message['Subject'] = subject  # 邮件主题
     try:
         smtp0bj = smtplib.SMTP()  # 建立和SMTP邮件服务器的连接
         smtp0bj.connect(host, 25)  # 25 为 SMTP 端口号

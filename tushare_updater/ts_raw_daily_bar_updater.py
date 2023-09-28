@@ -73,12 +73,20 @@ class RawDailyBarUpdater:
                   f"missed stocks are {check_raw_daily_bar_info['missed_stock_list']}. "
                   f"Retry downloading {date}")
             os.remove(tushare_path)
+            content = f"""
+            <table width="800" border="0" cellspacing="0" cellpadding="4">
+            <tr>
+            <td bgcolor="#CECFAD" height="30" style="font-size:21px"><b>Raw Daily Bar with missing stocks</b></td>
+            </tr>
+            <td bgcolor="#EFEBDE" height="100" style="font-size:13px">
+            <p>Missed stocks are {check_raw_daily_bar_info['missed_stock_list']}</p>
+            <p>Missed unsuspended stocks are {check_raw_daily_bar_info['missed_unsuspended_stock_list']}</p>
+            <p>Retry downloading {date}</p>
+            
+            """
             send_email(
                 subject='[Alert!!Raw Daily Bar] Unsuspended stock missed',
-                content=f"Missed stock list is not empty, "
-                        f"missed stocks are {check_raw_daily_bar_info['missed_stock_list']}, "
-                        f"missed unsuspended stocks are {check_raw_daily_bar_info['missed_unsuspended_stock_list']}."
-                        f"Retry downloading",
+                content=content,
                 receiver=SendEmailInfo.department['research'][0]
             )
             time.sleep(300)
@@ -89,20 +97,26 @@ class RawDailyBarUpdater:
     def notify_with_email(self, info_dict):
         subject = '[Tushare Daily Bar] Data downloaded successfully'
         content = f"""
+        <table width="800" border="0" cellspacing="0" cellpadding="4">
+        <tr>
+        <td bgcolor="#CECFAD" height="30" style="font-size:21px"><b>Raw Daily Bar Info</b></td>
+        </tr>
+        <td bgcolor="#EFEBDE" height="100" style="font-size:13px">
         Latest raw daily bar info is as follows:
+        
+        <p>Download path: </p>
+        &nbsp&nbsp{info_dict['tushare_path']}
+        <p>Number of TuShare stocks(a, kc): </p>
+        &nbsp&nbsp({info_dict['tushare_stock_count']}, {info_dict['tushare_kc_stock_count']})
+        <p>Number of RiceQuant stocks(a, kc): </p>
+        &nbsp&nbsp({info_dict['rice_quant_stock_count']}, {info_dict['rice_quant_kc_stock_count']})
+        <p>Missed stock list: </p>
+        &nbsp&nbsp{info_dict['missed_stock_list']}
+        <p>Missed KC stock list: </p>
+        &nbsp&nbsp{info_dict['missed_kc_stock_list']}
+        <p>NA stocks: </p>
+        &nbsp&nbsp{info_dict['na_stock_list']}
 
-        Download path: 
-            {info_dict['tushare_path']}
-        Number of TuShare stocks(a, kc): 
-            ({info_dict['tushare_stock_count']}, {info_dict['tushare_kc_stock_count']})
-        Number of RiceQuant stocks(a, kc): 
-            ({info_dict['rice_quant_stock_count']}, {info_dict['rice_quant_kc_stock_count']})
-        Missed stock list: 
-            {info_dict['missed_stock_list']}
-        Missed kc stock list:
-            {info_dict['missed_kc_stock_list']}
-        NA stocks: 
-            {info_dict['na_stock_list']}
         """
         send_email(subject=subject, content=content, receiver=SendEmailInfo.department['research'])
 

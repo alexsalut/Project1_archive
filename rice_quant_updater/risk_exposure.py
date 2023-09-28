@@ -22,14 +22,19 @@ def gen_expo_df(date):
             data.append(get_port_excess_exposure(date=date, product=p))
         expo_df = pd.concat(data, axis=1, keys=products)
         expo_df.to_csv(fr'{exposure_save_dir}\expo_{date}.csv', encoding='gbk')
-        expo_text = expo_df.to_string()
+        expo_text = expo_df.to_html()
         print(fr'[Strategy Exposure] File generated for {date}')
         send_email(
             subject=f'[Strategy Exposure] File generated for {date}',
             content=fr"""
-            文件路径:
+            <table width="800" border="0" cellspacing="0" cellpadding="4">
+            <tr>
+            <td bgcolor="#CECFAD" height="30" style="font-size:21px"><b>Exposure file generated</b></td>
+            </tr>
+            <td bgcolor="#EFEBDE" height="100" style="font-size:13px">
+            <p>文件路径:</p>
             {exposure_save_dir}\expo_{date}.csv
-            文件内容：
+            <p>文件内容：</p>
             {expo_text}
             """,
             receiver=SendEmailInfo.department['research'])
@@ -122,6 +127,4 @@ def rq_get_index_exposure(date, index_ticker):
     return index_exposure
 
 
-if __name__ == '__main__':
-    today = time.strftime('%Y%m%d')
-    gen_expo_df(date='20230921')
+

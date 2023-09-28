@@ -34,6 +34,11 @@ class TurnoverRateUpdater:
             else:
                 subject = '[Alert!!! Turnover Rate] data with alert.'
                 content = f"""
+                <table width="800" border="0" cellspacing="0" cellpadding="4">
+                <tr>
+                <td bgcolor="#CECFAD" height="30" style="font-size:21px"><b>Error list</b></td>
+                </tr>
+                <td bgcolor="#EFEBDE" height="100" style="font-size:13px">
                 {error_list}
                 """
                 send_email(subject=subject, content=content, receiver=SendEmailInfo.department['research'])
@@ -66,12 +71,17 @@ class TurnoverRateUpdater:
     def send_turnover_email(self, save_path, turnover_info_dict):
         subject = '[Turnover Rate] File downloaded successfully.'
         content = f"""
-        Today's turnover rate info is as follows if any:
-        Download path:
+        <table width="800" border="0" cellspacing="0" cellpadding="4">
+        <tr>
+        <td bgcolor="#CECFAD" height="30" style="font-size:21px"><b>Turnover Rate Overview</b></td>
+        </tr>
+        <td bgcolor="#EFEBDE" height="100" style="font-size:13px">
+        <p>Today's turnover rate info is as follows if any:</p>
+        <p>Download path:</p>
             {save_path}
-        Number of stocks included:            
+        <p>Number of stocks included:</p>            
             {turnover_info_dict['stock count']}  
-        Details(Code) of stocks with missing values:
+        <p>Details(Code) of stocks with missing values:</p>
             {turnover_info_dict['na list']}
         """
         send_email(subject=subject, content=content, receiver=SendEmailInfo.department['research'])

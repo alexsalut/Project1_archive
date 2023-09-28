@@ -38,25 +38,29 @@ class KlineUpdater:
             print(f'{self.kc_path} exists.')
             info_dict = self.data_check(adjusted_kline)
             content = f"""
-            Today's adjusted kline has been generated.
-            File path:
-                {self.kc_path}
-            Number of KC stocks today:
-                 {info_dict['Total Number of Stocks']}
-            NaN: 
-                {info_dict['NaN']}
-            Negative: 
-                {info_dict['Negative']}
-            Zero: 
-                {info_dict['Zero']}
-            Open&Close out of High&Low: 
-                {info_dict['Open&Close out of High&Low']}
-            Extreme High&Low Difference(>30%): 
-                {info_dict['Extreme High&Low Difference']}
-            Extreme Daily Ret(>20.05%): 
-                {info_dict['Extreme Daily Ret']}
-            Missing kc stocks compared with raw daily bar:
-                {info_dict['Missing kc stocks compared with Tushare']}
+            <table width="800" border="0" cellspacing="0" cellpadding="4">
+            <tr>
+            <td bgcolor="#CECFAD" height="30" style="font-size:21px"><b>Adjusted Kline updated</b></td>
+            </tr>
+            <td bgcolor="#EFEBDE" height="100" style="font-size:13px">
+            <p>File path:</p>
+            &nbsp&nbsp{self.kc_path}
+            <p>Number of KC stocks today:</p>
+            &nbsp&nbsp{info_dict['Total Number of Stocks']}
+            <p>NaN:</p> 
+            &nbsp&nbsp{info_dict['NaN']}
+            <p>Negative:</p> 
+            &nbsp&nbsp{info_dict['Negative']}
+            <p>Zero:</p> 
+            &nbsp&nbsp{info_dict['Zero']}
+            <p>Open&Close out of High&Low:</p> 
+            &nbsp&nbsp{info_dict['Open&Close out of High&Low']}
+            <p>Extreme High&Low Difference(>30%):</p> 
+            &nbsp&nbsp{info_dict['Extreme High&Low Difference']}
+            <p>Extreme Daily Ret(>20.05%):</p> 
+            &nbsp&nbsp{info_dict['Extreme Daily Ret']}
+            <p>Missing kc stocks compared with raw daily bar:</p>
+            &nbsp&nbsp{info_dict['Missing kc stocks compared with Tushare']}
             """
         else:
             subject = '[Adjusted Kline] File is non-existent. Retry downloading in 5 minutes.'
@@ -120,4 +124,4 @@ class KlineUpdater:
 
 
 if __name__ == '__main__':
-    KlineUpdater('20230918').update_confirm_adjusted_kline()
+    KlineUpdater('20230926').update_confirm_adjusted_kline()

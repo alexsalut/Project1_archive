@@ -32,12 +32,17 @@ class ST_List_Updater:
             today_stock_count = len(df[df.index == int(self.today)])
             if today_stock_count > self.stock_default_count:
                 subject = rf"[{data_name}]   today file is updated"
-                content = rf""""
-                {self.today} st list has been accessed and the info is as follows:
-                Download path:
-                    {self.save_path}
-                Number of st stocks today: 
-                    {today_stock_count}
+                content = rf"""
+                <table width="800" border="0" cellspacing="0" cellpadding="4">
+                <tr>
+                <td bgcolor="#CECFAD" height="30" style="font-size:21px"><b>ST list更新完成</b></td>
+                </tr>
+                <td bgcolor="#EFEBDE" height="100" style="font-size:13px">
+                <p>{self.today} st list has been accessed and the info is as follows:</p>
+                <p><b>Download path:</b></p>
+                {self.save_path}
+                <p><b>Number of st stocks today:</b></p> 
+                {today_stock_count}
                 """
                 send_email(subject=subject, content=content, receiver=SendEmailInfo.department['research'])
                 print('[ST list check] data is updated and email sent')

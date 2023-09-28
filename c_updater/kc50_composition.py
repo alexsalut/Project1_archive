@@ -22,7 +22,12 @@ def download_check_kc50_composition(date=None):
         print('[kc50 composition] no error found, downloaded successfully')
         subject = f'[kc50 composition] downloaded successfully'
         content = f"""
-        Download path:
+        <table width="800" border="0" cellspacing="0" cellpadding="4">
+        <tr>
+        <td bgcolor="#CECFAD" height="30" style="font-size:21px"><b>KC50 composition has been generated</b></td>
+        </tr>
+        <td bgcolor="#EFEBDE" height="100" style="font-size:13px">
+        <p>Download path:</p>
         {save_path}
         """
         send_email(subject=subject, content=content, receiver=SendEmailInfo.department['research'])
@@ -31,7 +36,12 @@ def download_check_kc50_composition(date=None):
         send_email(
             subject='[Alert! kc 50 composition not correct]',
             content=f"""
-            file path: 
+            <table width="800" border="0" cellspacing="0" cellpadding="4">
+            <tr>
+            <td bgcolor="#CECFAD" height="30" style="font-size:21px"><b>Alert KC50 Composition</b></td>
+            </tr>
+            <td bgcolor="#EFEBDE" height="100" style="font-size:13px">
+            <p>file path:</p> 
             {save_path}
             """,
             receiver=SendEmailInfo.department['research'][0])
