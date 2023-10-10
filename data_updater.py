@@ -6,7 +6,6 @@
 
 import datetime
 import time
-import multiprocessing
 
 from c_updater.c_st_list_updater import ST_List_Updater
 from c_updater.c_kc50_weight_updater import KC50WeightUpdater
