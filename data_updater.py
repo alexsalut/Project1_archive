@@ -81,5 +81,4 @@ def update_after_close():
 
 
 if __name__ == '__main__':
-    # auto_update()
-    gen_quick_virtual_kline(1353)
+    auto_update()
