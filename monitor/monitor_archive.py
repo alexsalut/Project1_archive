@@ -3,7 +3,7 @@
 # @Time    : 2023/9/25 13:53
 # @Author  : Suying
 # @Site    : 
-# @File    : archive_monitor_today.py
+# @File    : monitor_archive.py
 import pandas as pd
 import xlwings as xw
 import datetime
@@ -33,10 +33,10 @@ def archive_monitor_today(monitor_path, remote_monitor_dir, monitor_dir, today):
         # retry_remove_excel(file_path=rf'{remote_monitor_dir}/monitor_{today}_formula.xlsx')
         wb.close()
         app.quit()
-        print('Archive today monitor successfully')
+        print('Archive today rolling_check successfully')
     except Exception as e:
         print(e)
-        print('Retry archive today monitor in 10 seconds')
+        print('Retry archive today rolling_check in 10 seconds')
         time.sleep(10)
         archive_monitor_today(monitor_path, remote_monitor_dir, monitor_dir, today)
 

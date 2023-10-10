@@ -6,8 +6,8 @@
 # @File    : talang_info.py
 import time
 import pandas as pd
-from monitor.panlan1_info import Panlan1AccountInfo
-from monitor.tinglian2_info import get_tinglian2_raw_info
+from rolling_check.panlan1_info import Panlan1AccountInfo
+from rolling_check.tinglian2_info import get_tinglian2_raw_info
 from util.trading_calendar import TradingCalendar as TC
 
 

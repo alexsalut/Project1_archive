@@ -1,10 +1,10 @@
 import time
 
-from util.trading_calendar import TradingCalendar as tc
+from util.trading_calendar import TradingCalendar as TC
 from util.utils import send_email, SendEmailInfo
 from file_location import FileLocation as FL
-from daily_cnn_record.archive_monitor_today import archive_monitor_today
-from daily_cnn_record.record_next_trading_day import update_monitor_next_trading_day
+from monitor.monitor_archive import archive_monitor_today
+from monitor.monitor_next_trading_day import update_monitor_next_trading_day
 
 
 class CnnDailyRecord:
@@ -16,7 +16,7 @@ class CnnDailyRecord:
         self.today = time.strftime('%Y%m%d') if today is None else today
         self.monitor_path = rf'{self.monitor_dir}/monitor_{self.today}_formula.xlsx'
         self.remote_summary_dir = FL().remote_summary_dir
-        self.next_trading_day = tc().get_n_trading_day(self.today, 1).strftime('%Y%m%d')
+        self.next_trading_day = TC().get_n_trading_day(self.today, 1).strftime('%Y%m%d')
 
     def update_monitor(self):
         update_monitor_next_trading_day(
@@ -38,6 +38,6 @@ class CnnDailyRecord:
             today=self.today
         )
 
+
 if __name__ == '__main__':
     CnnDailyRecord().update_monitor()
-

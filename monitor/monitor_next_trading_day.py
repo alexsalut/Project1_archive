@@ -3,7 +3,7 @@
 # @Time    : 2023/9/25 13:45
 # @Author  : Suying
 # @Site    : 
-# @File    : record_next_trading_day.py
+# @File    : monitor_next_trading_day.py
 
 import time
 import xlwings as xw
@@ -49,7 +49,7 @@ def update_monitor_next_trading_day(date, monitor_path, remote_monitor_dir, moni
         app.quit()
         print('[Monitor Next trading day update]Updated successfully')
         send_email(
-            subject=f'Monitor next trading day updated, archive today monitor now',
+            subject=f'Monitor next trading day updated, archive today summary now',
             content='',
             receiver='zhou.sy@yz-fund.com.cn'
         )

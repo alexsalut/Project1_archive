@@ -7,7 +7,7 @@
 import time
 import pandas as pd
 from file_location import FileLocation as FL
-from account_position.account_location import get_account_location
+from position.account_location import get_account_location
 class AccountPosition:
     def __init__(self, account, date=None):
         self.account = account

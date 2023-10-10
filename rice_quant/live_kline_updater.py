@@ -10,7 +10,7 @@ import pandas as pd
 import rqdatac as rq
 from util.trading_calendar import TradingCalendar as TC
 from util.utils import send_email, SendEmailInfo
-from c_updater.kc_stock_number import get_kc_stock_num
+from choice.kc_stock_number import get_kc_stock_num
 
 
 def gen_ricequant_virtual_kline():

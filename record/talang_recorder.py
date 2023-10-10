@@ -10,7 +10,7 @@ import xlwings as xw
 import rqdatac as rq
 
 from file_location import FileLocation as FL
-from account_record.talang_info import read_account_info
+from record.talang_info import read_account_info
 
 
 class TalangRecorder:

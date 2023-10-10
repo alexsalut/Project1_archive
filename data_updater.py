@@ -6,25 +6,26 @@
 
 import time
 
-from c_updater.c_st_list_updater import ST_List_Updater
-from c_updater.c_kc50_weight_updater import KC50WeightUpdater
-# from c_updater.c_turnover_rate_updater import TurnoverRateUpdater
-from c_updater.kc50_composition import download_check_kc50_composition
+from choice.c_st_list_updater import ST_List_Updater
+from choice.c_kc50_weight_updater import KC50WeightUpdater
+# from choice.c_turnover_rate_updater import TurnoverRateUpdater
+from choice.kc50_composition import download_check_kc50_composition
 
-from tushare_updater.ts_kline_updater import KlineUpdater
-from tushare_updater.ts_raw_daily_bar_updater import RawDailyBarUpdater
+from tushare.ts_kline_updater import KlineUpdater
+from tushare.ts_raw_daily_bar_updater import RawDailyBarUpdater
 
-from account_position.position_check import check_notify_position
+from position.position_check import check_notify_position
 
-from account_record.account_recorder import account_recorder
-from daily_cnn_record.cnn_daily_record import CnnDailyRecord
+from record.account_recorder import account_recorder
+from monitor.cnn_daily_record import CnnDailyRecord
 
-from rice_quant_updater.risk_exposure import gen_expo_df
-from rice_quant_updater.live_kline_updater import gen_ricequant_virtual_kline
+from rice_quant.risk_exposure import gen_expo_df
+from rice_quant.live_kline_updater import gen_ricequant_virtual_kline
 
-from web_data_updater.index_futures import update_daily_futures
+from web_data.index_futures import update_daily_futures
 from util.trading_calendar import TradingCalendar as TC
-from monitor.account_monitor import account_monitor
+from util.utils import SendEmailInfo
+from rolling_check.account_monitor import account_monitor
 
 
 def auto_update():
@@ -48,7 +49,8 @@ def run_daily_update():
         gen_quick_virtual_kline(current_minute)
 
     elif current_minute in [1452, 1500]:
-        check_notify_position()
+        receivers = SendEmailInfo.department['research'] + SendEmailInfo.department['tech']
+        check_notify_position(receivers)
 
     elif current_minute == 1520:
         CnnDailyRecord().update_monitor()

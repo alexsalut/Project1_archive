@@ -69,8 +69,8 @@ class Cnn_Recorder:
                                  dtype=float)
 
         if (monitor_data == 'Refreshing').any() is True:
-            print('Account monitor data is refreshing, wait for 10 seconds to retry for access')
+            print('Account rolling_check data is refreshing, wait for 10 seconds to retry for access')
             self.get_monitor_data()
         else:
-            print('Get account monitor data successfully')
+            print('Get account rolling_check data successfully')
             return monitor_data

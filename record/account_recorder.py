@@ -2,10 +2,10 @@ import time
 import xlwings as xw
 import os
 from file_location import FileLocation as FL
-from account_record.cnn_recorder import Cnn_Recorder
-from account_record.talang_recorder import TalangRecorder
-from account_record.panlan1_recorder import Panlan1Recorder
-from account_record.remote_recorder import update_account_remote
+from record.cnn_recorder import Cnn_Recorder
+from record.talang_recorder import TalangRecorder
+from record.panlan1_recorder import Panlan1Recorder
+from record.remote_recorder import update_account_remote
 from util.utils import send_email, SendEmailInfo
 from util.trading_calendar import TradingCalendar as TC
 

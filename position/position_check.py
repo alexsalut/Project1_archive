@@ -3,19 +3,19 @@
 # @Time    : 2023/9/22 16:58
 # @Author  : Suying
 # @Site    : 
-# @File    : account_position.py
+# @File    : position.py
 
 from util.utils import send_email, SendEmailInfo
-from account_position.get_account_position import AccountPosition as ap
-from account_position.account_location import get_account_location
+from position.get_account_position import AccountPosition as ap
+from position.account_location import get_account_location
 
 
-def check_notify_position(date=None):
+def check_notify_position(receivers, date=None):
     account_list = ['talang1', 'panlan1', 'tinglian2']
-    accunt_pos_dict = check_all_account_pos(account_list)
+    account_pos_dict = check_all_account_pos(account_list)
     subject = rf'[Position Check]PositionCheck {date}'
-    content = gen_check_email_content(accunt_pos_dict)
-    send_email(subject, content, SendEmailInfo.department['research'][0])  # + SendEmailInfo.department['tech'])
+    content = gen_check_email_content(account_pos_dict)
+    send_email(subject, content, receivers)
 
 
 def check_all_account_pos(account_list, date=None):
@@ -86,4 +86,4 @@ def check_account_pos(actual_pos_df, target_pos_df):
 
 
 if __name__ == '__main__':
-    check_notify_position()
+    check_notify_position(receivers=SendEmailInfo.department['research']+SendEmailInfo.department['tech'])
