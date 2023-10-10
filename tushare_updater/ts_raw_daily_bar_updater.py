@@ -6,12 +6,13 @@
 
 import os
 import time
-import pandas as pd
-import tushare as ts
 import rqdatac
 
-from util.utils import c_get_trade_dates, send_email, SendEmailInfo
+import pandas as pd
+import tushare as ts
+
 from file_location import FileLocation as FL
+from util.utils import c_get_trade_dates, send_email, SendEmailInfo
 
 
 class RawDailyBarUpdater:

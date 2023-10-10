@@ -4,10 +4,12 @@
 # @Author  : Suying
 # @Site    : 
 # @File    : panlan1_info.py
+
 import time
+
 import pandas as pd
+
 from file_location import FileLocation as FL
-from util.trading_calendar import TradingCalendar as TC
 from dbfread import DBF
 
 
