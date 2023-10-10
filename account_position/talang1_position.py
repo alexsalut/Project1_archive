@@ -12,9 +12,9 @@ class Talang1Position:
     def __init__(self, date=None):
         formatted_date1 = time.strftime('%Y%m%d') if date is None else pd.to_datetime(date).strftime("%Y%m%d")
         formatted_date2 = time.strftime('%Y-%m-%d') if date is None else pd.to_datetime(date).strftime("%Y-%m-%d")
-        account_dir = FL().account_info_dir_dict['talang1']
+        account_dir = FL.account_info_dir_dict['talang1']
         self.talang1_actual_pos_path = rf'{account_dir}/StockPosition_{formatted_date2}.csv'
-        self.talang1_target_pos_path = rf'{account_dir}/tag_pos_4089106_{formatted_date1}.csv'
+        self.talang1_target_pos_path = rf'{FL.remote_target_pos_dir}/tag_pos_4089106_{formatted_date1}.csv'
 
     def get_talang1_actual_position(self):
         try:
