@@ -4,66 +4,54 @@
 # @Author  : Suying
 # @Site    : 
 # @File    : account_position.py
-import time
 
-import pandas as pd
 from util.utils import send_email, SendEmailInfo
-from account_position.panlan1_positon import Panlan1Position as pp
-from account_position.tinglian2_position import Tinglian2Position as tl2
-from account_position.talang1_position import Talang1Position as tl1
+from account_position.get_account_position import AccountPosition as ap
+from account_position.account_location import get_account_location
+
 
 def check_notify_position(date=None):
-    formatted_date = time.strftime('%Y%m%d') if date is None else pd.to_datetime(date).strftime("%Y%m%d")
-    panlan1_dict = check_account_pos(
-        actual_pos_df=pp(formatted_date).get_panlan1_actual_position(),
-        target_pos_df=pp(formatted_date).get_panlan1_target_position()
-    )
-    tinglian2_dict = check_account_pos(
-        actual_pos_df=tl2(formatted_date).get_tinglian2_actual_position(),
-        target_pos_df=tl2(formatted_date).get_tinglian2_target_position()
-    )
-    talang1_dict = check_account_pos(
-        actual_pos_df=tl1(formatted_date).get_talang1_actual_position(),
-        target_pos_df=tl1(formatted_date).get_talang1_target_position()
-    )
-    subject = f'[Position Check] PositionCheck-{formatted_date}'
+    account_list = ['talang1', 'panlan1', 'tinglian2']
+    accunt_pos_dict = check_all_account_pos(account_list)
+    subject = rf'[Position Check]PositionCheck {date}'
+    content = gen_check_email_content(accunt_pos_dict)
+    send_email(subject, content, SendEmailInfo.department['research'][0])  # + SendEmailInfo.department['tech'])
+
+
+def check_all_account_pos(account_list, date=None):
+    account_pos_dict = {}
+    for account in account_list:
+        account_pos_dict[account] = check_account_pos(ap(account, date).get_actual_position(),
+                                                      ap(account, date).get_target_position())
+    return account_pos_dict
+
+
+def gen_check_email_content(account_pos_dict):
+    account_loc_dict = get_account_location()
     content = f"""
     <table width="800" border="0" cellspacing="0" cellpadding="4">
     <tr>
     <td bgcolor="#CECFAD" height="30" style="font-size:21px"><b>踏浪1号|盼澜1号|听涟2号 持仓核对结果</b></td>
     </tr>
     <td bgcolor="#EFEBDE" height="100" style="font-size:13px">
-    <p>踏浪1号实际持仓文件路径：</p>
-    &nbsp&nbsp{tl1(formatted_date).talang1_actual_pos_path}
-    <p>踏浪1号目标持仓文件路径：</p>
-    &nbsp&nbsp{tl1(formatted_date).talang1_target_pos_path}
-    <p>踏浪1号实际持仓市值：</p>
-    &nbsp&nbsp<font color=red>{talang1_dict['market val total']:.1f}</font>
-    <p><b>踏浪1号持仓核对结果：</b></p>
-    <center>{talang1_dict['pos df']}</center>
-    
-    <p>盼澜1号实际持仓文件路径：</p>
-    &nbsp&nbsp{pp(formatted_date).panlan1_actual_pos_path}
-    <p>盼澜1号目标持仓文件路径：</p>
-    &nbsp&nbsp{pp(formatted_date).panlan1_target_pos_path}
-    <p>盼澜1号实际持仓参考市值：</p>
-    &nbsp&nbsp<font color=red>{panlan1_dict['market val total']:.1f}</font>
-    <p><b>盼澜1号持仓核对结果：</b></p>
-    <center>{panlan1_dict['pos df']}</center>
-
-    <p>听涟2号实际持仓文件路径：</p>
-    &nbsp&nbsp{tl2(formatted_date).tinglian2_actual_pos_path}
-    <p>听涟2号目标持仓文件路径：</p>
-    &nbsp&nbsp{tl2(formatted_date).tinglian2_target_pos_path}
-    <p>听涟2号实际持仓市值：</p>
-    &nbsp&nbsp<font color=red>{tinglian2_dict['market val total']:.1f}</font>
-    <p><b>听涟2号持仓核对结果：</b></p>
-    <center>{tinglian2_dict['pos df']}</center>
     """
-
-    print(content)
-    send_email(subject, content,
-               receiver=SendEmailInfo.department['research'] + SendEmailInfo.department['tech'])
+    account_name_dict = {
+        'panlan1': '盼澜1号',
+        'tinglian2': '听涟2号',
+        'talang1': '踏浪1号',
+    }
+    for account in account_pos_dict.keys():
+        content += f"""
+            <p>{account_name_dict[account]}实际持仓文件路径：</p>
+            &nbsp&nbsp{account_loc_dict[account]['actual']}
+            <p>{account_name_dict[account]}目标持仓文件路径：</p>
+            &nbsp&nbsp{account_loc_dict[account]['target']}
+            <p>{account_name_dict[account]}实际持仓市值：</p>
+            &nbsp&nbsp<font color=red>{account_pos_dict[account]['market val total']:.1f}</font>
+            <p><b>{account_name_dict[account]}持仓核对结果：</b></p>
+            <center>{account_pos_dict[account]['pos df']}</center>
+        """
+    return content
 
 
 def check_account_pos(actual_pos_df, target_pos_df):
@@ -80,10 +68,12 @@ def check_account_pos(actual_pos_df, target_pos_df):
         else:
             return ''
 
-    styled_pos_df = pos_df.reset_index(drop=False).style.applymap(highlight_diff, subset=['实际-目标','偏移比率%'])
-    styled_pos_df = styled_pos_df.format({'实际': '{:.0f}', '目标': '{:.0f}', '实际-目标': '{:.0f}', '偏移比率%': '{:.1f}'})
+    styled_pos_df = pos_df.reset_index(drop=False).style.applymap(highlight_diff, subset=['实际-目标', '偏移比率%'])
+    styled_pos_df = styled_pos_df.format(
+        {'实际': '{:.0f}', '目标': '{:.0f}', '实际-目标': '{:.0f}', '偏移比率%': '{:.1f}'})
     styled_pos_df = styled_pos_df.to_html(classes='table', escape=False)
-    styled_pos_df = styled_pos_df.replace('<table', '<table style="border-collapse: collapse; border: 1px solid black;"')
+    styled_pos_df = styled_pos_df.replace('<table',
+                                          '<table style="border-collapse: collapse; border: 1px solid black;"')
     styled_pos_df = styled_pos_df.replace('<tr', '<tr style="border-bottom: 1px solid black;"')
     styled_pos_df = styled_pos_df.replace('<th', '<th style="border-right: 1px solid black;"')
     styled_pos_df = styled_pos_df.replace('<td', '<td style="border-right: 1px solid black;"')
