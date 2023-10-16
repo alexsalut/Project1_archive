@@ -6,6 +6,8 @@
 # @File    : get_account_position.py
 import time
 import pandas as pd
+from dbfread import DBF
+from simpledbf import Dbf5
 from file_location import FileLocation as FL
 from position.account_location import get_account_location
 class AccountPosition:
@@ -35,7 +37,11 @@ class AccountPosition:
     def get_actual_position(self):
         try:
             encoding = 'gbk' if self.account == 'tinglian2' else None
-
+            # if self.location_dict['actual'].endswith('.dbf'):
+            #     actual_df = pd.DataFrame(iter(DBF(self.location_dict['actual'])))
+            #     print(actual_df)
+            # else:
+            print(pd.DataFrame(iter(DBF(rf"{FL.account_info_dir_dict['panlan1']}/StockPosition.dbf"))))
             actual_df = pd.read_csv(
                 self.location_dict['actual'],
                 encoding=encoding,
@@ -86,4 +92,4 @@ class AccountPosition:
 
 
 if __name__ == '__main__':
-    AccountPosition('talang1').get_target_position()
+    AccountPosition('panlan1','20231010').get_actual_position()
