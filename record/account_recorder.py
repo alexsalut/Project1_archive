@@ -22,7 +22,7 @@ def account_recorder(date=None):
     TalangRecorder(account_path=today_account_path, date=date).record_talang()
     Panlan1Recorder(account_path=today_account_path, date=date).record_panlan1()
     update_account_remote(account_path=today_account_path, remote_account_path=remote_account_path)
-    os.remove(old_account_path)
+    # os.remove(old_account_path)
     send_email(
         subject=f'[CNN 策略观察] {formatted_date} 更新完成',
         content=f"""
@@ -52,6 +52,6 @@ def copy_cnn_account(account_path, save_path):
     app.quit()
     print(f'Copy {account_path} to {save_path} successfully')
 
-if __name__ == '__main__':
-    account_recorder()
+# if __name__ == '__main__':
+#     account_recorder()
 
