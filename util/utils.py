@@ -83,5 +83,6 @@ def retry_remove_excel(file_path):
 class SendEmailInfo:
     department = {
         'research': ['zhou.sy@yz-fund.com.cn', 'wu.yw@yz-fund.com.cn'],
-        'tech': ['liu.ch@yz-fund.com.cn', 'ling.sh@yz-fund.com.cn']
+        'tech': ['liu.ch@yz-fund.com.cn', 'ling.sh@yz-fund.com.cn'],
+        'admin': ['chen.zf@yz-fund.com.cn']
     }

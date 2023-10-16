@@ -9,7 +9,7 @@ import time
 import pandas as pd
 
 from util.utils import send_email, SendEmailInfo
-from tushare.fq_kline import FqKLine
+from t.fq_kline import FqKLine
 from file_location import FileLocation as FL
 
 
