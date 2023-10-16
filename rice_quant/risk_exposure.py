@@ -41,7 +41,7 @@ def gen_expo_df(date):
             <p>文件内容：</p>  
             {expo_text}
             """,
-            receiver=SendEmailInfo.department['research'])
+            receiver=SendEmailInfo.department['research']+SendEmailInfo.department['admin'])
     except Exception as e:
         print(e)
         print(f'Error in gen_expo_df, retry in 5 minutes')
@@ -128,6 +128,6 @@ def rq_get_index_exposure(date, index_ticker):
     index_exposure.name = index_ticker
     return index_exposure
 
-
-if __name__ == '__main__':
-    gen_expo_df(date='20230928')
+#
+# if __name__ == '__main__':
+#     gen_expo_df(date='20231012')
