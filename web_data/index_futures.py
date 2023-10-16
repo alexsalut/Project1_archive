@@ -152,6 +152,4 @@ def decompress(src_loc, decompress_to=None):
 
 
 if __name__ == '__main__':
-    update_daily_futures(
-        cffe_dir=r'\\192.168.1.116\cffe',
-    )
+    update_daily_futures()
