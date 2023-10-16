@@ -47,6 +47,13 @@ class TalangRecorder:
             self.record_account_talang(sheet_name=sheet_name)
 
     def input_talang_account_cell_value(self, sheet_name, account_info_s, index_ret):
+        index_code_dict = {
+            '踏浪2号': '"000905.SH"',
+            '踏浪3号': '"000852.SH"',
+            '踏浪1号': '"000688.SH"'
+        }
+
+
         app = xw.App(visible=False, add_book=False)
         wb = app.books.open(self.account_path)
         time.sleep(10)
@@ -61,11 +68,16 @@ class TalangRecorder:
         sheet.range(f'G{last_row}').formula = f'=G{last_row - 1}*(1+D{last_row})'  # 多头净值
         sheet.range(f'H{last_row}').formula = f'=H{last_row - 1}*(1+E{last_row})'  # 指数净值
         sheet.range(f'I{last_row}').formula = f'=G{last_row}/H{last_row}-1'  # 累计超额
-        sheet.range(f'J{last_row}').formula = f'=I{last_row}-MAX(I2:I{last_row})'  # 超额回撤
+        sheet.range(f'J{last_row}').formula = f'=(1+I{last_row})/(1+MAX($I$2:I{last_row}))-1'  # 超额回撤
         sheet.range(f'K{last_row}').value = account_info_s['股票总市值']  # 总市值
         sheet.range(f'L{last_row}').formula = f'=K{last_row}/B{last_row}'  # 总仓位
         sheet.range(f'M{last_row}').value = account_info_s['成交额']  # 成交额
         sheet.range(f'N{last_row}').formula = f'=M{last_row}/B{last_row - 1}'  # 双边换手率
+        sheet.range(f'P{last_row}').formula = f'=EM_I_DQ_CLOSE({index_code_dict[sheet_name]},A{last_row})' # 指数收盘价
+        sheet.range(f'Q{last_row}').formula = f'=P{last_row}/P{last_row - 1}-1'  # 指数当日收益率
+        sheet.range(f'R{last_row}').formula = f'=E{last_row}-Q{last_row}'  # 检查指数收益率
+
+
         wb.save(self.account_path)
         wb.close()
         app.quit()

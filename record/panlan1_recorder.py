@@ -33,12 +33,12 @@ class Panlan1Recorder:
             wb = xw.books.open(self.account_path)
             sheet = wb.sheets['盼澜1号']
             last_row = sheet.cells(sheet.cells.last_cell.row, 1).end('up').row + 1
-            sheet.range(f'A{last_row}').value = self.date  # date
+            sheet.range(f'A{last_row}').value = pd.to_datetime(self.date).strftime("%Y%m%d")
             sheet.range(f'B{last_row}').formula = f'=H{last_row}+N{last_row}'  # 总资产
             sheet.range(f'C{last_row}').formula = f'=I{last_row}+O{last_row}'
             sheet.range(f'D{last_row}').formula = f'=C{last_row}/(B{last_row - 1})'  # 当日收益率
             sheet.range(f'E{last_row}').formula = f'=(E{last_row - 1}+1)*(1+D{last_row})-1'  # 累计收益率
-            sheet.range(f'G{last_row}').formula = f'=E{last_row}-MAX($E$2:E{last_row})'  # 累计回撤
+            sheet.range(f'G{last_row}').formula = f'=(1+E{last_row})/(1+MAX($E$2:E{last_row}))-1'  # 累计回撤
             sheet.range(f'H{last_row}').value = stock_s['账户资产']
             sheet.range(f'I{last_row}').formula = f'=H{last_row}-H{last_row - 1}-P{last_row}'
             sheet.range(f'J{last_row}').value = stock_s['证券市值']
@@ -57,3 +57,6 @@ class Panlan1Recorder:
             print(f'{self.account_path} 盼澜1号 updating failed. retry in 2 seconds')
             time.sleep(2)
             self.record_panlan1()
+#
+# if __name__ == '__main__':
+#     Panlan1Recorder(rf'/盼澜1号.xlsx','20231010').record_panlan1()
