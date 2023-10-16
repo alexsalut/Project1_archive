@@ -5,12 +5,15 @@
 # @Site    : 
 # @File    : position.py
 
+import time
+import numpy as np
 from util.utils import send_email, SendEmailInfo
 from position.get_account_position import AccountPosition as ap
 from position.account_location import get_account_location
 
 
 def check_notify_position(receivers, date=None):
+    date = date if date is not None else time.strftime('%Y%m%d')
     account_list = ['talang1', 'panlan1', 'tinglian2']
     account_pos_dict = check_all_account_pos(account_list)
     subject = rf'[Position Check]PositionCheck {date}'
@@ -56,19 +59,23 @@ def gen_check_email_content(account_pos_dict):
 
 def check_account_pos(actual_pos_df, target_pos_df):
     pos_df = actual_pos_df.merge(target_pos_df, how='outer', left_index=True, right_index=True)
+    pos_df = pos_df.fillna(0)
     pos_df['实际-目标'] = pos_df['实际'] - pos_df['目标']
     pos_df['偏移比率%'] = (100 * (pos_df['实际'] - pos_df['目标']) / pos_df['目标']).round(1)
     pos_df = pos_df.sort_values(by='市值', ascending=False)[['名称', '实际', '目标', '实际-目标', '偏移比率%', '市值']]
     market_val_total = pos_df['市值'].sum().round(2)
     pos_df['市值'] = pos_df['市值'].astype('int64', errors='ignore')
+    pos_df = pos_df.reset_index(drop=False)
+    pos_df.index = pos_df.index + 1
 
     def highlight_diff(s):
-        if s != 0:
-            return f'background-color: red'
+        if s:
+            return f'background-color: lightblue'
         else:
             return ''
 
-    styled_pos_df = pos_df.reset_index(drop=False).style.applymap(highlight_diff, subset=['实际-目标', '偏移比率%'])
+
+    styled_pos_df = pos_df.style.applymap(highlight_diff, subset=['实际-目标', '偏移比率%'])
     styled_pos_df = styled_pos_df.format(
         {'实际': '{:.0f}', '目标': '{:.0f}', '实际-目标': '{:.0f}', '偏移比率%': '{:.1f}'})
     styled_pos_df = styled_pos_df.to_html(classes='table', escape=False)
