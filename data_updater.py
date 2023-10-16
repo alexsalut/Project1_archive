@@ -6,13 +6,15 @@
 
 import time
 
+import rqdatac as rq
+
 from choice.c_st_list_updater import ST_List_Updater
 from choice.c_kc50_weight_updater import KC50WeightUpdater
 # from choice.c_turnover_rate_updater import TurnoverRateUpdater
 from choice.kc50_composition import download_check_kc50_composition
 
-from tushare.ts_kline_updater import KlineUpdater
-from tushare.ts_raw_daily_bar_updater import RawDailyBarUpdater
+from t.ts_kline_updater import KlineUpdater
+from t.ts_raw_daily_bar_updater import RawDailyBarUpdater
 
 from position.position_check import check_notify_position
 
@@ -20,12 +22,11 @@ from record.account_recorder import account_recorder
 from monitor.cnn_daily_record import CnnDailyRecord
 
 from rice_quant.risk_exposure import gen_expo_df
-from rice_quant.live_kline_updater import gen_ricequant_virtual_kline
+from rice_quant.live_kline_updater import gen_ricequant_virtual_kline, gen_stock_list
 
 from web_data.index_futures import update_daily_futures
 from util.trading_calendar import TradingCalendar as TC
 from util.utils import SendEmailInfo
-from rolling_check.account_monitor import account_monitor
 
 
 def auto_update():
@@ -45,19 +46,22 @@ def run_daily_update():
         ST_List_Updater().st_list_update_and_confirm()
         download_check_kc50_composition()
 
-    elif current_minute in [1429, 1444]:
+    elif current_minute in [1739, 1444]:
         gen_quick_virtual_kline(current_minute)
 
     elif current_minute in [1452, 1500]:
         receivers = SendEmailInfo.department['research'] + SendEmailInfo.department['tech']
         check_notify_position(receivers)
 
-    elif current_minute == 1520:
+    elif current_minute == 1516:
         CnnDailyRecord().update_monitor()
         account_recorder()
 
     elif current_minute == 1630:
         update_after_close()
+
+    elif current_minute == 1745:
+        gen_expo_df(time.strftime('%Y%m%d'))
 
     elif current_minute > 1800:
         print(time.strftime('%X'), f"Today's task has finished, sleep 12 hours.")
@@ -67,10 +71,13 @@ def run_daily_update():
 
 
 def gen_quick_virtual_kline(current_minute):
+    date = time.strftime('%Y%m%d')
+    stock_list = gen_stock_list(date)
+
     while int(time.strftime('%H%M')) == current_minute:
         print(time.strftime('%X'), 'Wait for update!')
-        time.sleep(0.5)
-    gen_ricequant_virtual_kline()
+        time.sleep(0.1)
+    gen_ricequant_virtual_kline(stock_list, date)
 
 
 def update_after_close():
@@ -79,8 +86,9 @@ def update_after_close():
     RawDailyBarUpdater().update_and_confirm_raw_daily_bar()
     KlineUpdater().update_confirm_adjusted_kline()
     update_daily_futures()
-    gen_expo_df(time.strftime('%Y%m%d'))
+
 
 
 if __name__ == '__main__':
     auto_update()
+
