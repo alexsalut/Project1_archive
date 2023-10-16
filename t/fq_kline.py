@@ -96,7 +96,7 @@ class FqKLine:
         fq_price[['open', 'high', 'low', 'close']] = \
             fq_price[['open', 'high', 'low', 'close']].mul(multiplier, axis=0)
 
-        fq_price['ma5'] = fq_price['close'].rolling(5).mean()  # 此步也不可修改
+        fq_price['ma5'] = fq_price['close'].rolling(5).mean()  # 此步不可修改
         return fq_price.dropna()  # 此步至关重要，万万不可修改
 
     def extract_price_of_kc_stocks(self):
