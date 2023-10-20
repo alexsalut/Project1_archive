@@ -27,7 +27,7 @@ def transfer_to_jy_ticker(universe, inverse=False):
         return [x.split('.')[-1].lower() + x.split('.')[0] for x in universe]
 
 
-def send_email(subject, content, receiver):
+def send_email(subject, content, receiver, file_path=None):
     # 配置第三方 SMTP 服务
     host = "smtp.163.com"
     mail_user = "13671217387@163.com"
@@ -38,10 +38,8 @@ def send_email(subject, content, receiver):
     receivers = receiver
 
     # 三个参数：第一个为文本内容，第二个 plain 设置文本格式，第三个 utf-8 设置编码
-    # content_html = markdown.markdown(content)
     message = MIMEText(content, "html", "utf-8")
 
-    # message = MIMEText(content_html, 'html', 'utf-8')
     message['From'] = sender  # 发送者
     message['To'] = ','.join(receivers)  # 接收者
     message['Subject'] = subject  # 邮件主题
@@ -86,3 +84,8 @@ class SendEmailInfo:
         'tech': ['liu.ch@yz-fund.com.cn', 'ling.sh@yz-fund.com.cn'],
         'admin': ['chen.zf@yz-fund.com.cn']
     }
+
+
+
+if __name__ == '__main__':
+    print(SendEmailInfo.department['research']+SendEmailInfo.department['tech'])
