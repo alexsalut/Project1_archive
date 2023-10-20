@@ -3,7 +3,7 @@
 # @Time    : 2023/9/23 17:54
 # @Author  : Suying
 # @Site    : 
-# @File    : talang_info.py
+# @File    : account_info.py
 import time
 import pandas as pd
 from rolling_check.panlan1_info import Panlan1AccountInfo
