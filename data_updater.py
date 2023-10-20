@@ -23,6 +23,7 @@ from monitor.cnn_daily_record import CnnDailyRecord
 
 from rice_quant.risk_exposure import gen_expo_df
 from rice_quant.live_kline_updater import gen_ricequant_virtual_kline, gen_stock_list
+from performance_analysis.analysis import daily_performance_eval
 
 from web_data.index_futures import update_daily_futures
 from util.trading_calendar import TradingCalendar as TC
@@ -46,14 +47,14 @@ def run_daily_update():
         ST_List_Updater().st_list_update_and_confirm()
         download_check_kc50_composition()
 
-    elif current_minute in [1739, 1444]:
+    elif current_minute in [1429, 1444]:
         gen_quick_virtual_kline(current_minute)
 
-    elif current_minute in [1452, 1500]:
+    elif current_minute in [1453, 1501]:
         receivers = SendEmailInfo.department['research'] + SendEmailInfo.department['tech']
         check_notify_position(receivers)
 
-    elif current_minute == 1516:
+    elif current_minute == 1506:
         CnnDailyRecord().update_monitor()
         account_recorder()
 
@@ -86,6 +87,7 @@ def update_after_close():
     RawDailyBarUpdater().update_and_confirm_raw_daily_bar()
     KlineUpdater().update_confirm_adjusted_kline()
     update_daily_futures()
+    daily_performance_eval()
 
 
 
