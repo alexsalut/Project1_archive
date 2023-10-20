@@ -17,16 +17,20 @@ class FileLocation:
 
     }
 
-# 账户代码
+# 客户编号
     stock_account_code_dict = {
         'talang1': 4089106,  # cats
         'talang2': 14748783,  # qmt
         'talang3': 190000612973,  # iQuant
         'panlan1': 4082225,  # cats
+        'talang1_credit': 4089106,  # cats
     }
+
+    #资产账户
 
     option_account_code_dict = {
         'panlan1': 9008023342,  # cats
+        'tinglian2': 310310300343,  # emc
     }
 
 # cnn策略观察文件路径， monitor文件路径
