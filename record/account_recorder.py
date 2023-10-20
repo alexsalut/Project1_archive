@@ -4,7 +4,7 @@ import os
 from file_location import FileLocation as FL
 from record.cnn_recorder import Cnn_Recorder
 from record.talang_recorder import TalangRecorder
-from record.panlan1_recorder import Panlan1Recorder
+from record.panlan1_tinglian2_recorder import PanlanTinglianRecorder
 from record.remote_recorder import update_account_remote
 from util.utils import send_email, SendEmailInfo
 from util.trading_calendar import TradingCalendar as TC
@@ -20,8 +20,10 @@ def account_recorder(date=None):
     copy_cnn_account(account_path=old_account_path, save_path=today_account_path)
     Cnn_Recorder(account_path=today_account_path, monitor_path=monitor_path, date=date).cnn_recorder()
     TalangRecorder(account_path=today_account_path, date=date).record_talang()
-    Panlan1Recorder(account_path=today_account_path, date=date).record_panlan1()
+    PanlanTinglianRecorder(account_path=today_account_path, account='panlan1', date=date).record_account()
+    PanlanTinglianRecorder(account_path=today_account_path, account='tinglian2', date=date).record_account()
     update_account_remote(account_path=today_account_path, remote_account_path=remote_account_path)
+
     # os.remove(old_account_path)
     send_email(
         subject=f'[CNN 策略观察] {formatted_date} 更新完成',
@@ -52,6 +54,6 @@ def copy_cnn_account(account_path, save_path):
     app.quit()
     print(f'Copy {account_path} to {save_path} successfully')
 
-# if __name__ == '__main__':
-#     account_recorder()
+if __name__ == '__main__':
+    account_recorder()
 

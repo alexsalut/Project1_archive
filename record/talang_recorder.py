@@ -5,17 +5,17 @@
 # @Site    : 
 # @File    : talang_recorder.py
 import time
-import os
+
+import pandas as pd
 import xlwings as xw
 import rqdatac as rq
 
-from file_location import FileLocation as FL
-from record.talang_info import read_account_info
+from record.account_info import read_account_info
 
 
 class TalangRecorder:
     def __init__(self, account_path, date=None):
-        self.date = date if date is not None else time.strftime('%Y%m%d')
+        self.date = pd.to_datetime(date).strftime('%Y%m%d') if date is not None else time.strftime('%Y%m%d')
         self.account_path = account_path
 
     def record_talang(self):
@@ -25,13 +25,13 @@ class TalangRecorder:
 
     def record_account_talang(self, sheet_name):
         index_ret = self.get_index_ret(sheet_name=sheet_name)
-        dict = {
+        talang_dict = {
             '踏浪2号': 'talang2',
             '踏浪3号': 'talang3',
             '踏浪1号': 'talang1'
         }
 
-        account = dict[sheet_name]
+        account = talang_dict[sheet_name]
         account_info_s = read_account_info(date=self.date, account=account)
 
         try:
@@ -47,12 +47,11 @@ class TalangRecorder:
             self.record_account_talang(sheet_name=sheet_name)
 
     def input_talang_account_cell_value(self, sheet_name, account_info_s, index_ret):
-        index_code_dict = {
-            '踏浪2号': '"000905.SH"',
-            '踏浪3号': '"000852.SH"',
-            '踏浪1号': '"000688.SH"'
-        }
-
+        # index_code_dict = {
+        #     '踏浪2号': '"000905.SH"',
+        #     '踏浪3号': '"000852.SH"',
+        #     '踏浪1号': '"000688.SH"'
+        # }
 
         app = xw.App(visible=False, add_book=False)
         wb = app.books.open(self.account_path)
@@ -60,7 +59,7 @@ class TalangRecorder:
         sheet = wb.sheets[sheet_name]
         last_row = sheet.cells(sheet.cells.last_cell.row, 1).end('up').row + 1
         sheet.range(f'A{last_row}').value = self.date  # date
-        sheet.range(f'B{last_row}').value = account_info_s['总资产']  # 总资产
+        sheet.range(f'B{last_row}').value = account_info_s['股票权益']  # 总资产
         sheet.range(f'C{last_row}').formula = f'=B{last_row}-B{last_row - 1}-O{last_row}'  # 当日盈亏
         sheet.range(f'D{last_row}').formula = f'=C{last_row}/B{last_row - 1}'  # 当日盈亏率
         sheet.range(f'E{last_row}').formula = index_ret  # 指数收益率
@@ -69,21 +68,18 @@ class TalangRecorder:
         sheet.range(f'H{last_row}').formula = f'=H{last_row - 1}*(1+E{last_row})'  # 指数净值
         sheet.range(f'I{last_row}').formula = f'=G{last_row}/H{last_row}-1'  # 累计超额
         sheet.range(f'J{last_row}').formula = f'=(1+I{last_row})/(1+MAX($I$2:I{last_row}))-1'  # 超额回撤
-        sheet.range(f'K{last_row}').value = account_info_s['股票总市值']  # 总市值
+        sheet.range(f'K{last_row}').value = account_info_s['股票市值']  # 总市值
         sheet.range(f'L{last_row}').formula = f'=K{last_row}/B{last_row}'  # 总仓位
         sheet.range(f'M{last_row}').value = account_info_s['成交额']  # 成交额
         sheet.range(f'N{last_row}').formula = f'=M{last_row}/B{last_row - 1}'  # 双边换手率
-        sheet.range(f'P{last_row}').formula = f'=EM_I_DQ_CLOSE({index_code_dict[sheet_name]},A{last_row})' # 指数收盘价
-        sheet.range(f'Q{last_row}').formula = f'=P{last_row}/P{last_row - 1}-1'  # 指数当日收益率
-        sheet.range(f'R{last_row}').formula = f'=E{last_row}-Q{last_row}'  # 检查指数收益率
-
 
         wb.save(self.account_path)
         wb.close()
         app.quit()
         print(f'{self.account_path} with sheet name {sheet_name} updating finished')
 
-    def get_index_ret(self, sheet_name):
+    @staticmethod
+    def get_index_ret(sheet_name):
         assert sheet_name in ['踏浪2号', '踏浪3号', '踏浪1号']
         index_code_dict = {
             '踏浪2号': '000905.SH',
@@ -99,3 +95,7 @@ class TalangRecorder:
         return index_ret
 
 
+if __name__ == '__main__':
+    m = TalangRecorder(account_path=rf'C:\Users\Yz02\Desktop\strategy_update\cnn策略观察_20231019.xlsx',
+                       date='20231019')
+    m.record_account_talang(sheet_name='踏浪1号')
