@@ -26,6 +26,12 @@ def get_account_location(date=None):
         'actual': rf"{FL.account_info_dir_dict['tinglian2']}/310310300343_RZRQ_POSITION.{formatted_date1}.csv",
         'target': rf'{FL.remote_target_pos_dir}/tag_pos_310310300343_RZRQ_{formatted_date1}.csv',
     }
+
+    account_position_dict['talang1_credit'] = {
+        'actual': rf"{FL.account_info_dir_dict['talang1']}/CreditPosition_{formatted_date2}.csv",
+        'target': rf'{FL.remote_target_pos_dir}/tag_pos_4089106_RZRQ_{formatted_date1}.csv',
+    }
+
     return account_position_dict
 
 

@@ -41,7 +41,10 @@ class AccountPosition:
             #     actual_df = pd.DataFrame(iter(DBF(self.location_dict['actual'])))
             #     print(actual_df)
             # else:
-            print(pd.DataFrame(iter(DBF(rf"{FL.account_info_dir_dict['panlan1']}/StockPosition.dbf"))))
+            # table = DBF(rf"{FL.account_info_dir_dict['panlan1']}/StockPosition.dbf")
+            # print(table)
+
+            # print(pd.DataFrame(iter(DBF(rf"{FL.account_info_dir_dict['panlan1']}/StockPosition.dbf"))))
             actual_df = pd.read_csv(
                 self.location_dict['actual'],
                 encoding=encoding,
@@ -67,7 +70,7 @@ class AccountPosition:
             self.get_actual_position()
 
     def get_position_col(self):
-        # 账户目前有三种，分别是盼澜1号，踏浪1号，听涟2号
+        # 普通账户目前有三种，分别是盼澜1号，踏浪1号，听涟2号
         account_col_dict = {}
         account_col_dict['panlan1'] = {
             'actual code': '代码',
@@ -79,6 +82,7 @@ class AccountPosition:
             'target': '目标',
         }
         account_col_dict['talang1'] = account_col_dict['panlan1']
+        account_col_dict['talang1_credit'] = account_col_dict['panlan1']
         account_col_dict['tinglian2'] = {
             'actual code': '证券代码',
             'actual name': '证券名称',
@@ -92,4 +96,4 @@ class AccountPosition:
 
 
 if __name__ == '__main__':
-    AccountPosition('panlan1','20231010').get_actual_position()
+    AccountPosition('talang1_credit','20231019').get_target_position()

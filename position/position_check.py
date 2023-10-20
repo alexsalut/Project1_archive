@@ -14,9 +14,9 @@ from position.account_location import get_account_location
 
 def check_notify_position(receivers, date=None):
     date = date if date is not None else time.strftime('%Y%m%d')
-    account_list = ['talang1', 'panlan1', 'tinglian2']
+    account_list = ['talang1_credit','talang1', 'panlan1', 'tinglian2']
     account_pos_dict = check_all_account_pos(account_list)
-    subject = rf'[Position Check]PositionCheck {date}'
+    subject = rf'[Position Check] {date}'
     content = gen_check_email_content(account_pos_dict)
     send_email(subject, content, receivers)
 
@@ -39,9 +39,10 @@ def gen_check_email_content(account_pos_dict):
     <td bgcolor="#EFEBDE" height="100" style="font-size:13px">
     """
     account_name_dict = {
-        'panlan1': '盼澜1号',
-        'tinglian2': '听涟2号',
-        'talang1': '踏浪1号',
+        'talang1_credit': '踏浪1号信用账户',
+        'panlan1': '盼澜1号普通账户',
+        'tinglian2': '听涟2号信用账户',
+        'talang1': '踏浪1号普通账户',
     }
     for account in account_pos_dict.keys():
         content += f"""
