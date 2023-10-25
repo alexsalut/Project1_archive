@@ -25,12 +25,8 @@ class CnnDailyRecord:
             remote_monitor_dir=self.remote_monitor_dir,
             monitor_dir=self.monitor_dir,
             remote_summary_dir=self.remote_summary_dir)
-        send_email(
-            subject=f'Monitor next trading day updated, archive today monitor in 100 seconds',
-            content='',
-            receiver=SendEmailInfo.department['research'][0]
-        )
-        time.sleep(100)
+
+
         archive_monitor_today(
             monitor_path=self.monitor_path,
             remote_monitor_dir=self.remote_monitor_dir,
