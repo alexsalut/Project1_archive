@@ -3,7 +3,7 @@
 # @Author  : Youwei Wu
 # @File    : risk_exposure.py
 # @Software: PyCharm
-
+import os.path
 import time
 import rqdatac
 
@@ -18,30 +18,54 @@ exposure_save_dir = FL().exposure_dir
 
 
 def gen_expo_df(date):
+    formatted_date = pd.to_datetime(date).strftime('%Y%m%d')
     products = ['talang2', 'talang3', 'panlan']
     data = []
+
     try:
         for p in products:
             print(p)
-            data.append(get_port_excess_exposure(date=date, product=p))
+            data.append(get_port_excess_exposure(date=formatted_date, product=p))
         expo_df = pd.concat(data, axis=1, keys=products)
-        expo_df.to_csv(fr'{exposure_save_dir}\expo_{date}.csv', encoding='gbk')
-        expo_text = expo_df.to_html(float_format='%.2f')
+        expo_df.to_csv(fr'{exposure_save_dir}\expo_{formatted_date}.csv', encoding='gbk')
+
+
+        barra_df = expo_df.iloc[:11]
+        barra_text = barra_df.to_html(float_format='%.2f')
+
+        industry_df = expo_df.iloc[11:]
+        styled_industry_df = industry_df.style.bar(
+            subset=[('talang2', 'relative'), ('talang3', 'relative'), ('panlan', 'relative')],
+            color='#d65f5f',
+        )
+        styled_industry_df = styled_industry_df.format('{:.2f}')
+        industry_text = styled_industry_df.to_html(float_format='%.2f')
         print(fr'[Strategy Exposure] File generated for {date}')
         send_email(
             subject=f'[Strategy Exposure] File generated for {date}',
             content=fr"""
-            <table width="800" border="0" cellspacing="0" cellpadding="4">
-            <tr>
-            <td bgcolor="#CECFAD" height="30" style="font-size:21px"><b>Exposure file generated</b></td>
-            </tr>
-            <td bgcolor="#EFEBDE" height="100" style="font-size:13px">
-            <p>文件路径:</p>
-            {exposure_save_dir}\expo_{date}.csv
-            <p>文件内容：</p>  
-            {expo_text}
-            """,
-            receiver=SendEmailInfo.department['research']+SendEmailInfo.department['admin'])
+                <table width="800" border="0" cellspacing="0" cellpadding="4">
+                <tr>
+                <td bgcolor="#CECFAD" height="30" style="font-size:21px"><b>Exposure file generated</b></td>
+                </tr>
+                <td bgcolor="#EFEBDE" height="100" style="font-size:13px">
+                <p>文件路径:</p>
+                {exposure_save_dir}\expo_{date}.csv
+                <p>Barra及仓位因子暴露：</p>
+                <html><head><style>table.bordered-table
+                {{ border-collapse: seperate; width: 100%; }} table.bordered-table, th, td {{ border: 1px solid black; }} th, td {{ padding: 8px;}}</style>
+                </head><body>{barra_text}</body></html>
+
+                 <p>行业因子暴露：</p>
+                <html><head><style>table.bordered-table
+                {{ border-collapse: seperate; width: 100%; }} table.bordered-table, th, td {{ border: 1px solid black; }} th, td {{ padding: 8px;}}
+                th, td {{ width: 50%; }}
+                </style></head><body>{industry_text}</body></html>
+                """,
+
+            receiver=SendEmailInfo.department['research']+SendEmailInfo.department['admin'],)
+
+
     except Exception as e:
         print(e)
         print(f'Error in gen_expo_df, retry in 5 minutes')
@@ -128,6 +152,7 @@ def rq_get_index_exposure(date, index_ticker):
     index_exposure.name = index_ticker
     return index_exposure
 
-#
-# if __name__ == '__main__':
-#     gen_expo_df(date='20231012')
+
+
+if __name__ == '__main__':
+    gen_expo_df('20231023')
