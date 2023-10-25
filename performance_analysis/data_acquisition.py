@@ -35,7 +35,6 @@ def get_kc_stock_info(date=None):
     date = date if date is not None else time.strftime('%Y-%m-%d')
     rq.init()
     kc_stock_info_df = rq.all_instruments(type='CS', market='cn', date=date).query('board_type=="KSH"')
-    kc_stock_info_df.to_pickle(rf'./data/kc_stock_info_{date}.pkl')
     return kc_stock_info_df
 
 if __name__ == '__main__':

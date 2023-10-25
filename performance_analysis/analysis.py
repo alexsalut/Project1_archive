@@ -7,8 +7,10 @@
 import time
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+import seaborn as sns
 from performance_analysis.data_acquisition import get_talang1_ret, get_kc_stock_pct, get_kc50_stock_list, get_kc50_ret
-from util.send_email import Mail
+from util.send_email import Mail, R
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.io import write_html
@@ -28,7 +30,7 @@ def notify_with_email(df_html, talang1_ret, kc50_ret, date=None):
 
     subject = f'[Strategy Review] {date}'
     content = f"""
-    <table width="800" border="0" cellspacing="0" cellpadding="4">
+    <table width="1200" border="0" cellspacing="0" cellpadding="4">
     <tr>
     <td bgcolor="#CECFAD" height="30" style="font-size:21px"><b>踏浪1号在科创板表现一览</b></td>
     </tr>
@@ -40,12 +42,13 @@ def notify_with_email(df_html, talang1_ret, kc50_ret, date=None):
     <p>踏浪1号当日收益率：{format_number(talang1_ret)}</p>
     <p>科创50当日收益率：{format_number(kc50_ret)}</p>
     """
-    Mail(receivers=['zhou.sy@yz-fund.com.cn', 'wu.yw@yz-fund.com.cn']).send(
+    Mail().send(
         subject,
         content,
         attachs=[],
         pics=[f'./data/科创板股票涨跌幅分布_{date}.png', f'./data/科创50成分股涨跌幅分布_{date}.png'],
-        pic_disp=['科创板涨跌幅分布', '科创50涨跌幅分布']
+        pic_disp=['科创板涨跌幅分布', '科创50涨跌幅分布'],
+        receivers=[R.staff['zhou'], R.staff['wu']]
     )
 
 
@@ -85,20 +88,21 @@ def format_number(value):
 
 
 def plot_hist_performance(kc_stock_ret, port_ret, kc50_ret, stock_name, date):
-    import matplotlib.pyplot as plt
-    import seaborn as sns
-    fig = plt.figure(figsize=(12, 8))
-    sns.distplot(kc_stock_ret, bins=100, kde=False)
-    plt.title(f'{stock_name}涨跌幅分布')
-    plt.xlabel('涨跌幅')
-    plt.ylabel('计数')
+    bin_num = 100 if len(kc_stock_ret) > 1000 else 50
+    plt.figure(figsize=(16, 12))
+    sns.distplot(kc_stock_ret, bins=bin_num, kde=False)
+    plt.title(f'{stock_name}涨跌幅分布', fontsize=25)
+    plt.xlabel('涨跌幅', fontsize=15)
+    plt.xticks(fontsize=15)
+    plt.ylabel('计数', fontsize=15)
+    plt.yticks(fontsize=15)
     plt.axvline(x=port_ret, color='r', linestyle='--', label='踏浪1号')
     plt.axvline(x=kc50_ret, color='b', linestyle='--', label='科创50指数')
     plt.axvline(x=np.mean(kc_stock_ret), color='g', linestyle='--', label=f'{stock_name}均值')
     plt.axvline(x=np.median(kc_stock_ret), color='orange', linestyle='--', label=f'{stock_name}中位数')
     plt.rcParams['font.sans-serif'] = ['SimHei']
     plt.rcParams['axes.unicode_minus'] = False
-    plt.legend()
+    plt.legend(fontsize=20)
     plt.savefig(f'./data/{stock_name}涨跌幅分布_{date}.png')
 
 
@@ -162,4 +166,4 @@ def get_data(date=None):
 
 
 if __name__ == '__main__':
-    daily_performance_eval(date='20231019')
+    daily_performance_eval()
