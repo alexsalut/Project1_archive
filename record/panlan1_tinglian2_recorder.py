@@ -10,27 +10,34 @@ import xlwings as xw
 import pandas as pd
 from file_location import FileLocation
 from record.account_info import read_account_info
-
-
+from account_check.get_clearing_info import SettleInfo
+from util.trading_calendar import TradingCalendar as TC
 class PanlanTinglianRecorder:
-    def __init__(self, account_path, account, date=None):
+    def __init__(self, account_path, account, date=None, adjust=None):
         self.formatted_date1 = pd.to_datetime(date).strftime("%Y%m%d") if date is not None else time.strftime('%Y%m%d')
         self.formatted_date2 = pd.to_datetime(date).strftime("%Y-%m-%d") if date is not None else time.strftime(
             '%Y-%m-%d')
         self.account_path = account_path
         self.account = account
+        self.adjust = adjust
         f = FileLocation()
         self.panlan_dir = f.account_info_dir_dict['panlan1']
-        self.tinglian_dir = f.account_info_dir_dict['tinglian2']
+        self.tinglian_dir = f.account_info_dir_dict['tinglian2 emc']
 
     def record_account(self):
         try:
-            account_info = read_account_info(self.formatted_date2, self.account)
             app = xw.App(visible=False, add_book=False)
             wb = xw.books.open(self.account_path)
             sheet = wb.sheets['盼澜1号'] if self.account == 'panlan1' else wb.sheets['听涟2号']
-            last_row = sheet.cells(sheet.cells.last_cell.row, 1).end('up').row + 1
-            sheet.range(f'A{last_row}').value = pd.to_datetime(self.formatted_date2).strftime("%Y%m%d")
+
+            if self.adjust is None:
+                account_info = read_account_info(self.formatted_date2, self.account)
+                last_row = sheet.cells(sheet.cells.last_cell.row, 1).end('up').row + 1
+            else:
+                account_info = SettleInfo(date=self.formatted_date1).get_settle_info(account=self.account)
+                last_row = sheet.cells(sheet.cells.last_cell.row, 1).end('up').row
+
+            sheet.range(f'A{last_row}').value = self.formatted_date1
             sheet.range(f'B{last_row}').formula = f'=H{last_row}+N{last_row}'  # 总资产
             sheet.range(f'C{last_row}').formula = f'=I{last_row}+O{last_row}'
             sheet.range(f'D{last_row}').formula = f'=C{last_row}/(B{last_row - 1})'  # 当日收益率

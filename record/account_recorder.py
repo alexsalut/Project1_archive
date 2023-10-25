@@ -9,7 +9,7 @@ from record.remote_recorder import update_account_remote
 from util.utils import send_email, SendEmailInfo
 from util.trading_calendar import TradingCalendar as TC
 
-def account_recorder(date=None):
+def account_recorder(date=None, adjust=None):
     formatted_date = date if date is not None else time.strftime('%Y%m%d')
     last_trading_day = TC().get_n_trading_day(formatted_date,-1).strftime('%Y%m%d')
     old_account_path = rf'{FL().monitor_dir}\cnn策略观察_{last_trading_day}.xlsx'
@@ -17,16 +17,23 @@ def account_recorder(date=None):
     monitor_path = rf'{FL().monitor_dir}\monitor_{formatted_date}.xlsx'
     remote_account_path = rf'{FL().remote_monitor_dir}\cnn策略观察.xlsx'
 
-    copy_cnn_account(account_path=old_account_path, save_path=today_account_path)
-    Cnn_Recorder(account_path=today_account_path, monitor_path=monitor_path, date=date).cnn_recorder()
-    TalangRecorder(account_path=today_account_path, date=date).record_talang()
-    PanlanTinglianRecorder(account_path=today_account_path, account='panlan1', date=date).record_account()
-    PanlanTinglianRecorder(account_path=today_account_path, account='tinglian2', date=date).record_account()
-    update_account_remote(account_path=today_account_path, remote_account_path=remote_account_path)
+    if adjust is None:
+        account_path = today_account_path
+        date_to_update = formatted_date
+        copy_cnn_account(account_path=old_account_path, save_path=today_account_path)
+        Cnn_Recorder(account_path=account_path, monitor_path=monitor_path, date=date).cnn_recorder()
+    else:
+        account_path = old_account_path
+        date_to_update = last_trading_day
+
+    TalangRecorder(account_path=account_path, date=date_to_update, adjust=adjust).record_talang()
+    PanlanTinglianRecorder(account_path=account_path, account='panlan1', date=date_to_update, adjust=adjust).record_account()
+    PanlanTinglianRecorder(account_path=account_path, account='tinglian2', date=date_to_update, adjust=adjust).record_account()
+    update_account_remote(account_path=account_path, remote_account_path=remote_account_path)
 
     # os.remove(old_account_path)
     send_email(
-        subject=f'[CNN 策略观察] {formatted_date} 更新完成',
+        subject=f'[CNN 策略观察] {date_to_update} 更新完成',
         content=f"""
         <table width="800" border="0" cellspacing="0" cellpadding="4">
         <tr>
@@ -55,5 +62,5 @@ def copy_cnn_account(account_path, save_path):
     print(f'Copy {account_path} to {save_path} successfully')
 
 if __name__ == '__main__':
-    account_recorder()
+    account_recorder(adjust=True)
 

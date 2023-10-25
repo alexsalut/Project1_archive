@@ -26,30 +26,40 @@ def read_account_info(date, account):
 
 
 def get_tinglian2_info(date=None):
-    tinglian_dir = FL().account_info_dir_dict['tinglian2']
+    emc_tinglian_dir = FL().account_info_dir_dict['tinglian2 emc']
+    cats_tinglian_dir = FL().account_info_dir_dict['tinglian2 cats']
     formatted_date1 = pd.to_datetime(date).strftime("%Y%m%d") if date is not None else time.strftime('%Y%m%d')
+    formatted_date2 = pd.to_datetime(date).strftime("%Y-%m-%d") if date is not None else time.strftime('%Y-%m-%d')
+
     stock_df = pd.read_csv(
-        rf'{tinglian_dir}/310310300343_RZRQ_FUND.{formatted_date1}.csv',
+        rf'{emc_tinglian_dir}/310310300343_RZRQ_FUND.{formatted_date1}.csv',
         index_col=False,
         encoding='gbk'
     )
-    option_df = pd.read_csv(
-        rf'{tinglian_dir}/310317000090_OPTION_FUND.{formatted_date1}.csv',
+    option_df1 = pd.read_csv(
+        rf'{emc_tinglian_dir}/310317000090_OPTION_FUND.{formatted_date1}.csv',
         index_col=False,
         encoding='gbk'
-    )
+    )  # emc 账户
+    option_df2 = pd.read_csv(
+        rf'{cats_tinglian_dir}/OptionFund_{formatted_date2}.csv',
+        index_col=False,
+    ).set_index('账户') # cats 账户
     transaction_df = pd.read_csv(
-        rf'{tinglian_dir}/310310300343_RZRQ_MATCH.{formatted_date1}.csv',
+        rf'{emc_tinglian_dir}/310310300343_RZRQ_MATCH.{formatted_date1}.csv',
         index_col=False,
         encoding='gbk'
-    ).query(f'资金账号=={FL().option_account_code_dict["tinglian2"]}')
+    ).query(f'资金账号=={FL().stock_account_code_dict["tinglian2"]}')
     info_dict = {
-        '期权权益': option_df.loc[0,'资产总值'],
-        '股票权益': stock_df.loc[0,'资产总值']-stock_df.loc[0,'总负债'],
-        '股票市值': stock_df.loc[0,'总市值'],
+        'cats期权权益': option_df2.loc[FL().option_account_code_dict['tinglian2'], '客户总权益'],
+        'emc期权权益': option_df1.loc[0, '资产总值'],
+        '期权权益': option_df1.loc[0, '资产总值'] + option_df2.loc[FL().option_account_code_dict['tinglian2'], '客户总权益'],
+        '股票权益': stock_df.loc[0, '资产总值'] - stock_df.loc[0, '总负债'],
+        '股票市值': stock_df.loc[0, '总市值'],
         '成交额': transaction_df['成交数量'].mul(transaction_df['成交价格']).sum()
     }
     return info_dict
+
 
 def get_talang23_info(account, date=None):
     date = pd.to_datetime(date).strftime('%Y%m%d') if date is not None else pd.to_datetime(time.strftime('%Y%m%d'))
@@ -64,16 +74,18 @@ def get_talang23_info(account, date=None):
     }
     return account_info_dict
 
+
 def get_talang1_info(date=None):
     account_dir = FL().account_info_dir_dict['talang1']
     account_code = FL().stock_account_code_dict['talang1']
 
     formatted_date = pd.to_datetime(date).strftime("%Y-%m-%d") if date is not None else time.strftime('%Y-%m-%d')
     stock_ordinary = \
-    pd.read_csv(rf'{account_dir}/StockFund_{formatted_date}.csv', index_col=False).set_index('账户').loc[
-        account_code]
+        pd.read_csv(rf'{account_dir}/StockFund_{formatted_date}.csv', index_col=False).set_index('账户').loc[
+            account_code]
     stock_credit = \
-    pd.read_csv(rf'{account_dir}/CreditFund_{formatted_date}.csv', index_col=False).set_index('账户').loc[account_code]
+        pd.read_csv(rf'{account_dir}/CreditFund_{formatted_date}.csv', index_col=False).set_index('账户').loc[
+            account_code]
     trades = pd.read_csv(rf'{account_dir}/TransactionsStatisticsDaily_{formatted_date}.csv',
                          index_col=False).set_index(
         '账户').loc[account_code]
@@ -87,6 +99,8 @@ def get_talang1_info(date=None):
         '成交额': trades['成交额'].sum()
     }
     return account_info_dict
+
+
 def get_panlan1_info(date=None):
     panlan_dir = FL().account_info_dir_dict['panlan1']
     formatted_date2 = pd.to_datetime(date).strftime("%Y-%m-%d") if date is not None else time.strftime(
@@ -111,17 +125,4 @@ def get_panlan1_info(date=None):
 
 
 if __name__ == '__main__':
-    read_account_info(date='2023-10-19', account='tinglian2')
-
-
-
-
-
-
-
-
-
-
-
-
-
+    read_account_info(date='2023-10-24', account='tinglian2')
