@@ -16,26 +16,18 @@ import os
 
 
 class Mail(object):
-    def __init__(self, receivers):
+    def __init__(self):
         self.mail_host = "smtp.163.com"  # SMTP服务器
         self.port = 25  # 端口号
         self.mail_sender = "13671217387@163.com"
         self.mail_license = 'YDIDWQVKNSKJHGYT'
-        self.mail_receivers = receivers  # 收件人邮箱，可以为多个收件人
 
-    def send(self, subject, body_content, attachs, pics, pic_disp):
-        '''
-        :param subject: str,邮件主题
-        :param body_content: str,邮件正文
-        :param attachs: list,附件地址
-        :param pics: list,图片地址
-        :return: 发送邮件
-        '''
+    def send(self, subject, body_content, attachs=[], pics=[], pic_disp=[], receivers=[]):
         mm = MIMEMultipart('related')  # 构建MIMEMultipart对象代表邮件本身，可以往里面添加文本、图片、附件等
         # 设置发送者,注意严格遵守格式,里面邮箱为发件人邮箱
         mm["From"] = self.mail_sender
         # 设置接受者,注意严格遵守格式,里面邮箱为接受者邮箱
-        mm["To"] = ','.join(self.mail_receivers)
+        mm["To"] = ','.join(receivers)
         # 1. 设置邮件头部内容
         mm["Subject"] = Header(subject, 'utf-8')
         # 2. 添加正文内容
@@ -79,10 +71,11 @@ class Mail(object):
         # 登录邮箱，传递参数1：邮箱地址，参数2：邮箱授权码
         stp.login(self.mail_sender, self.mail_license)
         # 发送邮件，传递参数1：发件人邮箱地址，参数2：收件人邮箱地址，参数3：把邮件内容格式改为str
-        stp.sendmail(self.mail_sender, self.mail_receivers, mm.as_string())
+        stp.sendmail(self.mail_sender, receivers, mm.as_string())
         print("邮件发送成功")
         # 关闭SMTP对象
         stp.quit()
+
 
 class R:
     staff = {
@@ -92,15 +85,20 @@ class R:
         'ling': 'ling.sh@yz-fund.com.cn',
         'chen': 'chen.zf@yz-fund.com.cn'
     }
+    department = {
+        'research': ['zhou.sy@yz-fund.com.cn', 'wu.yw@yz-fund.com.cn'],
+        'tech': ['liu.ch@yz-fund.com.cn', 'ling.sh@yz-fund.com.cn',],
+
+    }
 
 
 if __name__ == '__main__':
-    subject = """Python邮件测试"""
-    body_content = """
+    sub = """Python邮件测试"""
+    content = """
     <h1>这是一封测试邮件 - 1级标题</h1>
     <h2>这是一封测试邮件 - 2级标题</h2>
     <h3>这是一封测试邮件 - 3级标题</h3>
     """
-    attachs = [fr'./data/科创50涨跌幅分布_2023-10-18.html']
-    pics = [fr'./data/科创50涨跌幅分布_2023-10-18.html']
-    Mail().send(subject, body_content, attachs, pics)
+    attach = [fr'./data/科创50涨跌幅分布_2023-10-18.html']
+    pic = [fr'./data/科创50涨跌幅分布_2023-10-18.html']
+    Mail().send(sub, content, attach, pic, ['科创50涨跌幅分布'], [R.staff['zhou'], R.staff['wu']])

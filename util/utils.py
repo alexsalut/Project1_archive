@@ -4,6 +4,7 @@ import os
 
 import pandas as pd
 
+import multiprocessing as mul
 from email.mime.text import MIMEText
 from EmQuantAPI import c
 
@@ -27,7 +28,7 @@ def transfer_to_jy_ticker(universe, inverse=False):
         return [x.split('.')[-1].lower() + x.split('.')[0] for x in universe]
 
 
-def send_email(subject, content, receiver, file_path=None):
+def send_email(subject, content, receiver):
     # 配置第三方 SMTP 服务
     host = "smtp.163.com"
     mail_user = "13671217387@163.com"
@@ -78,6 +79,14 @@ def retry_remove_excel(file_path):
         retry_remove_excel(file_path)
 
 
+def multi_task(func, tasks, n_cpu=30):
+    pool = mul.Pool(processes=n_cpu)
+    pool_result = [pool.apply_async(func, args=(task,))
+                   for task in tasks]
+    data = [r.get() for r in pool_result]
+    return data
+
+
 class SendEmailInfo:
     department = {
         'research': ['zhou.sy@yz-fund.com.cn', 'wu.yw@yz-fund.com.cn'],
@@ -86,6 +95,7 @@ class SendEmailInfo:
     }
 
 
-
 if __name__ == '__main__':
-    print(SendEmailInfo.department['research']+SendEmailInfo.department['tech'])
+    c.start()
+    data = c.css("688120.SZ", "TRADESTATUS", "TradeDate=2023-10-23").Data
+    c.stop()
