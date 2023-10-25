@@ -28,6 +28,8 @@ from performance_analysis.analysis import daily_performance_eval
 from web_data.index_futures import update_daily_futures
 from util.trading_calendar import TradingCalendar as TC
 from util.utils import SendEmailInfo
+from tick_check.tick_check import CheckTick
+from account_check.account_cross_check import AccountCheck
 
 
 def auto_update():
@@ -43,7 +45,11 @@ def auto_update():
 
 def run_daily_update():
     current_minute = int(time.strftime('%H%M'))
-    if current_minute == 1400:
+    if current_minute == 843:
+        AccountCheck().notify_check_with_email()
+        account_recorder(adjust=True)
+
+    elif current_minute == 1400:
         ST_List_Updater().st_list_update_and_confirm()
         download_check_kc50_composition()
 
@@ -54,8 +60,10 @@ def run_daily_update():
         receivers = SendEmailInfo.department['research'] + SendEmailInfo.department['tech']
         check_notify_position(receivers)
 
-    elif current_minute == 1506:
+    elif current_minute == 1501:
         CnnDailyRecord().update_monitor()
+
+    elif current_minute == 1530:
         account_recorder()
 
     elif current_minute == 1630:
@@ -88,9 +96,9 @@ def update_after_close():
     KlineUpdater().update_confirm_adjusted_kline()
     update_daily_futures()
     daily_performance_eval()
+    CheckTick().multi_task_daily_check()
 
 
 
 if __name__ == '__main__':
     auto_update()
-

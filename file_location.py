@@ -8,29 +8,33 @@
 class FileLocation:
 
     # 账户信息文件路径
+
+
     account_info_dir_dict = {
         'talang2': r'\\192.168.1.116\trade\broker\qmt_gf\account\Stock',
         'talang3': r'\\192.168.1.116\trade\broker\iQuant\account\Stock',
         'talang1': r'\\192.168.1.116\trade\broker\cats\account',
         'panlan1': r'\\192.168.1.116\trade\broker\cats\account',
-        'tinglian2': r'\\192.168.1.116\trade\broker\emc\account'
+        'tinglian2 emc': r'\\192.168.1.116\trade\broker\emc\account',
+        'tinglian2 cats': r'\\192.168.1.116\trade\broker\cats\account',
 
     }
 
-# 客户编号
+    # 客户编号
     stock_account_code_dict = {
         'talang1': 4089106,  # cats
         'talang2': 14748783,  # qmt
         'talang3': 190000612973,  # iQuant
         'panlan1': 4082225,  # cats
         'talang1_credit': 4089106,  # cats
+        'tinglian2': 310310300343,  # emc
     }
 
     #资产账户
 
     option_account_code_dict = {
         'panlan1': 9008023342,  # cats
-        'tinglian2': 310310300343,  # emc
+        'tinglian2': 4088701,  # cats
     }
 
 # cnn策略观察文件路径， monitor文件路径
