@@ -3,12 +3,12 @@
 # @Time    : 2023/9/28 9:46
 # @Author  : Suying
 # @Site    : 
-# @File    : settle_data.py
+# @File    : txt_data.py
 import pandas as pd
 import re
 
 
-class SettleData:
+class TxtData:
     def __init__(self, file_path):
         self.file_path = file_path
         self.series_sep_list = [':', '：']
@@ -100,4 +100,4 @@ if __name__ == '__main__':
         r'C:\Users\Yz02\Desktop\Data\Save\账户对账单\310310300343衍舟听涟2号20231016(两融).TXT',
         r'C:\Users\Yz02\Desktop\Data\Save\账户对账单\190000612973普通对账单_20231016.txt'
     ]
-    option_clearing_file_data = SettleData(f_path[2]).gen_clearing_file_data(encoding='utf-8')
+    option_clearing_file_data = TxtData(f_path[2]).gen_clearing_file_data(encoding='utf-8')

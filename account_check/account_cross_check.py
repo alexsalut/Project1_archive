@@ -7,14 +7,17 @@
 
 import time
 import pandas as pd
-from get_clearing_info import SettleInfo
-from util.utils import send_email, SendEmailInfo
+from account_check.get_clearing_info import SettleInfo
+from util.send_email import Mail, R
 from record.account_info import read_account_info
+from util.trading_calendar import TradingCalendar as TC
+
 
 class AccountCheck:
     def __init__(self, account=None, date=None):
         self.account = [account] if account is not None else ['panlan1', 'tinglian2', 'talang1', 'talang2', 'talang3']
-        self.date = date if date is not None else time.strftime('%Y%m%d')
+        last_trading_day = TC().get_n_trading_day(time.strftime('%Y%m%d'), -1).strftime('%Y%m%d')
+        self.date = date if date is not None else last_trading_day
         self.dir = r'C:\Users\Yz02\Desktop\Data\Save\账户对账单'
         self.account_path = rf'C:\Users\Yz02\Desktop\strategy_update\cnn策略观察_{self.date}.xlsx'
         self.account_name_dict = {
@@ -26,9 +29,23 @@ class AccountCheck:
         }
 
     def notify_check_with_email(self):
-        check_info_dict = self.check_all_account_info()
-        email_info = self.gen_email_content(check_info_dict=check_info_dict)
-        send_email(email_info['subject'], email_info['content'], SendEmailInfo.department['research'][0])
+        try:
+            check_info_dict = self.check_all_account_info()
+            email_info = self.gen_email_content(check_info_dict=check_info_dict)
+            Mail().send(
+                subject=email_info['subject'],
+                body_content=email_info['content'],
+                receivers=R.department['research']+[R.department['tech'][0]],
+            )
+        except Exception as e:
+            print(e)
+            Mail().send(
+                subject=f'[各账户资产核对]{self.date}失败，两分钟后重试',
+                body_content=f'各账户资产核对失败，请检查',
+                receivers=R.department['research'][0],
+            )
+            time.sleep(120)
+            self.notify_check_with_email()
 
     def check_all_account_info(self):
         check_info_dict = {}
@@ -45,7 +62,7 @@ class AccountCheck:
         info_df['差值'] = info_df['结算单'] - info_df['记录单']
 
         def highlight_diff(s):
-            if s > 1000:
+            if abs(s) > 1000:
                 return f'background-color: lightblue'
             else:
                 return ''
@@ -98,4 +115,4 @@ class AccountCheck:
 
 
 if __name__ == '__main__':
-    AccountCheck(date='20231019').notify_check_with_email()
+    AccountCheck().notify_check_with_email()

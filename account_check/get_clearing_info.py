@@ -7,7 +7,7 @@
 import time
 import pandas as pd
 import numpy as np
-from account_check.settle_data import SettleData
+from account_check.txt_data import TxtData
 
 
 class SettleInfo:
@@ -32,13 +32,15 @@ class SettleInfo:
         }
         self.option_account_path = {
             'panlan1': rf'{self.dir}/衍舟盼澜1号-个股期权对账单-9008023342_{self.date}.xlsx',
-            'tinglian2': rf'{self.dir}/310300016431衍舟听涟2号{self.date}(期权).TXT'
+            'tinglian2 emc': rf'{self.dir}/310300016431衍舟听涟2号{self.date}(期权).TXT',
+            'tinglian2 cats': rf'{self.dir}/衍舟听涟2号-个股期权对账单-9008023665_{self.date}.xlsx',
         }
 
         #信用账户
         self.credit_account_path = {
             'talang1': rf'{self.dir}/衍舟踏浪1号-融资融券账户对账单-8009302636_{self.date}.xlsx',
             'tinglian2': rf'{self.dir}/310310300343衍舟听涟2号{self.date}(两融).TXT',
+
         }
 
     def get_settle_info(self, account):
@@ -60,14 +62,19 @@ class SettleInfo:
         return info_dict
 
     def generate_tinglian2_settle_info(self):
-        option_dict = SettleData(self.option_account_path['tinglian2']).gen_settle_data()
-        stock_dict = SettleData(self.credit_account_path['tinglian2']).gen_settle_data()
+        option_dict = TxtData(self.option_account_path['tinglian2 emc']).gen_settle_data()
+        stock_dict = TxtData(self.credit_account_path['tinglian2']).gen_settle_data()
+        option_df = pd.read_excel(self.option_account_path['tinglian2 cats'], sheet_name='Sheet1')
+        cats_loc = np.where(option_df.values == '总权益：')
+
         info_dict = {
-            '期权权益': float(option_dict['series']['市值权益']),
-            '股票权益': float(stock_dict['资产信息'].loc[0, '总资产']),
+            'emc期权权益': float(option_dict['series']['市值权益']),
+            'cats期权权益': float(option_df.iloc[cats_loc[0][0], cats_loc[1][0] + 1]),
+            '股票权益': float(stock_dict['资产信息'].loc[0, '总资产'])-float(stock_dict['资产信息'].loc[0, '总负债']),
             '股票市值': float(stock_dict['资产信息'].loc[0, '当前市值']),
             '成交额': stock_dict['资产交割']['成交金额'].astype(float).sum(),
         }
+        info_dict.update({'期权权益': info_dict['emc期权权益'] + info_dict['cats期权权益']})
         return info_dict
 
     def generate_panlan1_settle_info(self):
@@ -103,6 +110,7 @@ class SettleInfo:
             return new_df.iloc[1:]
 
         pos_df = sep_df('持仓信息', '多金融产品持仓：', stock_df)
+
         transaction_df = sep_df('资金流水明细', '债券回购预计利息', stock_df)
 
         info_dict.update({
@@ -113,7 +121,7 @@ class SettleInfo:
         return info_dict
 
     def generate_talang3_settle_info(self):
-        f = SettleData(self.stock_account_path['talang3'])
+        f = TxtData(self.stock_account_path['talang3'])
         settle_dict = f.gen_settle_data(encoding='utf-8')
         info_dict = {
             '股票权益': float(settle_dict['series']['总资产']),
@@ -159,5 +167,5 @@ class SettleInfo:
 
 
 if __name__ == '__main__':
-    test_dict = SettleInfo(date='20231019').get_settle_info(account='talang1')
-    print(test_dict)
+
+    SettleInfo(date='20231023').get_settle_info(account='tinglian2')
