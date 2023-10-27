@@ -40,6 +40,7 @@ class SettleInfo:
         self.credit_account_path = {
             'talang1': rf'{self.dir}/衍舟踏浪1号-融资融券账户对账单-8009302636_{self.date}.xlsx',
             'tinglian2': rf'{self.dir}/310310300343衍舟听涟2号{self.date}(两融).TXT',
+            'panlan1': rf'{self.dir}/衍舟盼澜1号-融资融券账户对账单（含约定融资＆约定融券）-8009296565_{self.date}.xlsx',
 
         }
 
@@ -78,20 +79,40 @@ class SettleInfo:
         return info_dict
 
     def generate_panlan1_settle_info(self):
-        option_df = pd.read_excel(self.option_account_path['panlan1'], sheet_name='Sheet1')
+
         stock_df = pd.read_excel(self.stock_account_path['panlan1'], sheet_name='Sheet1',
                                  index_col=0)
-        transaction_df = stock_df.copy()
-        transaction_df.columns = transaction_df.loc['发生日期']
-        transaction_df = transaction_df[transaction_df.index == self.date]
+        putong_equity = stock_df.iloc[np.where(stock_df.values == '总资产')[0][0] + 1, np.where(stock_df.values == '总资产')[1][0]]
+        putong_market_value = stock_df.iloc[
+                np.where(stock_df.values == '资产市值')[0][0] + 1, np.where(stock_df.values == '资产市值')[1][0]]
+
+        option_df = pd.read_excel(self.option_account_path['panlan1'], sheet_name='Sheet1')
+        option_equity = option_df.iloc[
+                np.where(option_df.values == '总权益：')[0][0], np.where(option_df.values == '总权益：')[1][0] + 1]
+
+
+        putong_transaction_df = stock_df.copy()
+        putong_transaction_df.columns = putong_transaction_df.loc['发生日期']
+        putong_transaction_df = putong_transaction_df[putong_transaction_df.index == self.date]
+        putong_transaction_vol = putong_transaction_df['成交股数'].mul(putong_transaction_df['成交价格']).sum()
+
+        credit_df = pd.read_excel(self.credit_account_path['panlan1'], sheet_name='Sheet1',index_col=False)
+        credit_equity = credit_df.iloc[np.where(credit_df.values == '净资产')[0][0]+1, np.where(credit_df.values == '净资产')[1][0]]
+        credit_market_value = credit_df.iloc[np.where(credit_df.values == '证券市值')[0][0]+1, np.where(credit_df.values == '证券市值')[1][0]]
+
+        credit_transaction_loc1 = np.where(credit_df.values == '业务类型')
+        credit_transaction_df = credit_df.iloc[credit_transaction_loc1[0][0]:]
+        credit_transaction_df = credit_transaction_df.rename(columns=credit_transaction_df.iloc[0]).iloc[1:]
+        credit_transaction_df = credit_transaction_df.query('业务类型 == "证券买卖"')
+        credit_transation_vol = credit_transaction_df['发生数量'].astype(float).mul(credit_transaction_df['成交价格'].astype(float)).sum()
+
+
+
         info_dict = {
-            '期权权益': option_df.iloc[
-                np.where(option_df.values == '总权益：')[0][0], np.where(option_df.values == '总权益：')[1][0] + 1],
-            '股票权益': stock_df.iloc[
-                np.where(stock_df.values == '总资产')[0][0] + 1, np.where(stock_df.values == '总资产')[1][0]],
-            '股票市值': stock_df.iloc[
-                np.where(stock_df.values == '资产市值')[0][0] + 1, np.where(stock_df.values == '资产市值')[1][0]],
-            '成交额': transaction_df['成交股数'].mul(transaction_df['成交价格']).sum(),
+            '期权权益': option_equity,
+            '股票权益': putong_equity + credit_equity,
+            '股票市值': putong_market_value + credit_market_value,
+            '成交额': putong_transaction_vol + credit_transation_vol,
         }
         return info_dict
 
@@ -168,4 +189,4 @@ class SettleInfo:
 
 if __name__ == '__main__':
 
-    SettleInfo(date='20231023').get_settle_info(account='tinglian2')
+    SettleInfo(date='20231026').get_settle_info(account='panlan1')

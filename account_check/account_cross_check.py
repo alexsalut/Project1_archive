@@ -115,4 +115,4 @@ class AccountCheck:
 
 
 if __name__ == '__main__':
-    AccountCheck().notify_check_with_email()
+    AccountCheck(date='20231026').notify_check_with_email()
