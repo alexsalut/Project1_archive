@@ -130,4 +130,4 @@ def get_panlan1_info(date=None):
 
 
 if __name__ == '__main__':
-    read_account_info(date='2023-10-25', account='panlan1')
+    read_account_info(date='2023-10-27', account='talang1')

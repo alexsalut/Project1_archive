@@ -17,10 +17,10 @@ import os
 
 class Mail(object):
     def __init__(self):
-        self.mail_host = "smtp.163.com"  # SMTP服务器
+        self.mail_host = "smtp.feishu.cn"  # SMTP服务器
         self.port = 25  # 端口号
-        self.mail_sender = "13671217387@163.com"
-        self.mail_license = 'YDIDWQVKNSKJHGYT'
+        self.mail_sender = 'zhou.sy@yz-fund.com.cn'
+        self.mail_license = 'FIhxF55WGb84C17V'
 
     def send(self, subject, body_content, attachs=[], pics=[], pic_disp=[], receivers=[]):
         mm = MIMEMultipart('related')  # 构建MIMEMultipart对象代表邮件本身，可以往里面添加文本、图片、附件等
@@ -99,6 +99,6 @@ if __name__ == '__main__':
     <h2>这是一封测试邮件 - 2级标题</h2>
     <h3>这是一封测试邮件 - 3级标题</h3>
     """
-    attach = [fr'./data/科创50涨跌幅分布_2023-10-18.html']
-    pic = [fr'./data/科创50涨跌幅分布_2023-10-18.html']
-    Mail().send(sub, content, attach, pic, ['科创50涨跌幅分布'], [R.staff['zhou'], R.staff['wu']])
+    attach = []
+    pic = []
+    Mail().send(sub, content, attach, pic, ['科创50涨跌幅分布'], [R.staff['zhou']])

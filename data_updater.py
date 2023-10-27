@@ -71,7 +71,7 @@ def run_daily_update():
         receivers = SendEmailInfo.department['research'] + SendEmailInfo.department['tech']
         check_notify_position(receivers)
 
-    elif current_minute == 1501:
+    elif current_minute == 1510:
         CnnDailyRecord().update_monitor()
 
     elif current_minute == 1516:
