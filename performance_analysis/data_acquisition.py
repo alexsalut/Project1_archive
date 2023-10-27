@@ -19,10 +19,18 @@ def get_kc50_stock_list(date=None):
     rq.init()
     return rq.index_components('000688.XSHG', date=date)
 
-def get_kc50_ret(date=None):
+def retry_get_kc50_ret(date=None):
     date = pd.to_datetime(date).strftime('%Y-%m-%d') if date is not None else time.strftime('%Y-%m-%d')
     rq.init()
-    return rq.get_price_change_rate('000688.XSHG', start_date=date, end_date=date).iloc[0, 0]
+    def get_kc50_ret(date1):
+        df = rq.get_price_change_rate('000688.XSHG', start_date=date1, end_date=date1)
+        if df is None:
+            print(f'No data for kc50 ret {date1}, retry in 10 seconds')
+            time.sleep(10)
+            get_kc50_ret(date1)
+        else:
+            return df.iloc[0, 0]
+    return get_kc50_ret(date)
 
 def get_kc_stock_pct(date=None):
     date = pd.to_datetime(date).strftime('%Y-%m-%d') if date is not None else time.strftime('%Y-%m-%d')
@@ -39,4 +47,4 @@ def get_kc_stock_info(date=None):
 
 if __name__ == '__main__':
 
-    print(get_kc50_ret())
+    print(retry_get_kc50_ret())

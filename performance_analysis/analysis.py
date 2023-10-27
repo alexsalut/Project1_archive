@@ -9,7 +9,7 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from performance_analysis.data_acquisition import get_talang1_ret, get_kc_stock_pct, get_kc50_stock_list, get_kc50_ret
+from performance_analysis.data_acquisition import get_talang1_ret, get_kc_stock_pct, get_kc50_stock_list, retry_get_kc50_ret
 from util.send_email import Mail, R
 import plotly.express as px
 import plotly.graph_objects as go
@@ -17,12 +17,12 @@ from plotly.io import write_html
 
 
 def daily_performance_eval(date=None):
-    date = time.strftime('%Y-%m-%d') if date is None else pd.to_datetime(date).strftime("%Y-%m-%d")
-    data_dict = get_data(date)
-    plot_hist_performance(data_dict['kc stock'], data_dict['talang1'], data_dict['kc50'], '科创板股票', date)
-    plot_hist_performance(data_dict['kc50 stock'], data_dict['talang1'], data_dict['kc50'], '科创50成分股', date)
+    formatted_date = time.strftime('%Y-%m-%d') if date is None else pd.to_datetime(date).strftime("%Y-%m-%d")
+    data_dict = get_data(formatted_date)
+    plot_hist_performance(data_dict['kc stock'], data_dict['talang1'], data_dict['kc50'], '科创板股票', formatted_date)
+    plot_hist_performance(data_dict['kc50 stock'], data_dict['talang1'], data_dict['kc50'], '科创50成分股', formatted_date)
     statistics_df = gen_statistics_table(data_dict['kc stock'], data_dict['kc50 stock'])
-    notify_with_email(statistics_df, data_dict['talang1'], data_dict['kc50'], date)
+    notify_with_email(statistics_df, data_dict['talang1'], data_dict['kc50'], formatted_date)
 
 
 def notify_with_email(df_html, talang1_ret, kc50_ret, date=None):
@@ -155,7 +155,7 @@ def get_data(date=None):
     date = time.strftime('%Y-%m-%d') if date is None else pd.to_datetime(date).strftime("%Y-%m-%d")
     ret_dict = {
         'talang1': get_talang1_ret(date),
-        'kc50': get_kc50_ret(date),
+        'kc50': retry_get_kc50_ret(date),
         'kc stock': get_kc_stock_pct(date),
     }
     kc50_stock_list = get_kc50_stock_list(date)
