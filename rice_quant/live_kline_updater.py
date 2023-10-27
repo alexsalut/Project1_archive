@@ -107,5 +107,5 @@ def notify_with_email(error_dict):
 
 
 if __name__ == '__main__':
-    gen_ricequant_virtual_kline(gen_stock_list('20231016'),'20231016')
+    gen_ricequant_virtual_kline(gen_stock_list('20231027'),'20231027')
 

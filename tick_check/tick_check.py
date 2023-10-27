@@ -142,4 +142,4 @@ class CheckTick:
 
 
 if __name__ == '__main__':
-    CheckTick().multi_task_daily_check()
+    CheckTick('20231026').multi_task_daily_check()
