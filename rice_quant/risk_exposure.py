@@ -11,6 +11,8 @@ import pandas as pd
 
 from util.utils import send_email, SendEmailInfo
 from file_location import FileLocation as FL
+from rice_quant.exposure_plot import plot_all_barra_expo
+from util.send_email import Mail, R
 
 rqdatac.init()
 
@@ -29,6 +31,7 @@ def gen_expo_df(date):
         expo_df = pd.concat(data, axis=1, keys=products)
         expo_df.to_csv(fr'{exposure_save_dir}\expo_{formatted_date}.csv', encoding='gbk')
 
+        file_list = plot_all_barra_expo(date=formatted_date)
 
         barra_df = expo_df.iloc[:11]
         barra_text = barra_df.to_html(float_format='%.2f')
@@ -41,9 +44,9 @@ def gen_expo_df(date):
         styled_industry_df = styled_industry_df.format('{:.2f}')
         industry_text = styled_industry_df.to_html(float_format='%.2f')
         print(fr'[Strategy Exposure] File generated for {date}')
-        send_email(
+        Mail().send(
             subject=f'[Strategy Exposure] File generated for {date}',
-            content=fr"""
+            body_content=fr"""
                 <table width="800" border="0" cellspacing="0" cellpadding="4">
                 <tr>
                 <td bgcolor="#CECFAD" height="30" style="font-size:21px"><b>Exposure file generated</b></td>
@@ -62,10 +65,10 @@ def gen_expo_df(date):
                 th, td {{ width: 50%; }}
                 </style></head><body>{industry_text}</body></html>
                 """,
+            attachs=file_list,
+            receivers=R.department['research'] + R.department['admin'],
 
-            receiver=SendEmailInfo.department['research']+SendEmailInfo.department['admin'],)
-
-
+        )
     except Exception as e:
         print(e)
         print(f'Error in gen_expo_df, retry in 5 minutes')
@@ -153,6 +156,5 @@ def rq_get_index_exposure(date, index_ticker):
     return index_exposure
 
 
-
 if __name__ == '__main__':
-    gen_expo_df('20231023')
+    gen_expo_df('20231026')

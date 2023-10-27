@@ -14,10 +14,15 @@ import rqdatac as rq
 import plotly.subplots as sp
 import plotly.graph_objects as go
 
-def plot_all_barra_expo(barra_df):
-    for factor in barra_df.columns:
-        plot_single_barra_expo(barra_df[factor])
 
+def plot_all_barra_expo(date=None):
+    formatted_date = pd.to_datetime(date).strftime('%Y%m%d')
+    barra_df = gen_relative_barra_expo_history(start='20230908', end=formatted_date)
+    file_list = []
+    for factor in barra_df.columns:
+        file_path = plot_single_barra_expo(barra_df[factor])
+        file_list.append(file_path)
+    return file_list
 
 def plot_single_barra_expo(barra_s):
     factor = barra_s.name
@@ -32,15 +37,7 @@ def plot_single_barra_expo(barra_s):
     plt.suptitle(factor, fontsize=20)
 
     plt.savefig(fr'.\Data\{factor}.png')
-    # fig = sp.make_subplots(rows=3, cols=1, subplot_titles=expo_df.columns, shared_xaxes=False)
-    # for i, account in enumerate(expo_df.columns):
-    #     fig.add_trace(go.Bar(x=expo_df.index, y=expo_df[account].values, name=account), row=i+1, col=1)
-    # fig.update_layout(title_text=factor)
-    # fig.show()
-
-
-
-
+    return fr'.\Data\{factor}.png'
 
 
 def gen_relative_barra_expo_history(start, end):
@@ -66,6 +63,4 @@ def gen_relative_barra_expo(date):
 
 
 if __name__ == '__main__':
-    expo_df = gen_relative_barra_expo_history(start='20230908', end='20231024')
-    factor = 'momentum'
-    plot_all_barra_expo(expo_df)
+    plot_all_barra_expo(date='20231026')
