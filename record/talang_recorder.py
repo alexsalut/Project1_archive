@@ -14,6 +14,7 @@ from record.account_info import read_account_info
 from account_check.get_clearing_info import SettleInfo
 from util.trading_calendar import TradingCalendar as TC
 
+
 class TalangRecorder:
     def __init__(self, account_path, date=None, adjust=None):
         self.date = pd.to_datetime(date).strftime('%Y%m%d') if date is not None else time.strftime('%Y%m%d')
@@ -26,7 +27,7 @@ class TalangRecorder:
         self.record_account_talang(sheet_name='踏浪3号')
 
     def record_account_talang(self, sheet_name):
-        index_ret = self.get_index_ret(sheet_name=sheet_name)
+        index_ret = self.retry_get_index_ret(sheet_name=sheet_name)
         talang_dict = {
             '踏浪2号': 'talang2',
             '踏浪3号': 'talang3',
@@ -38,7 +39,6 @@ class TalangRecorder:
             account_info_dict = read_account_info(date=self.date, account=account)
         else:
             account_info_dict = SettleInfo(date=self.date).get_settle_info(account=account)
-
 
         try:
             self.input_talang_account_cell_value(
@@ -88,8 +88,7 @@ class TalangRecorder:
         app.quit()
         print(f'{self.account_path} with sheet name {sheet_name} updating finished')
 
-
-    def get_index_ret(self, sheet_name):
+    def retry_get_index_ret(self, sheet_name):
         assert sheet_name in ['踏浪2号', '踏浪3号', '踏浪1号']
         index_code_dict = {
             '踏浪2号': '000905.SH',
@@ -100,14 +99,23 @@ class TalangRecorder:
         index_code = index_code_dict[sheet_name]
         rq.init()
         order_book_ids = rq.id_convert(index_code)
-        index_ret = rq.get_price_change_rate(order_book_ids, start_date='20231010', end_date=self.date).iloc[-1, 0]
 
-        print(f'{index_code} return is {index_ret:.2%} for date {self.date}')
+        def get_index_ret(order_book_ids, date):
+            index_ret = rq.get_price_change_rate(order_book_ids, start_date=date, end_date=date)
+            if index_ret is None:
+                current_time = time.strftime('%X')
+                print(f'no data for index {index_code} for {date} yet,{current_time}, retry in 10 seconds')
+                time.sleep(10)
+                get_index_ret(order_book_ids, date)
+            else:
+                print(f'{index_code} return is {index_ret.iloc[-1, 0]:.2%} for date {date}')
+                return index_ret.iloc[-1, 0]
+
+        index_ret = get_index_ret(order_book_ids, self.date)
         return index_ret
 
 
 if __name__ == '__main__':
-    m = TalangRecorder(account_path=rf'C:\Users\Yz02\Desktop\strategy_update\cnn策略观察_20231023.xlsx',
-                       date='20231024',
-                       adjust=True)
-    m.record_account_talang(sheet_name='踏浪1号')
+    rq.init()
+    order_book_ids = rq.id_convert('000905.SH')
+    index_ret = rq.get_price_change_rate(order_book_ids, start_date='20231026', end_date='20231026')

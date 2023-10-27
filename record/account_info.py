@@ -105,17 +105,22 @@ def get_panlan1_info(date=None):
     panlan_dir = FL().account_info_dir_dict['panlan1']
     formatted_date2 = pd.to_datetime(date).strftime("%Y-%m-%d") if date is not None else time.strftime(
         '%Y-%m-%d')
-    stock_s = \
+    stock_putong_s = \
         pd.read_csv(rf'{panlan_dir}/StockFund_{formatted_date2}.csv', index_col=False).set_index(
             '账户').loc[
             FL().stock_account_code_dict['panlan1']]
-    info_dict = {
-        '期权权益':
-            pd.read_csv(rf'{panlan_dir}/OptionFund_{formatted_date2}.csv', index_col=False).set_index(
+
+    stock_credit_s = pd.read_csv(rf'{panlan_dir}/CreditFund_{formatted_date2}.csv', index_col=False).set_index(
+        '账户').loc[FL().stock_account_code_dict['panlan1']]
+
+    option_s = pd.read_csv(rf'{panlan_dir}/OptionFund_{formatted_date2}.csv', index_col=False).set_index(
                 '账户').loc[
-                FL().option_account_code_dict['panlan1']]['客户总权益'],
-        '股票权益': stock_s['账户资产'],
-        '股票市值': stock_s['证券市值'],
+                FL().option_account_code_dict['panlan1']]
+
+    info_dict = {
+        '期权权益': option_s['客户总权益'],
+        '股票权益': stock_putong_s['账户资产'] + stock_credit_s['净资产'],
+        '股票市值': stock_putong_s['证券市值'] + stock_credit_s['证券市值'],
         '成交额':
             pd.read_csv(rf'{panlan_dir}/TransactionsStatisticsDaily_{formatted_date2}.csv',
                         index_col=False).set_index(
@@ -125,4 +130,4 @@ def get_panlan1_info(date=None):
 
 
 if __name__ == '__main__':
-    read_account_info(date='2023-10-24', account='tinglian2')
+    read_account_info(date='2023-10-25', account='panlan1')
