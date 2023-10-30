@@ -13,14 +13,15 @@ from util.utils import send_email, SendEmailInfo
 from choice.kc_stock_number import get_kc_stock_num
 
 
-def gen_ricequant_virtual_kline(stock_list,date):
+def gen_ricequant_virtual_kline(stock_list,date=None):
+    formatted_date = time.strftime('%Y%m%d') if date is None else date
     current_min = int(time.strftime('%H%M'))
     print(f'Generating RiceQuant virtual kline at {datetime.datetime.now()}')
     rq_vk_df = gen_rq_vk_df(stock_list)
     rq_vk_df.to_pickle(
-        rf"\\192.168.1.116\kline\virtual\virtual_kline2_{date}_{current_min}.pkl")  # for youwei
+        rf"\\192.168.1.116\kline\virtual\virtual_kline2_{formatted_date}_{current_min}.pkl")  # for youwei
     rq_vk_df.to_csv(
-        rf"\\192.168.1.116\kline\virtual_csv\virtual_kline2_{date}_{current_min}.csv")  # for shaohu
+        rf"\\192.168.1.116\kline\virtual_csv\virtual_kline2_{formatted_date}_{current_min}.csv")  # for shaohu
     print(f'Downloaded at {datetime.datetime.now()}')
 
     check_rq_virtual_kline(rq_vk_df)
@@ -40,9 +41,10 @@ def gen_rq_vk_df(stock_list):
     vk_df.index.name = 'symbol'
     return vk_df
 
-def gen_stock_list(date):
+def gen_stock_list(date=None):
+    formatted_date = time.strftime('%Y%m%d') if date is None else date
     rq.init()
-    cn_stks_df = rq.all_instruments(type='CS', market='cn', date=date)
+    cn_stks_df = rq.all_instruments(type='CS', market='cn', date=formatted_date)
     kc_stks_df = cn_stks_df.query("board_type == 'KSH'").set_index('order_book_id')
 
     # 获取快照数据
@@ -107,5 +109,5 @@ def notify_with_email(error_dict):
 
 
 if __name__ == '__main__':
-    gen_ricequant_virtual_kline(gen_stock_list('20231027'),'20231027')
+    gen_ricequant_virtual_kline(gen_stock_list())
 

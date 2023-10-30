@@ -51,9 +51,9 @@ def get_tinglian2_info(date=None):
         encoding='gbk'
     ).query(f'资金账号=={FL().stock_account_code_dict["tinglian2"]}')
     info_dict = {
-        'cats期权权益': option_df2.loc[FL().option_account_code_dict['tinglian2'], '客户总权益'],
+        'cats期权权益': option_df2.loc[FL().option_account_code_dict['tinglian2'], '资金总额'],
         'emc期权权益': option_df1.loc[0, '资产总值'],
-        '期权权益': option_df1.loc[0, '资产总值'] + option_df2.loc[FL().option_account_code_dict['tinglian2'], '客户总权益'],
+        '期权权益': option_df1.loc[0, '资产总值'] + option_df2.loc[FL().option_account_code_dict['tinglian2'], '资金总额'],
         '股票权益': stock_df.loc[0, '资产总值'] - stock_df.loc[0, '总负债'],
         '股票市值': stock_df.loc[0, '总市值'],
         '成交额': transaction_df['成交数量'].mul(transaction_df['成交价格']).sum()
@@ -130,4 +130,4 @@ def get_panlan1_info(date=None):
 
 
 if __name__ == '__main__':
-    read_account_info(date='2023-10-27', account='talang1')
+    read_account_info(date='20231030',account='tinglian2')

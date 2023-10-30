@@ -46,9 +46,9 @@ def notify_with_email(df_html, talang1_ret, kc50_ret, date=None):
         subject,
         content,
         attachs=[],
-        pics=[f'./data/科创板股票涨跌幅分布_{date}.png', f'./data/科创50成分股涨跌幅分布_{date}.png'],
+        pics=[f'performance_analysis/data/科创板股票涨跌幅分布_{date}.png', f'performance_analysis/data/科创50成分股涨跌幅分布_{date}.png'],
         pic_disp=['科创板涨跌幅分布', '科创50涨跌幅分布'],
-        receivers=[R.staff['zhou'], R.staff['wu']]
+        receivers=[R.staff['zhou']]
     )
 
 
@@ -103,7 +103,7 @@ def plot_hist_performance(kc_stock_ret, port_ret, kc50_ret, stock_name, date):
     plt.rcParams['font.sans-serif'] = ['SimHei']
     plt.rcParams['axes.unicode_minus'] = False
     plt.legend(fontsize=20)
-    plt.savefig(f'./data/{stock_name}涨跌幅分布_{date}.png')
+    plt.savefig(f'performance_analysis/data/{stock_name}涨跌幅分布_{date}.png')
 
 
 def hist_performance(kc_stock_ret, port_ret, kc50_ret, stock_name, date):

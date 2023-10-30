@@ -6,7 +6,6 @@
 
 import time
 
-import rqdatac as rq
 
 from choice.c_st_list_updater import ST_List_Updater
 from choice.c_kc50_weight_updater import KC50WeightUpdater
@@ -71,7 +70,7 @@ def run_daily_update():
         receivers = SendEmailInfo.department['research'] + SendEmailInfo.department['tech']
         check_notify_position(receivers)
 
-    elif current_minute == 1510:
+    elif current_minute == 1502:
         CnnDailyRecord().update_monitor()
 
     elif current_minute == 1516:
@@ -112,3 +111,4 @@ def update_after_close():
 
 if __name__ == '__main__':
     auto_update()
+

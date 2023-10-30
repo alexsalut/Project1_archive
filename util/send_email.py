@@ -9,6 +9,8 @@ import smtplib
 from email.mime.text import MIMEText
 # 负责构造图片
 from email.mime.image import MIMEImage
+import imaplib
+import email
 # 负责将多个对象集合起来
 from email.mime.multipart import MIMEMultipart
 from email.header import Header
@@ -17,15 +19,17 @@ import os
 
 class Mail(object):
     def __init__(self):
-        self.mail_host = "smtp.feishu.cn"  # SMTP服务器
-        self.port = 25  # 端口号
-        self.mail_sender = 'zhou.sy@yz-fund.com.cn'
+        self.send_mail_host = "smtp.feishu.cn"  # SMTP服务器
+        self.receive_mail_host = "imap.feishu.cn"
+        self.send_port = 25  # 端口号465
+        self.receive_port = 993
+        self.account = 'zhou.sy@yz-fund.com.cn'
         self.mail_license = 'FIhxF55WGb84C17V'
 
     def send(self, subject, body_content, attachs=[], pics=[], pic_disp=[], receivers=[]):
         mm = MIMEMultipart('related')  # 构建MIMEMultipart对象代表邮件本身，可以往里面添加文本、图片、附件等
         # 设置发送者,注意严格遵守格式,里面邮箱为发件人邮箱
-        mm["From"] = self.mail_sender
+        mm["From"] = self.account
         # 设置接受者,注意严格遵守格式,里面邮箱为接受者邮箱
         mm["To"] = ','.join(receivers)
         # 1. 设置邮件头部内容
@@ -62,19 +66,76 @@ class Mail(object):
                 pic_inline += tmp_pic_inline
         mm.attach(MIMEText(body_content + pic_inline, "html", "utf-8"))
         # 创建SMTP对象
-        stp = smtplib.SMTP(self.mail_host)
+        stp = smtplib.SMTP(self.send_mail_host)
         # 设置发件人邮箱的域名和端口
-        stp.connect(self.mail_host, self.port)
+        stp.connect(self.send_mail_host, self.send_port)
         # set_debuglevel(1)可以打印出和SMTP服务器交互的所有信息
         # stp.set_debuglevel(1)
         stp.starttls()
         # 登录邮箱，传递参数1：邮箱地址，参数2：邮箱授权码
-        stp.login(self.mail_sender, self.mail_license)
+        stp.login(self.account, self.mail_license)
         # 发送邮件，传递参数1：发件人邮箱地址，参数2：收件人邮箱地址，参数3：把邮件内容格式改为str
-        stp.sendmail(self.mail_sender, receivers, mm.as_string())
+        stp.sendmail(self.account, receivers, mm.as_string())
         print("邮件发送成功")
         # 关闭SMTP对象
         stp.quit()
+
+
+    def receive(self, save_dir, date_range=[2,1]):
+        import imaplib
+        import email
+        import os
+        from email.header import decode_header
+        from datetime import datetime, timedelta
+
+
+        # Directory to save attachments
+
+        # Set the time range to select emails after 5 PM yesterday
+        now = datetime.now()
+        last = now - timedelta(days=date_range[0])
+        next = now + timedelta(days=date_range[1])
+
+        # Connect to the IMAP server
+        mail = imaplib.IMAP4_SSL(self.receive_mail_host)
+        mail.login(self.account, self.mail_license)
+        mail.select('INBOX')
+
+        # Construct the search criteria with the date format '17-Jul-2022'
+        search_criteria = f'(SINCE "{last.strftime("%d-%b-%Y")}" BEFORE "{next.strftime("%d-%b-%Y")}")'
+
+        # Search for emails within the specified time range
+        status, email_ids = mail.search(None, search_criteria)
+        email_ids = email_ids[0].split()
+
+        # Download attachments from selected emails
+        for email_id in email_ids:
+            status, msg_data = mail.fetch(email_id, '(RFC822)')
+
+            if status == 'OK':
+                raw_email = msg_data[0][1]
+                email_message = email.message_from_bytes(raw_email)
+
+                for part in email_message.walk():
+                    if part.get_content_maintype() == 'multipart':
+                        continue
+                    if part.get('Content-Disposition') is None:
+                        continue
+
+                    filename = part.get_filename()
+                    filename, encoding = decode_header(filename)[0]
+
+                    if isinstance(filename, bytes):
+                        filename = filename.decode(encoding or 'utf-8')
+
+                    if filename:
+                        # Construct the full path to save the attachment
+                        full_path = os.path.join(save_dir, filename)
+                        with open(full_path, 'wb') as attachment:
+                            attachment.write(part.get_payload(decode=True))
+
+        # Close the connection
+        mail.logout()
 
 
 class R:
@@ -93,12 +154,4 @@ class R:
 
 
 if __name__ == '__main__':
-    sub = """Python邮件测试"""
-    content = """
-    <h1>这是一封测试邮件 - 1级标题</h1>
-    <h2>这是一封测试邮件 - 2级标题</h2>
-    <h3>这是一封测试邮件 - 3级标题</h3>
-    """
-    attach = []
-    pic = []
-    Mail().send(sub, content, attach, pic, ['科创50涨跌幅分布'], [R.staff['zhou']])
+    Mail().receive(save_dir=r'C:\Users\Yz02\Desktop\Data\Save\账户对账单\Data')

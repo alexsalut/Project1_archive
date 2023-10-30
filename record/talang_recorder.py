@@ -22,6 +22,7 @@ class TalangRecorder:
         self.adjust = adjust
 
     def record_talang(self):
+        rq.init()
         self.record_account_talang(sheet_name='踏浪1号')
         self.record_account_talang(sheet_name='踏浪2号')
         self.record_account_talang(sheet_name='踏浪3号')
@@ -97,7 +98,7 @@ class TalangRecorder:
         }
 
         index_code = index_code_dict[sheet_name]
-        rq.init()
+
         order_book_ids = rq.id_convert(index_code)
 
         def get_index_ret(order_book_ids, date):

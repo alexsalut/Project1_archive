@@ -58,3 +58,8 @@ class FileLocation:
 
 # web期货数据存储路径
     future_dir = r'\\192.168.1.116\cffe'
+
+
+
+# 结算单存储路径
+    clearing_dir = r'C:\Users\Yz02\Desktop\Data\Save\账户对账单'

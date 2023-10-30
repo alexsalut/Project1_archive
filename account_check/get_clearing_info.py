@@ -189,4 +189,4 @@ class SettleInfo:
 
 if __name__ == '__main__':
 
-    SettleInfo(date='20231026').get_settle_info(account='panlan1')
+    SettleInfo(date='20231027').get_settle_info(account='tinglian2')

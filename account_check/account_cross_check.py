@@ -11,6 +11,7 @@ from account_check.get_clearing_info import SettleInfo
 from util.send_email import Mail, R
 from record.account_info import read_account_info
 from util.trading_calendar import TradingCalendar as TC
+from file_location import FileLocation as FL
 
 
 class AccountCheck:
@@ -18,7 +19,7 @@ class AccountCheck:
         self.account = [account] if account is not None else ['panlan1', 'tinglian2', 'talang1', 'talang2', 'talang3']
         last_trading_day = TC().get_n_trading_day(time.strftime('%Y%m%d'), -1).strftime('%Y%m%d')
         self.date = date if date is not None else last_trading_day
-        self.dir = r'C:\Users\Yz02\Desktop\Data\Save\账户对账单'
+        self.dir = FL().clearing_dir
         self.account_path = rf'C:\Users\Yz02\Desktop\strategy_update\cnn策略观察_{self.date}.xlsx'
         self.account_name_dict = {
             'panlan1': '盼澜1号',
@@ -28,8 +29,10 @@ class AccountCheck:
             'talang3': '踏浪3号',
         }
 
+
     def notify_check_with_email(self):
         try:
+            Mail().receive(save_dir=self.dir)
             check_info_dict = self.check_all_account_info()
             email_info = self.gen_email_content(check_info_dict=check_info_dict)
             Mail().send(
@@ -80,7 +83,7 @@ class AccountCheck:
         return styled_info_df
 
     def gen_email_content(self, check_info_dict):
-        subject = f'[各账户资产核对]{self.date}'
+        subject = f'[Equity Check]{self.date}'
         content = f"""
         <table width="800" border="0" cellspacing="0" cellpadding="4">
         <tr>
@@ -115,4 +118,4 @@ class AccountCheck:
 
 
 if __name__ == '__main__':
-    AccountCheck(date='20231026').notify_check_with_email()
+    AccountCheck().notify_check_with_email()
