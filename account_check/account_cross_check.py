@@ -16,7 +16,7 @@ from file_location import FileLocation as FL
 
 class AccountCheck:
     def __init__(self, account=None, date=None):
-        self.account = [account] if account is not None else ['panlan1', 'tinglian2', 'talang1', 'talang2', 'talang3']
+        self.account = [account] if account is not None else ['talang1', 'talang2', 'talang3', 'panlan1', 'tinglian2']
         last_trading_day = TC().get_n_trading_day(time.strftime('%Y%m%d'), -1).strftime('%Y%m%d')
         self.date = date if date is not None else last_trading_day
         self.dir = FL().clearing_dir
@@ -59,10 +59,10 @@ class AccountCheck:
     def check_account_info(self, account):
         clearing_info = SettleInfo(date=self.date).get_settle_info(account=account)
         record_info = read_account_info(date=self.date, account=account)
-        clearing_info_s = pd.Series(clearing_info, name='结算单')
-        record_info_s = pd.Series(record_info, name='记录单')
+        clearing_info_s = pd.Series(clearing_info, name='对账单')
+        record_info_s = pd.Series(record_info, name='导出单')
         info_df = pd.concat([clearing_info_s, record_info_s], axis=1)
-        info_df['差值'] = info_df['结算单'] - info_df['记录单']
+        info_df['差值'] = info_df['对账单'] - info_df['导出单']
 
         def highlight_diff(s):
             if abs(s) > 1000:
@@ -72,7 +72,7 @@ class AccountCheck:
 
         styled_info_df = info_df.style.applymap(highlight_diff, subset=['差值'])
         styled_info_df = styled_info_df.format(
-            {'结算单': '{:.2f}', '记录单': '{:.2f}', '差值': '{:.2f}'})
+            {'对账单': '{:.2f}', '导出单': '{:.2f}', '差值': '{:.2f}'})
         styled_info_df = styled_info_df.to_html(classes='table', escape=False)
         styled_info_df = styled_info_df.replace('<table',
                                                 '<table style="border-collapse: collapse; border: 1px solid black;"')

@@ -34,7 +34,12 @@ def gen_expo_df(date):
         file_list = plot_all_barra_expo(date=formatted_date)
 
         barra_df = expo_df.iloc[:11]
-        barra_text = barra_df.to_html(float_format='%.2f')
+        styled_barra_df = barra_df.style.bar(
+            subset=[('talang2', 'relative'), ('talang3', 'relative'), ('panlan', 'relative')],
+            color='#d65f5f',
+        )
+        styled_barra_df = styled_barra_df.format('{:.2f}')
+        barra_text = styled_barra_df.to_html(float_format='%.2f')
 
         industry_df = expo_df.iloc[11:]
         styled_industry_df = industry_df.style.bar(
@@ -157,4 +162,4 @@ def rq_get_index_exposure(date, index_ticker):
 
 
 if __name__ == '__main__':
-    gen_expo_df('20231026')
+    gen_expo_df('20231030')

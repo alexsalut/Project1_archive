@@ -112,6 +112,10 @@ class SettleInfo:
             '期权权益': option_equity,
             '股票权益': putong_equity + credit_equity,
             '股票市值': putong_market_value + credit_market_value,
+            '普通账户股票权益': putong_equity,
+            '普通账户股票市值': putong_market_value,
+            '信用账户股票权益': credit_equity,
+            '信用账户股票市值': credit_market_value,
             '成交额': putong_transaction_vol + credit_transation_vol,
         }
         return info_dict
@@ -189,4 +193,4 @@ class SettleInfo:
 
 if __name__ == '__main__':
 
-    SettleInfo(date='20231027').get_settle_info(account='tinglian2')
+    SettleInfo(date='20231030').get_settle_info(account='talang1')

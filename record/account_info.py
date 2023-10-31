@@ -117,17 +117,22 @@ def get_panlan1_info(date=None):
                 '账户').loc[
                 FL().option_account_code_dict['panlan1']]
 
+    transaction_df = pd.read_csv(rf'{panlan_dir}/TransactionsStatisticsDaily_{formatted_date2}.csv',
+                        index_col=False).set_index(
+                '账户').loc[FL().stock_account_code_dict['panlan1']]
+
     info_dict = {
         '期权权益': option_s['客户总权益'],
         '股票权益': stock_putong_s['账户资产'] + stock_credit_s['净资产'],
         '股票市值': stock_putong_s['证券市值'] + stock_credit_s['证券市值'],
-        '成交额':
-            pd.read_csv(rf'{panlan_dir}/TransactionsStatisticsDaily_{formatted_date2}.csv',
-                        index_col=False).set_index(
-                '账户').loc[FL().stock_account_code_dict['panlan1']]['成交额'].sum()
+        '普通账户股票权益': stock_putong_s['账户资产'],
+        '普通账户股票市值': stock_putong_s['证券市值'],
+        '信用账户股票权益': stock_credit_s['净资产'],
+        '信用账户股票市值': stock_credit_s['证券市值'],
+        '成交额': transaction_df['成交额'].sum()
     }
     return info_dict
 
 
 if __name__ == '__main__':
-    read_account_info(date='20231030',account='tinglian2')
+    read_account_info(date='20231030',account='panlan1')

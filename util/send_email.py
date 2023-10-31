@@ -81,7 +81,7 @@ class Mail(object):
         stp.quit()
 
 
-    def receive(self, save_dir, date_range=[2,1]):
+    def receive(self, save_dir, date_range=[3,1]):
         import imaplib
         import email
         import os
@@ -149,6 +149,7 @@ class R:
     department = {
         'research': ['zhou.sy@yz-fund.com.cn', 'wu.yw@yz-fund.com.cn'],
         'tech': ['liu.ch@yz-fund.com.cn', 'ling.sh@yz-fund.com.cn',],
+        'admin': ['chen.zf@yz-fund.com.cn']
 
     }
 
