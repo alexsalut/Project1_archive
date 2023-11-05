@@ -29,39 +29,42 @@ class CheckTick:
         output = multi_task(self.check_multi_files, chunked_list, 10)
         t2 = time.time() - t1
         all_error_file_list = [item['error file list'] for item in output if item['error file list'] != []]
-        all_error_file_list = [item for sublist in all_error_file_list for item in sublist]
         no_data_list = [stock for item in output for stock in item['no data list'] if item['no data list'] != []]
-        no_data_unsuspended_list = [stock for item in output for stock in item['no data unsuspended list'] if item['no data unsuspended list'] != []]
+        if no_data_list:
+            c.start()
+            suspension_info = c.css(','.join(no_data_list), "TRADESTATUS", f"TradeDate={self.date}").Data
+            c.stop()
+            suspension_list = [ticker for ticker, status in suspension_info.items() if '停牌' not in status[0]]
+        else:
+            suspension_list = []
 
         print(f'总耗时：{t2}秒')
         return {
             'stock count': num_stocks,
             'error file list': all_error_file_list,
             'no data list': no_data_list,
-            'no data unsuspended list': no_data_unsuspended_list,
+            'no data unsuspended list': suspension_list,
         }
 
     def check_multi_files(self, file_path_list):
         error_file_list = []
         no_data_list = []
-        no_data_unsuspended_list = []
         for file_path in file_path_list:
             error_dict = self.check_single_tick(file_path)
             if 'No Data' in error_dict.keys():
                 no_data_list.append(error_dict['No Data'])
                 print(f'{file_path} has no data')
-                if not self.check_suspension(error_dict['No Data'], self.date):
-                    no_data_unsuspended_list.append(error_dict['No Data'])
 
             elif error_dict == {}:
                 print(f'{file_path} is OK')
             else:
                 error_file_list.append(file_path)
                 print(f'{file_path} has error')
+
+
         return {
             'error file list': error_file_list,
             'no data list': no_data_list,
-            'no data unsuspended list': no_data_unsuspended_list,
         }
 
     def notify_with_email(self, info_dict):
@@ -134,12 +137,13 @@ class CheckTick:
         error_dict = {k: v for k, v in check_dict.items() if v != 0}
         return error_dict
 
-    def check_suspension(self, ticker, date):
-        c.start()
-        data = c.css(ticker, "TRADESTATUS", f"TradeDate={date}").Data[ticker][0].count('停牌')
-        c.stop()
-        return bool(data)
+
+
+    # def check_suspension(self, ticker, date):
+    #     data = c.css(ticker, "TRADESTATUS", f"TradeDate={date}").Data[ticker][0].count('停牌')
+    #     return bool(data)
 
 
 if __name__ == '__main__':
-    CheckTick('20231026').multi_task_daily_check()
+    CheckTick().multi_task_daily_check()
+

@@ -33,7 +33,7 @@ class FileLocation:
     #资产账户
 
     option_account_code_dict = {
-        'panlan1': 9008023342,  # cats
+        'panlan1': 4082225,  # cats
         'tinglian2': 4088701,  # cats
     }
 
@@ -63,3 +63,6 @@ class FileLocation:
 
 # 结算单存储路径
     clearing_dir = r'C:\Users\Yz02\Desktop\Data\Save\账户对账单'
+
+# 因子数据存储路径
+    factor_dir = r'\\192.168.1.116\trade\cnn_factor'

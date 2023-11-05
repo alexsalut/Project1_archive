@@ -9,7 +9,8 @@ import os
 import time
 import xlwings as xw
 import pandas as pd
-from util.utils import send_email, retry_save_excel, SendEmailInfo
+from util.send_email import Mail, R
+from util.utils import retry_save_excel
 from util.trading_calendar import TradingCalendar as TC
 
 def update_monitor_next_trading_day(date, monitor_path, remote_monitor_dir, monitor_dir, remote_summary_dir):
@@ -52,12 +53,14 @@ def update_monitor_next_trading_day(date, monitor_path, remote_monitor_dir, moni
             wb.close()
             app.quit()
             print('[Monitor Next trading day update]Updated successfully')
-            send_email(
-                subject=f'Monitor next trading day updated, archive today monitor in 100 seconds',
-                content='',
-                receiver=SendEmailInfo.department['research']
-            )
-            time.sleep(100)
+
+
+            Mail().send(subject=f'Monitor next trading day updated, archive today monitor in 2 min',
+                        body_content='',
+                        receivers=R.department['research']
+                        )
+
+            time.sleep(120)
 
         except Exception as e:
             print(e)

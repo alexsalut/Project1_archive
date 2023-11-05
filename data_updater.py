@@ -55,7 +55,7 @@ def auto_update():
 
 def run_daily_update():
     current_minute = int(time.strftime('%H%M'))
-    if current_minute == 830:
+    if current_minute == 840:
         AccountCheck().notify_check_with_email()
         account_recorder(adjust=True)
 
@@ -70,10 +70,8 @@ def run_daily_update():
         receivers = SendEmailInfo.department['research'] + SendEmailInfo.department['tech']
         check_notify_position(receivers)
 
-    elif current_minute == 1502:
+    elif current_minute == 1505:
         CnnDailyRecord().update_monitor()
-
-    elif current_minute == 1516:
         account_recorder()
 
     elif current_minute == 1630:

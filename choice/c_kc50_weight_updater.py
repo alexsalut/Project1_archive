@@ -10,7 +10,7 @@ import pandas as pd
 
 from EmQuantAPI import c
 
-from util.utils import send_email, SendEmailInfo
+from util.send_email import Mail, R
 from file_location import FileLocation as FL
 
 
@@ -38,7 +38,7 @@ class KC50WeightUpdater:
             <p>Download path:</p>
             {save_path}
             """
-            send_email(subject=subject, content=content, receiver=SendEmailInfo.department['research'])
+            Mail().send(subject=subject, body_content=content, receivers=R.department['research'])
         else:
             print(f'[kc50 weight] error found, retry downloading in 10 seconds')
             time.sleep(10)

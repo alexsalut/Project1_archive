@@ -9,7 +9,7 @@ import pandas as pd
 
 from EmQuantAPI import c
 
-from util.utils import send_email, SendEmailInfo
+from util.send_email import Mail, R
 from file_location import FileLocation as FL
 
 
@@ -30,21 +30,21 @@ def download_check_kc50_composition(date=None):
         <p>Download path:</p>
         {save_path}
         """
-        send_email(subject=subject, content=content, receiver=SendEmailInfo.department['research'])
+        Mail().send(subject=subject, body_content=content, receivers=R.department['research'])
     else:
         print('[kc50 composition] Stock number not correct, retry downloading in five mins')
-        send_email(
-            subject='[Alert! kc 50 composition not correct]',
-            content=f"""
-            <table width="800" border="0" cellspacing="0" cellpadding="4">
-            <tr>
-            <td bgcolor="#CECFAD" height="30" style="font-size:21px"><b>Alert KC50 Composition</b></td>
-            </tr>
-            <td bgcolor="#EFEBDE" height="100" style="font-size:13px">
-            <p>file path:</p> 
-            {save_path}
-            """,
-            receiver=SendEmailInfo.department['research'][0])
+        Mail().send(subject='[Alert! kc 50 composition not correct]',
+                    body_content=f"""
+                    <table width="800" border="0" cellspacing="0" cellpadding="4">
+                    <tr>
+                    <td bgcolor="#CECFAD" height="30" style="font-size:21px"><b>Alert KC50 Composition</b></td>
+                    </tr>
+                    <td bgcolor="#EFEBDE" height="100" style="font-size:13px">
+                    <p>file path:</p> 
+                    {save_path}
+                    """,
+                    receivers=R.department['research'][0]
+                    )
         time.sleep(300)
         download_check_kc50_composition(date)
 

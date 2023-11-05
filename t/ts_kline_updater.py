@@ -8,7 +8,7 @@ import os
 import time
 import pandas as pd
 
-from util.utils import send_email, SendEmailInfo
+from util.send_email import Mail, R
 from t.fq_kline import FqKLine
 from file_location import FileLocation as FL
 
@@ -65,7 +65,8 @@ class KlineUpdater:
         else:
             subject = '[Adjusted Kline] File is non-existent. Retry downloading in 5 minutes.'
             content = None
-        send_email(subject, content, receiver=SendEmailInfo.department['research'])
+
+        Mail().send(subject=subject, body_content=content, receivers=R.department['research'])
 
     def data_check(self, adjusted_kline):
         keys = [

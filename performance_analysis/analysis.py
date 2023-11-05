@@ -9,23 +9,37 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
-from performance_analysis.data_acquisition import get_talang1_ret, get_kc_stock_pct, get_kc50_stock_list, retry_get_kc50_ret
+from performance_analysis.data_acquisition import get_talang1_ret, get_kc_stock_pct, get_kc50_stock_list, \
+    retry_get_kc50_ret
+from performance_analysis.factor_quantile_eval import FactorQuantileEval
 from util.send_email import Mail, R
 import plotly.express as px
 import plotly.graph_objects as go
 from plotly.io import write_html
+import rqdatac as rq
 
 
 def daily_performance_eval(date=None):
-    formatted_date = time.strftime('%Y-%m-%d') if date is None else pd.to_datetime(date).strftime("%Y-%m-%d")
-    data_dict = get_data(formatted_date)
-    plot_hist_performance(data_dict['kc stock'], data_dict['talang1'], data_dict['kc50'], '科创板股票', formatted_date)
-    plot_hist_performance(data_dict['kc50 stock'], data_dict['talang1'], data_dict['kc50'], '科创50成分股', formatted_date)
+    formatted_date1 = time.strftime('%Y-%m-%d') if date is None else pd.to_datetime(date).strftime("%Y-%m-%d")
+    formatted_date2 = time.strftime('%Y%m%d') if date is None else pd.to_datetime(date).strftime("%Y%m%d")
+
+    f = FactorQuantileEval(date)
+    file_path_dict = f.file_path
+    group_ret, group_rank = f.get_all_group_ret_rank()
+
+    data_dict = get_data(formatted_date1)
+    fig_paths = []
+    fig_paths.append(plot_hist_performance(data_dict['kc stock'], data_dict['talang1'], data_dict['kc50'], '科创板股票',
+                                           formatted_date1))
+    fig_paths.append(
+        plot_hist_performance(data_dict['kc50 stock'], data_dict['talang1'], data_dict['kc50'], '科创50成分股',
+                              formatted_date1))
     statistics_df = gen_statistics_table(data_dict['kc stock'], data_dict['kc50 stock'])
-    notify_with_email(statistics_df, data_dict['talang1'], data_dict['kc50'], formatted_date)
+    notify_with_email(statistics_df, data_dict['talang1'], data_dict['kc50'], group_ret, group_rank,file_path_dict, fig_paths,
+                      formatted_date1)
 
 
-def notify_with_email(df_html, talang1_ret, kc50_ret, date=None):
+def notify_with_email(df_html, talang1_ret, kc50_ret, group_ret, group_rank, file_path_dict, fig_paths, date=None):
     date = time.strftime('%Y-%m-%d') if date is None else pd.to_datetime(date).strftime("%Y-%m-%d")
 
     subject = f'[Strategy Review] {date}'
@@ -41,14 +55,24 @@ def notify_with_email(df_html, talang1_ret, kc50_ret, date=None):
     <center>{df_html}</center>
     <p>踏浪1号当日收益率：{format_number(talang1_ret)}</p>
     <p>科创50当日收益率：{format_number(kc50_ret)}</p>
+    <p>因子文件路径：</p>
+    <p>{file_path_dict['I10R5']}</p>
+    <p>{file_path_dict['I10R2']}</p>
+    <p>{file_path_dict['I5R2']}</p>
+    <p>科创板涨跌幅文件路径：</p>
+    <p>{file_path_dict['raw daily bar']}</p>
+    <p>CNN因子分组收益表现：</p>
+    <center>{group_ret}</center>
+    <p>CNN因子分组收益排名：</p>
+    <center>{group_rank}</center>
     """
     Mail().send(
         subject,
         content,
         attachs=[],
-        pics=[f'performance_analysis/data/科创板股票涨跌幅分布_{date}.png', f'performance_analysis/data/科创50成分股涨跌幅分布_{date}.png'],
+        pics=fig_paths,
         pic_disp=['科创板涨跌幅分布', '科创50涨跌幅分布'],
-        receivers=[R.staff['zhou']]
+        receivers=R.department['research'],
     )
 
 
@@ -103,7 +127,9 @@ def plot_hist_performance(kc_stock_ret, port_ret, kc50_ret, stock_name, date):
     plt.rcParams['font.sans-serif'] = ['SimHei']
     plt.rcParams['axes.unicode_minus'] = False
     plt.legend(fontsize=20)
-    plt.savefig(f'performance_analysis/data/{stock_name}涨跌幅分布_{date}.png')
+    path = rf'C:\Users\Yz02\Desktop\Project_1\performance_analysis\data\{stock_name}涨跌幅分布_{date}.png'
+    plt.savefig(path)
+    return path
 
 
 def hist_performance(kc_stock_ret, port_ret, kc50_ret, stock_name, date):
@@ -147,11 +173,12 @@ def hist_performance(kc_stock_ret, port_ret, kc50_ret, stock_name, date):
             )
         )
     fig.show()
-    with open(f'./data/{stock_name}涨跌幅分布_{date}.html', 'w', encoding='utf-8') as f:
+    with open(f'performance/data/{stock_name}涨跌幅分布_{date}.html', 'w', encoding='utf-8') as f:
         write_html(fig, f)
 
 
 def get_data(date=None):
+    rq.init()
     date = time.strftime('%Y-%m-%d') if date is None else pd.to_datetime(date).strftime("%Y-%m-%d")
     ret_dict = {
         'talang1': get_talang1_ret(date),
@@ -166,4 +193,4 @@ def get_data(date=None):
 
 
 if __name__ == '__main__':
-    daily_performance_eval()
+    daily_performance_eval('20231031')

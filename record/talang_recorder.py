@@ -117,6 +117,4 @@ class TalangRecorder:
 
 
 if __name__ == '__main__':
-    rq.init()
-    order_book_ids = rq.id_convert('000905.SH')
-    index_ret = rq.get_price_change_rate(order_book_ids, start_date='20231026', end_date='20231026')
+    TalangRecorder(account_path=r'C:\Users\13671\Documents\cnn\cnn策略观察_20210924.xlsx', date='20231103').record_talang()

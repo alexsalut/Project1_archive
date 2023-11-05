@@ -131,11 +131,14 @@ class Mail(object):
                     if filename:
                         # Construct the full path to save the attachment
                         full_path = os.path.join(save_dir, filename)
-                        with open(full_path, 'wb') as attachment:
-                            attachment.write(part.get_payload(decode=True))
+                        if not os.path.exists(full_path):
+                            with open(full_path, 'wb') as attachment:
+                                attachment.write(part.get_payload(decode=True))
+                                print(f'{full_path} has been saved')
 
         # Close the connection
         mail.logout()
+        print('邮件下载成功')
 
 
 class R:
@@ -155,4 +158,4 @@ class R:
 
 
 if __name__ == '__main__':
-    Mail().receive(save_dir=r'C:\Users\Yz02\Desktop\Data\Save\账户对账单\Data')
+    Mail().receive(save_dir=r'C:\Users\Yz02\Desktop\Data\Save\账户对账单')

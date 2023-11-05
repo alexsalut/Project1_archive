@@ -57,3 +57,27 @@ def get_refreshed_data(monitor_path):
         return df
 
 
+if __name__ == '__main__':
+
+
+    import openpyxl
+
+    # Load the Excel file
+    workbook = openpyxl.load_workbook(r'C:\Users\Yz02\Desktop\strategy_update\monitor_20231030.xlsx')
+
+
+
+    # Iterate through the sheets and check cell values
+    for sheet_name in workbook.sheetnames:
+        sheet = workbook[sheet_name]
+        for row in sheet.iter_rows(values_only=True):
+            for cell in row:
+                cell_value = cell.value
+                if isinstance(cell_value, str) and cell_value.startswith('='):
+                    print(f"Found a potential formula in cell {cell.coordinate}: {cell_value}")
+
+    # Close the Excel file
+    workbook.close()
+
+    # Close the Excel file
+    workbook.close()

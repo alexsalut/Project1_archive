@@ -9,9 +9,8 @@ import time
 import pandas as pd
 
 from EmQuantAPI import c
-
-from util.utils import send_email, SendEmailInfo
 from file_location import FileLocation as FL
+from util.send_email import Mail, R
 
 
 class ST_List_Updater:
@@ -44,7 +43,7 @@ class ST_List_Updater:
                 <p><b>Number of st stocks today:</b></p> 
                 {today_stock_count}
                 """
-                send_email(subject=subject, content=content, receiver=SendEmailInfo.department['research'])
+                Mail().send(subject=subject, body_content=content, receivers=R.department['research'])
                 print('[ST list check] data is updated and email sent')
             else:
                 print('[ST list check] today st stock data is not sufficient, retry downloading in 10 seconds')

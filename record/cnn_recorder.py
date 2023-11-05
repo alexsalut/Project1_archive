@@ -38,8 +38,8 @@ class Cnn_Recorder:
                 raise
 
             sheet.range(f'C{last_row}').value = monitor_data['kc50_ret']  # 科创50涨幅
-            sheet.range(f'D{last_row}').value = (sheet.range(f'B{last_row}').value
-                                                 - sheet.range(f'C{last_row}').value)  # 指增超额
+            print(f'[{sheet_name}]科创50收益率', monitor_data['kc50_ret'])
+            sheet.range(f'D{last_row}').formula = f'=B{last_row}-C{last_row}' # 指增超额
             sheet.range(f'E{last_row}').formula = f'=SUM(D2:D{last_row})'  # 累计指增超额算术
             sheet.range(f'F{last_row}').formula = f'=F{last_row - 1}*(1+B{last_row})'  # 多头净值
             sheet.range(f'G{last_row}').formula = f'=G{last_row - 1}*(1+C{last_row})'  # 指数净值

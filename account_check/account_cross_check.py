@@ -5,6 +5,7 @@
 # @Site    : 
 # @File    : account_cross_check.py
 
+import os
 import time
 import pandas as pd
 from account_check.get_clearing_info import SettleInfo
@@ -31,24 +32,37 @@ class AccountCheck:
 
 
     def notify_check_with_email(self):
-        try:
-            Mail().receive(save_dir=self.dir)
+
+        Mail().receive(save_dir=self.dir)
+        missed_string = self.check_all_file_exist()
+        if missed_string:
+            Mail().send(
+                subject=f'[各账户资产核对]{self.date}失败，两分钟后重试',
+                body_content=f'{missed_string}不存在',
+                receivers=R.department['research'][0],
+            )
+            time.sleep(120)
+            self.notify_check_with_email()
+        else:
             check_info_dict = self.check_all_account_info()
             email_info = self.gen_email_content(check_info_dict=check_info_dict)
             Mail().send(
                 subject=email_info['subject'],
                 body_content=email_info['content'],
                 receivers=R.department['research']+[R.department['tech'][0]],
+                # receivers=[R.department['research'][0]],
             )
-        except Exception as e:
-            print(e)
-            Mail().send(
-                subject=f'[各账户资产核对]{self.date}失败，两分钟后重试',
-                body_content=f'各账户资产核对失败，请检查',
-                receivers=R.department['research'][0],
-            )
-            time.sleep(120)
-            self.notify_check_with_email()
+
+
+    def check_all_file_exist(self):
+        f = SettleInfo(date=self.date)
+        file_list = f.file_path_list
+        missed_file_list = []
+        for file in file_list:
+            if not os.path.exists(file):
+                missed_file_list.append(file)
+        missed_file_string = '\n'.join(missed_file_list)
+        return missed_file_string
 
     def check_all_account_info(self):
         check_info_dict = {}

@@ -10,7 +10,8 @@ import pandas as pd
 
 from EmQuantAPI import c
 
-from util.utils import transfer_to_jy_ticker, send_email, SendEmailInfo
+from util.send_email import Mail, R
+from util.utils import transfer_to_jy_ticker
 from file_location import FileLocation as FL
 
 
@@ -41,7 +42,7 @@ class TurnoverRateUpdater:
                 <td bgcolor="#EFEBDE" height="100" style="font-size:13px">
                 {error_list}
                 """
-                send_email(subject=subject, content=content, receiver=SendEmailInfo.department['research'])
+                Mail().send(subject=subject, body_content=content, receivers=R.department['research'])
                 self.redownload_turnover_rate(save_path=save_path)
 
     def get_turnover_info(self, save_path):
@@ -84,7 +85,7 @@ class TurnoverRateUpdater:
         <p>Details(Code) of stocks with missing values:</p>
             {turnover_info_dict['na list']}
         """
-        send_email(subject=subject, content=content, receiver=SendEmailInfo.department['research'])
+        Mail().send(subject=subject, body_content=content, receivers=R.department['research'])
 
     def c_download_turnover_rate_history(self):
         print(f"Downloading historical turnover rate until {self.today}")

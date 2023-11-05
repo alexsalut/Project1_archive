@@ -9,7 +9,6 @@ import rqdatac
 
 import pandas as pd
 
-from util.utils import send_email, SendEmailInfo
 from file_location import FileLocation as FL
 from rice_quant.exposure_plot import plot_all_barra_expo
 from util.send_email import Mail, R
@@ -162,4 +161,4 @@ def rq_get_index_exposure(date, index_ticker):
 
 
 if __name__ == '__main__':
-    gen_expo_df('20231030')
+    gen_expo_df('20231101')

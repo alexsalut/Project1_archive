@@ -4,6 +4,7 @@
 # @Author  : Suying
 # @Site    : 
 # @File    : exposure_plot.py
+import os
 import pandas as pd
 
 from file_location import FileLocation as FL
@@ -35,9 +36,10 @@ def plot_single_barra_expo(barra_s):
     plt.xticks(np.arange(len(expo_df.index)), expo_df.index, rotation=45, ha='right')
 
     plt.suptitle(factor, fontsize=20)
-
-    plt.savefig(fr'.\Data\{factor}.png')
-    return fr'.\Data\{factor}.png'
+    os.makedirs(fr'{FL().exposure_dir}\Data', exist_ok=True)
+    path = fr'{FL().exposure_dir}\Data\{factor}.png'
+    plt.savefig(path)
+    return path
 
 
 def gen_relative_barra_expo_history(start, end):
@@ -63,4 +65,4 @@ def gen_relative_barra_expo(date):
 
 
 if __name__ == '__main__':
-    plot_all_barra_expo(date='20231026')
+    plot_all_barra_expo(date='20231031')

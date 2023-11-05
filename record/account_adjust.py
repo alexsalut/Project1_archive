@@ -6,14 +6,10 @@
 # @File    : account_adjust.py
 
 import time
-import xlwings as xw
-import os
 from file_location import FileLocation as FL
-from record.cnn_recorder import Cnn_Recorder
 from record.talang_recorder import TalangRecorder
 from record.panlan1_tinglian2_recorder import PanlanTinglianRecorder
 from record.remote_recorder import update_account_remote
-from util.utils import send_email, SendEmailInfo
 from util.trading_calendar import TradingCalendar as TC
 
 def adjust_account(date=None):

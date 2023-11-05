@@ -21,8 +21,8 @@ def get_mini_strategy_history_ret(start):
         if date >= start:
             df = pd.read_excel(path, sheet_name='monitor目标持仓', index_col=0, header=2)
             df = df.query('index.notnull()').iloc[:5,:]
-            ret_dict = {index : df.loc[index, '组合涨幅'] for index in df.index}
-            ret_dict.update({index : df.loc[index, '超额收益'] for index in df.index})
+            ret_dict = {index : df.loc[index, '超额收益'] for index in df.index}
+            # ret_dict.update({index : df.loc[index, '超额收益'] for index in df.index})
             ret_dict.update({'date': date})
             ret.append(ret_dict)
     ret_df = pd.DataFrame(ret).set_index('date')
@@ -31,4 +31,4 @@ def get_mini_strategy_history_ret(start):
 
 
 if __name__ == '__main__':
-    get_mini_strategy_history_ret('20230915')
+    get_mini_strategy_history_ret('20231018')

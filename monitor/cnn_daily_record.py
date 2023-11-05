@@ -1,7 +1,6 @@
 import time
 
 from util.trading_calendar import TradingCalendar as TC
-from util.utils import send_email, SendEmailInfo
 from file_location import FileLocation as FL
 from monitor.monitor_next_trading_day import update_monitor_next_trading_day
 from monitor.monitor_archive import archive_monitor_today
@@ -35,5 +34,5 @@ class CnnDailyRecord:
         )
 
 
-# if __name__ == '__main__':
-#     CnnDailyRecord().update_monitor()
+if __name__ == '__main__':
+    CnnDailyRecord().update_monitor()

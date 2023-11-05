@@ -21,7 +21,6 @@ def get_kc50_stock_list(date=None):
 
 def retry_get_kc50_ret(date=None):
     date = pd.to_datetime(date).strftime('%Y-%m-%d') if date is not None else time.strftime('%Y-%m-%d')
-    rq.init()
     def get_kc50_ret(date1):
         df = rq.get_price_change_rate('000688.XSHG', start_date=date1, end_date=date1)
         if df is None:
@@ -41,7 +40,6 @@ def get_kc_stock_pct(date=None):
 
 def get_kc_stock_info(date=None):
     date = date if date is not None else time.strftime('%Y-%m-%d')
-    rq.init()
     kc_stock_info_df = rq.all_instruments(type='CS', market='cn', date=date).query('board_type=="KSH"')
     return kc_stock_info_df
 

@@ -6,8 +6,7 @@
 # @File    : position.py
 
 import time
-import numpy as np
-from util.utils import send_email, SendEmailInfo
+from util.send_email import Mail, R
 from position.get_account_position import AccountPosition as ap
 from position.account_location import get_account_location
 
@@ -18,7 +17,7 @@ def check_notify_position(receivers, date=None):
     account_pos_dict = check_all_account_pos(account_list)
     subject = rf'[Position Check] {date}'
     content = gen_check_email_content(account_pos_dict)
-    send_email(subject, content, receivers)
+    Mail().send(subject=subject, body_content=content, receivers=receivers)
 
 
 def check_all_account_pos(account_list, date=None):
@@ -94,4 +93,4 @@ def check_account_pos(actual_pos_df, target_pos_df):
 
 
 if __name__ == '__main__':
-    check_notify_position(receivers=SendEmailInfo.department['research']+SendEmailInfo.department['tech'])
+    check_notify_position(receivers=R.department['research']+R.department['tech'])

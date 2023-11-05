@@ -12,7 +12,8 @@ import pandas as pd
 import tushare as ts
 
 from file_location import FileLocation as FL
-from util.utils import c_get_trade_dates, send_email, SendEmailInfo
+from util.send_email import Mail, R
+from util.utils import c_get_trade_dates
 
 
 class RawDailyBarUpdater:
@@ -85,11 +86,12 @@ class RawDailyBarUpdater:
             <p>Retry downloading {date}</p>
             
             """
-            send_email(
+            Mail().send(
                 subject='[Alert!!Raw Daily Bar] Unsuspended stock missed',
-                content=content,
-                receiver=SendEmailInfo.department['research'][0]
+                body_content=content,
+                receivers=[R.department['research'][0]]
             )
+
             time.sleep(300)
             self.update_and_confirm_raw_daily_bar(today=date)
         else:
@@ -119,7 +121,7 @@ class RawDailyBarUpdater:
         &nbsp&nbsp{info_dict['na_stock_list']}
 
         """
-        send_email(subject=subject, content=content, receiver=SendEmailInfo.department['research'])
+        Mail().send(subject=subject, body_content=content, receivers=R.department['research'])
 
     def check_daily_info(self, tushare_path, date):
         tushare_df = pd.read_csv(tushare_path)

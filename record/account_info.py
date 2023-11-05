@@ -4,12 +4,10 @@
 # @File    : account_info.py
 # @Software: PyCharm
 
-import os
 import time
 
 import pandas as pd
 from file_location import FileLocation as FL
-from util.utils import send_email
 
 
 def read_account_info(date, account):
@@ -36,27 +34,54 @@ def get_tinglian2_info(date=None):
         index_col=False,
         encoding='gbk'
     )
-    option_df1 = pd.read_csv(
+    stock_equity = stock_df.loc[0, '资产总值'] - stock_df.loc[0, '总负债']
+
+
+    emc_option_df = pd.read_csv(
         rf'{emc_tinglian_dir}/310317000090_OPTION_FUND.{formatted_date1}.csv',
         index_col=False,
         encoding='gbk'
     )  # emc 账户
-    option_df2 = pd.read_csv(
+    emc_option_equity = emc_option_df.loc[0, '资产总值']
+
+    cats_option_df = pd.read_csv(
         rf'{cats_tinglian_dir}/OptionFund_{formatted_date2}.csv',
         index_col=False,
-    ).set_index('账户') # cats 账户
+    ).set_index('账户')  # cats 账户
+    cats_option_equity = cats_option_df.loc[FL().option_account_code_dict['tinglian2'], '资金总额']
+
     transaction_df = pd.read_csv(
         rf'{emc_tinglian_dir}/310310300343_RZRQ_MATCH.{formatted_date1}.csv',
         index_col=False,
         encoding='gbk'
-    ).query(f'资金账号=={FL().stock_account_code_dict["tinglian2"]}')
+    )
+
+    stock_transaction_df = transaction_df.query(
+        f'资金账号=={FL().stock_account_code_dict["tinglian2"]}|业务类型.isin(["证券买入", "证券卖出"])')
+    stock_transaction_vol = stock_transaction_df['成交数量'].mul(stock_transaction_df['成交价格']).sum()
+
+    option_dir = FL().account_info_dir_dict['tinglian2 cats']
+    option_transaction_df = pd.read_csv(rf'{option_dir}/TransactionsStatisticsDaily_{formatted_date2}.csv',
+                                        index_col=False).set_index(
+        '账户')
+    option_code = FL().option_account_code_dict['tinglian2']
+    option_transaction_df = option_transaction_df.query(f'账户=={option_code}')
+
+
+
+
+    option_transaction_vol = option_transaction_df.query('证券代码.str.startswith("1000")', engine='python')[
+        '成交额'].sum()
+
     info_dict = {
-        'cats期权权益': option_df2.loc[FL().option_account_code_dict['tinglian2'], '资金总额'],
-        'emc期权权益': option_df1.loc[0, '资产总值'],
-        '期权权益': option_df1.loc[0, '资产总值'] + option_df2.loc[FL().option_account_code_dict['tinglian2'], '资金总额'],
-        '股票权益': stock_df.loc[0, '资产总值'] - stock_df.loc[0, '总负债'],
+        'cats期权权益': cats_option_equity,
+        'emc期权权益': emc_option_equity,
+        '期权权益': cats_option_equity + emc_option_equity,
+        '股票权益': stock_equity,
         '股票市值': stock_df.loc[0, '总市值'],
-        '成交额': transaction_df['成交数量'].mul(transaction_df['成交价格']).sum()
+        '成交额': stock_transaction_vol + option_transaction_vol,
+        '股票成交额': stock_transaction_vol,
+        '期权成交额': option_transaction_vol,
     }
     return info_dict
 
@@ -114,25 +139,31 @@ def get_panlan1_info(date=None):
         '账户').loc[FL().stock_account_code_dict['panlan1']]
 
     option_s = pd.read_csv(rf'{panlan_dir}/OptionFund_{formatted_date2}.csv', index_col=False).set_index(
-                '账户').loc[
-                FL().option_account_code_dict['panlan1']]
+        '账户').loc[
+        FL().option_account_code_dict['panlan1']]
 
     transaction_df = pd.read_csv(rf'{panlan_dir}/TransactionsStatisticsDaily_{formatted_date2}.csv',
-                        index_col=False).set_index(
-                '账户').loc[FL().stock_account_code_dict['panlan1']]
+                                 index_col=False).set_index(
+        '账户').loc[FL().stock_account_code_dict['panlan1']]
+
+    option_transaction_vol = transaction_df.query('证券代码.str.startswith("1000")', engine='python')['成交额'].sum()
+    stock_transaction_vol = transaction_df.query('证券代码.str.len() == 9')['成交额'].sum()
 
     info_dict = {
-        '期权权益': option_s['客户总权益'],
+        '期权权益': option_s['资金总额'],
         '股票权益': stock_putong_s['账户资产'] + stock_credit_s['净资产'],
         '股票市值': stock_putong_s['证券市值'] + stock_credit_s['证券市值'],
         '普通账户股票权益': stock_putong_s['账户资产'],
         '普通账户股票市值': stock_putong_s['证券市值'],
         '信用账户股票权益': stock_credit_s['净资产'],
         '信用账户股票市值': stock_credit_s['证券市值'],
-        '成交额': transaction_df['成交额'].sum()
+        '成交额': option_transaction_vol + stock_transaction_vol,
+        '股票成交额': stock_transaction_vol,
+        '期权成交额': option_transaction_vol,
+
     }
     return info_dict
 
 
 if __name__ == '__main__':
-    read_account_info(date='20231030',account='panlan1')
+    read_account_info(date='20231102', account='tinglian2')

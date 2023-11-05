@@ -8,8 +8,7 @@ import time
 import datetime
 import pandas as pd
 import rqdatac as rq
-from util.trading_calendar import TradingCalendar as TC
-from util.utils import send_email, SendEmailInfo
+from util.send_email import Mail, R
 from choice.kc_stock_number import get_kc_stock_num
 
 
@@ -104,7 +103,7 @@ def notify_with_email(error_dict):
     <p>Open & now out of High & low: {error_dict['Open & now out of High & low']}</p>
     
     """
-    send_email(subject=subject, content=text, receiver=SendEmailInfo.department['research'][0])
+    Mail().send(subject=subject, body_content=text, receivers=R.department['research'][0])
 
 
 
