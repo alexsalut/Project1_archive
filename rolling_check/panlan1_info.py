@@ -35,7 +35,7 @@ class Panlan1AccountInfo:
                                ).set_index('账户').loc[FL().option_account_code_dict['panlan1']]
         stock_s = pd.read_csv(rf'{account_dir}/StockFund_{date}.csv',
                               dtype={'账户': int, '账户资产': 'float64'},
-                              index_col=False).set_index('账户').loc[FL().stock_account_code_dict['panlan1']]
+                              index_col=False).set_index('账户').loc[FL().account_code['panlan1']]
         panlan1_info_dict = {'option equity': option_s['客户总权益'], 'stock equity': stock_s['账户资产'],
                              'margin risk': option_s['保证金风险度']}
         return panlan1_info_dict
@@ -46,7 +46,7 @@ class Panlan1AccountInfo:
         ).set_index('ACCT').loc[FL().option_account_code_dict['panlan1']]
         panlan1_stock_s = pd.DataFrame(iter(DBF(self.panlan1_today_stock_path))).astype(
             {'ACCT': int, 'ASSET': 'Float64'}
-        ).set_index('ACCT').loc[FL().stock_account_code_dict['panlan1']]
+        ).set_index('ACCT').loc[FL().account_code['panlan1']]
         panlan1_info_dict = {'option equity': panlan1_option_s['TOTEQUITY'], 'stock equity': panlan1_stock_s['ASSET'],
                              'margin risk': panlan1_option_s['MARGINRP']}
         return panlan1_info_dict

@@ -19,6 +19,7 @@ import plotly.graph_objects as go
 def plot_all_barra_expo(date=None):
     formatted_date = pd.to_datetime(date).strftime('%Y%m%d')
     barra_df = gen_relative_barra_expo_history(start='20230908', end=formatted_date)
+    barra_df.index = pd.MultiIndex.from_tuples([((i[0], 'talang1' if i[1] == 'panlan' else i[1])) for i in barra_df.index])
     file_list = []
     for factor in barra_df.columns:
         file_path = plot_single_barra_expo(barra_df[factor])

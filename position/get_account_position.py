@@ -6,9 +6,10 @@
 # @File    : get_account_position.py
 import time
 import pandas as pd
-from dbfread import DBF
 from file_location import FileLocation as FL
 from position.account_location import get_account_location
+
+
 class AccountPosition:
     def __init__(self, account, date=None):
         self.account = account
@@ -29,21 +30,14 @@ class AccountPosition:
             return target_df
         except Exception as e:
             print(e)
-            print(f'Error: {self.account}目标持仓数据获取失败，请检查{self.location_dict["target"]}文件是否存在，两分钟后重试')
+            print(
+                f'Error: {self.account}目标持仓数据获取失败，请检查{self.location_dict["target"]}文件是否存在，两分钟后重试')
             time.sleep(120)
             self.get_target_position()
 
     def get_actual_position(self):
         try:
             encoding = 'gbk' if self.account == 'tinglian2' else None
-            # if self.location_dict['actual'].endswith('.dbf'):
-            #     actual_df = pd.DataFrame(iter(DBF(self.location_dict['actual'])))
-            #     print(actual_df)
-            # else:
-            # table = DBF(rf"{FL.account_info_dir_dict['panlan1']}/StockPosition.dbf")
-            # print(table)
-
-            # print(pd.DataFrame(iter(DBF(rf"{FL.account_info_dir_dict['panlan1']}/StockPosition.dbf"))))
             actual_df = pd.read_csv(
                 self.location_dict['actual'],
                 encoding=encoding,
@@ -59,12 +53,13 @@ class AccountPosition:
                 self.col_dict['actual']: '实际',
                 self.col_dict['actual market val']: '市值'}).set_index('代码')
             if 'actual account' in self.col_dict.keys():
-                actual_df = actual_df.query(f'账户=={FL.stock_account_code_dict[self.account]}')
+                actual_df = actual_df.query(f'账户=={FL.account_code[self.account]}')
             actual_df = actual_df[['名称', '实际', '市值']]
             return actual_df[actual_df['实际'] != 0]
         except Exception as e:
             print(e)
-            print(f'Error: {self.account}实际持仓数据获取失败，请检查{self.location_dict["actual"]}文件是否存在，两分钟后重试')
+            print(
+                f'Error: {self.account}实际持仓数据获取失败，请检查{self.location_dict["actual"]}文件是否存在，两分钟后重试')
             time.sleep(120)
             self.get_actual_position()
 
@@ -81,7 +76,6 @@ class AccountPosition:
             'target': '目标',
         }
         account_col_dict['talang1'] = account_col_dict['panlan1']
-        account_col_dict['talang1_credit'] = account_col_dict['panlan1']
         account_col_dict['tinglian2'] = {
             'actual code': '证券代码',
             'actual name': '证券名称',
@@ -95,4 +89,4 @@ class AccountPosition:
 
 
 if __name__ == '__main__':
-    AccountPosition('talang1_credit','20231019').get_target_position()
+    AccountPosition('talang1_credit', '20231019').get_target_position()

@@ -55,7 +55,7 @@ def auto_update():
 
 def run_daily_update():
     current_minute = int(time.strftime('%H%M'))
-    if current_minute == 840:
+    if current_minute == 830:
         AccountCheck().notify_check_with_email()
         account_recorder(adjust=True)
 
@@ -104,7 +104,7 @@ def update_after_close():
     KlineUpdater().update_confirm_adjusted_kline()
     update_daily_futures()
     daily_performance_eval()
-    CheckTick().multi_task_daily_check()
+    CheckTick().check_daily()
 
 
 if __name__ == '__main__':

@@ -32,27 +32,32 @@ class AccountCheck:
 
 
     def notify_check_with_email(self):
-
-        Mail().receive(save_dir=self.dir)
-        missed_string = self.check_all_file_exist()
-        if missed_string:
-            Mail().send(
-                subject=f'[各账户资产核对]{self.date}失败，两分钟后重试',
-                body_content=f'{missed_string}不存在',
-                receivers=R.department['research'][0],
-            )
+        try:
+            Mail().receive(save_dir=self.dir)
+            missed_string = self.check_all_file_exist()
+            if missed_string:
+                print(f'{missed_string}不存在')
+                Mail().send(
+                    subject=f'[各账户资产核对]{self.date}失败，两分钟后重试',
+                    body_content=f'{missed_string}不存在',
+                    receivers=R.department['research'][0],
+                )
+                time.sleep(120)
+                self.notify_check_with_email()
+            else:
+                check_info_dict = self.check_all_account_info()
+                email_info = self.gen_email_content(check_info_dict=check_info_dict)
+                Mail().send(
+                    subject=email_info['subject'],
+                    body_content=email_info['content'],
+                    receivers=R.department['research']+[R.department['tech'][0]],
+                    # receivers=[R.department['research'][0]],
+                )
+        except Exception as e:
+            print(e)
+            print('Error in notify_check_with_email, retry in 2 minutes.')
             time.sleep(120)
             self.notify_check_with_email()
-        else:
-            check_info_dict = self.check_all_account_info()
-            email_info = self.gen_email_content(check_info_dict=check_info_dict)
-            Mail().send(
-                subject=email_info['subject'],
-                body_content=email_info['content'],
-                receivers=R.department['research']+[R.department['tech'][0]],
-                # receivers=[R.department['research'][0]],
-            )
-
 
     def check_all_file_exist(self):
         f = SettleInfo(date=self.date)
@@ -131,5 +136,7 @@ class AccountCheck:
         return record_info_dict
 
 
+
 if __name__ == '__main__':
-    AccountCheck().notify_check_with_email()
+    f = AccountCheck()
+    f.notify_check_with_email()

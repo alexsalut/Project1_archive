@@ -8,7 +8,7 @@ import time
 import pandas as pd
 import numpy as np
 from account_check.txt_data import TxtData
-
+from util.send_email import Mail, R
 
 class SettleInfo:
     def __init__(self, date=None):
@@ -46,6 +46,7 @@ class SettleInfo:
         self.file_path_list = list(self.stock_account_path.values()) + list(self.option_account_path.values()) + list(self.credit_account_path.values())
 
     def get_settle_info(self, account):
+        print('获取对账单信息：', account)
         if account == 'panlan1':
             info_dict = self.generate_panlan1_settle_info()
         elif account == 'tinglian2':
@@ -60,7 +61,16 @@ class SettleInfo:
             raise ValueError('account name is not correct, please input right account name')
 
         for key, value in info_dict.items():
-            info_dict[key] = float(value)
+            if value == 'nan':
+                print(f'{account}对账单 {key}存在缺失值，请检查后重新运行')
+                Mail().send(
+                    subject=f'{account}对账单 {key}存在缺失值，请检查后重新运行',
+                    body_content=f'{account}对账单 {key}存在缺失值，请检查后重新运行',
+                    receivers=R.department['research'][0]
+                            )
+                raise ValueError(f'{account}对账单 {key}存在缺失值，请检查后重新运行')
+            else:
+                info_dict[key] = float(value)
         return info_dict
 
     def generate_tinglian2_settle_info(self):
@@ -220,4 +230,4 @@ class SettleInfo:
 
 if __name__ == '__main__':
 
-    SettleInfo(date='20231102').get_settle_info(account='tinglian2')
+    SettleInfo(date='20231103').get_settle_info(account='panlan1')

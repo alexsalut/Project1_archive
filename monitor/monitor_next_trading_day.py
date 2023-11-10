@@ -31,18 +31,18 @@ def update_monitor_next_trading_day(date, monitor_path, remote_monitor_dir, moni
             sheet['B1'].value = next_trading_day
             stock_shares_df, tag_pos_df = renew_stock_list(remote_summary_dir, formatted_date)
             for index in tag_pos_df.index:
-                sheet[f'B{index + 4}'].value = tag_pos_df.loc[index, 'index']
+                sheet[f'B{index + 5}'].value = tag_pos_df.loc[index, 'index']
             for index in stock_shares_df.index:
-                sheet[f'A{index + 57}'].value = stock_shares_df.loc[index, 'index']
-                sheet[f'B{index + 57}'].formula = f'=EM_S_INFO_NAME(A{index + 57})'
-                sheet[f'C{index + 57}'].value = stock_shares_df.loc[index, '0']
-                sheet[f'D{index + 57}'].formula = f'=EM_S_INFO_INDUSTRY_SW2021(A{index + 57},"1")'
-                sheet[f'E{index + 57}'].formula = f'=EM_S_FREELIQCI_VALUE(A{index + 57},B1,100000000)'
-                sheet[f'F{index + 57}'].formula = f'=EM_S_VAL_MV2(A{index + 57},B1,100000000)'
-                sheet[f'G{index + 57}'].formula = f'=RTD("em.rtq",,A{index + 57},"Time")'
-                sheet[f'H{index + 57}'].formula = f'=RTD("em.rtq",,A{index + 57},"DifferRange")'
+                sheet[f'A{index + 98}'].value = stock_shares_df.loc[index, 'index']
+                sheet[f'B{index + 98}'].formula = f'=EM_S_INFO_NAME(A{index + 98})'
+                sheet[f'C{index + 98}'].value = stock_shares_df.loc[index, '0']
+                sheet[f'D{index + 98}'].formula = f'=EM_S_INFO_INDUSTRY_SW2021(A{index + 98},"1")'
+                sheet[f'E{index + 98}'].formula = f'=EM_S_FREELIQCI_VALUE(A{index + 98},B1,100000000)'
+                sheet[f'F{index + 98}'].formula = f'=EM_S_VAL_MV2(A{index + 98},B1,100000000)'
+                sheet[f'G{index + 98}'].formula = f'=RTD("em.rtq",,A{index + 98},"Time")'
+                sheet[f'H{index + 98}'].formula = f'=RTD("em.rtq",,A{index + 98},"DifferRange")'
 
-            rows_to_delete = range(57 + len(stock_shares_df), 107)
+            rows_to_delete = range(98 + len(stock_shares_df), 180)
             for row in rows_to_delete:
                 sheet.api.Rows(row).Delete()
 
@@ -57,7 +57,7 @@ def update_monitor_next_trading_day(date, monitor_path, remote_monitor_dir, moni
 
             Mail().send(subject=f'Monitor next trading day updated, archive today monitor in 2 min',
                         body_content='',
-                        receivers=R.department['research']
+                        receivers=[R.staff['zhou']]
                         )
 
             time.sleep(120)
@@ -84,3 +84,17 @@ def renew_stock_list(remote_summary_dir, today):
         print('[Next trading day stock list]Update failed, retry in 20 seconds')
         time.sleep(20)
         renew_stock_list(remote_summary_dir, today)
+
+
+if __name__ == '__main__':
+    monitor_path = r'C:\Users\Yz02\Desktop\strategy_update\monitor_test.xlsx'
+    remote_monitor_dir = r'\\192.168.1.116\target_position\monitor'
+    monitor_dir = r'C:\Users\Yz02\Desktop\strategy_update'
+    remote_summary_dir = r'\\192.168.1.116\target_position\summary'
+    update_monitor_next_trading_day(
+        date='20231107',
+        monitor_path=monitor_path,
+        remote_monitor_dir=remote_monitor_dir,
+        monitor_dir=monitor_dir,
+        remote_summary_dir=remote_summary_dir
+    )

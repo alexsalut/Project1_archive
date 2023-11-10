@@ -131,10 +131,9 @@ class Mail(object):
                     if filename:
                         # Construct the full path to save the attachment
                         full_path = os.path.join(save_dir, filename)
-                        if not os.path.exists(full_path):
-                            with open(full_path, 'wb') as attachment:
-                                attachment.write(part.get_payload(decode=True))
-                                print(f'{full_path} has been saved')
+                        with open(full_path, 'wb') as attachment:
+                            attachment.write(part.get_payload(decode=True))
+                            print(f'{full_path} has been saved')
 
         # Close the connection
         mail.logout()

@@ -3,10 +3,8 @@
 # @Author  : Youwei Wu
 # @File    : risk_exposure.py
 # @Software: PyCharm
-import os.path
 import time
 import rqdatac
-
 import pandas as pd
 
 from file_location import FileLocation as FL
@@ -20,7 +18,7 @@ exposure_save_dir = FL().exposure_dir
 
 def gen_expo_df(date):
     formatted_date = pd.to_datetime(date).strftime('%Y%m%d')
-    products = ['talang2', 'talang3', 'panlan']
+    products = ['talang1', 'talang2', 'talang3']
     data = []
 
     try:
@@ -34,7 +32,7 @@ def gen_expo_df(date):
 
         barra_df = expo_df.iloc[:11]
         styled_barra_df = barra_df.style.bar(
-            subset=[('talang2', 'relative'), ('talang3', 'relative'), ('panlan', 'relative')],
+            subset=[('talang1', 'relative'), ('talang2', 'relative'), ('talang3', 'relative')],
             color='#d65f5f',
         )
         styled_barra_df = styled_barra_df.format('{:.2f}')
@@ -42,7 +40,7 @@ def gen_expo_df(date):
 
         industry_df = expo_df.iloc[11:]
         styled_industry_df = industry_df.style.bar(
-            subset=[('talang2', 'relative'), ('talang3', 'relative'), ('panlan', 'relative')],
+            subset=[ ('talang1', 'relative'), ('talang2', 'relative'), ('talang3', 'relative')],
             color='#d65f5f',
         )
         styled_industry_df = styled_industry_df.format('{:.2f}')
@@ -91,9 +89,9 @@ def get_port_excess_exposure(date, product):
 
 
 def get_port_exposure(date, product):
-    if product == 'panlan':
+    if product == 'talang1':
         new_date = pd.to_datetime(date).strftime('%Y-%m-%d')
-        pos_s = pd.read_csv(fr'\\192.168.1.116\trade\broker\cats\account/StockPosition_{new_date}.csv', index_col=2)[
+        pos_s = pd.read_csv(fr'\\192.168.1.116\trade\broker\cats\account/CreditPosition_{new_date}.csv', index_col=2)[
             '参考市值']
         stocklist = pos_s.index.astype(str) + '.XSHG'
         weight = pos_s / pos_s.sum()
@@ -121,7 +119,7 @@ def get_index_exposure(date, product):
         index_ticker = '000905.XSHG'
     elif product == 'talang3':
         index_ticker = '000852.XSHG'
-    elif product == 'panlan':
+    elif product == 'talang1':
         index_ticker = '000688.XSHG'
     else:
         raise
@@ -161,4 +159,4 @@ def rq_get_index_exposure(date, index_ticker):
 
 
 if __name__ == '__main__':
-    gen_expo_df('20231101')
+    gen_expo_df()

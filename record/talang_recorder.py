@@ -54,12 +54,6 @@ class TalangRecorder:
             self.record_account_talang(sheet_name=sheet_name)
 
     def input_talang_account_cell_value(self, sheet_name, account_info_dict, index_ret):
-        # index_code_dict = {
-        #     '踏浪2号': '"000905.SH"',
-        #     '踏浪3号': '"000852.SH"',
-        #     '踏浪1号': '"000688.SH"'
-        # }
-
         app = xw.App(visible=False, add_book=False)
         wb = app.books.open(self.account_path)
         time.sleep(10)
@@ -73,7 +67,7 @@ class TalangRecorder:
         sheet.range(f'B{last_row}').value = account_info_dict['股票权益']  # 总资产
         sheet.range(f'C{last_row}').formula = f'=B{last_row}-B{last_row - 1}-O{last_row}'  # 当日盈亏
         sheet.range(f'D{last_row}').formula = f'=C{last_row}/B{last_row - 1}'  # 当日盈亏率
-        sheet.range(f'E{last_row}').formula = index_ret  # 指数收益率
+        sheet.range(f'E{last_row}').value = index_ret  # 指数收益率
         sheet.range(f'F{last_row}').formula = f'=D{last_row}-E{last_row}'  # 当日超额
         sheet.range(f'G{last_row}').formula = f'=G{last_row - 1}*(1+D{last_row})'  # 多头净值
         sheet.range(f'H{last_row}').formula = f'=H{last_row - 1}*(1+E{last_row})'  # 指数净值
@@ -117,4 +111,4 @@ class TalangRecorder:
 
 
 if __name__ == '__main__':
-    TalangRecorder(account_path=r'C:\Users\13671\Documents\cnn\cnn策略观察_20210924.xlsx', date='20231103').record_talang()
+    TalangRecorder(account_path=r'C:\Users\Yz02\Desktop\strategy_update\test.xlsx', date='20231110').record_talang()

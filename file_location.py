@@ -17,17 +17,23 @@ class FileLocation:
         'panlan1': r'\\192.168.1.116\trade\broker\cats\account',
         'tinglian2 emc': r'\\192.168.1.116\trade\broker\emc\account',
         'tinglian2 cats': r'\\192.168.1.116\trade\broker\cats\account',
+        'nongchao1 cats': r'Z:\投研\数据\交易记录\nongchao\cats',
+        'nongchao1 matic': r'Z:\投研\数据\交易记录\nongchao\matic',
+        'nongchao2 matic': r'Z:\投研\数据\交易记录\nongchao\matic',
 
     }
 
     # 客户编号
-    stock_account_code_dict = {
+    account_code = {
         'talang1': 4089106,  # cats
         'talang2': 14748783,  # qmt
         'talang3': 190000612973,  # iQuant
         'panlan1': 4082225,  # cats
         'talang1_credit': 4089106,  # cats
         'tinglian2': 310310300343,  # emc
+        'nongchao1 cats': 4069336,  # cats
+        'nongchao1 cats_HK': 7200001295,
+
     }
 
     #资产账户
@@ -37,7 +43,7 @@ class FileLocation:
         'tinglian2': 4088701,  # cats
     }
 
-# cnn策略观察文件路径， monitor文件路径
+# 衍舟策略观察文件路径， monitor文件路径
     monitor_dir = r'C:\Users\Yz02\Desktop\strategy_update'
     remote_monitor_dir = r'\\192.168.1.116\target_position\monitor'
     remote_summary_dir = r'\\192.168.1.116\target_position\summary'

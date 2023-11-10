@@ -11,22 +11,12 @@ import matplotlib.pyplot as plt
 import seaborn as sns
 from performance_analysis.data_acquisition import get_talang1_ret, get_kc_stock_pct, get_kc50_stock_list, \
     retry_get_kc50_ret
-from performance_analysis.factor_quantile_eval import FactorQuantileEval
 from util.send_email import Mail, R
-import plotly.express as px
-import plotly.graph_objects as go
-from plotly.io import write_html
 import rqdatac as rq
 
 
 def daily_performance_eval(date=None):
     formatted_date1 = time.strftime('%Y-%m-%d') if date is None else pd.to_datetime(date).strftime("%Y-%m-%d")
-    formatted_date2 = time.strftime('%Y%m%d') if date is None else pd.to_datetime(date).strftime("%Y%m%d")
-
-    f = FactorQuantileEval(date)
-    file_path_dict = f.file_path
-    group_ret, group_rank = f.get_all_group_ret_rank()
-
     data_dict = get_data(formatted_date1)
     fig_paths = []
     fig_paths.append(plot_hist_performance(data_dict['kc stock'], data_dict['talang1'], data_dict['kc50'], '科创板股票',
@@ -35,11 +25,10 @@ def daily_performance_eval(date=None):
         plot_hist_performance(data_dict['kc50 stock'], data_dict['talang1'], data_dict['kc50'], '科创50成分股',
                               formatted_date1))
     statistics_df = gen_statistics_table(data_dict['kc stock'], data_dict['kc50 stock'])
-    notify_with_email(statistics_df, data_dict['talang1'], data_dict['kc50'], group_ret, group_rank,file_path_dict, fig_paths,
-                      formatted_date1)
+    notify_with_email(statistics_df, data_dict['talang1'], data_dict['kc50'], fig_paths, formatted_date1)
 
 
-def notify_with_email(df_html, talang1_ret, kc50_ret, group_ret, group_rank, file_path_dict, fig_paths, date=None):
+def notify_with_email(df_html, talang1_ret, kc50_ret, fig_paths, date=None):
     date = time.strftime('%Y-%m-%d') if date is None else pd.to_datetime(date).strftime("%Y-%m-%d")
 
     subject = f'[Strategy Review] {date}'
@@ -55,16 +44,7 @@ def notify_with_email(df_html, talang1_ret, kc50_ret, group_ret, group_rank, fil
     <center>{df_html}</center>
     <p>踏浪1号当日收益率：{format_number(talang1_ret)}</p>
     <p>科创50当日收益率：{format_number(kc50_ret)}</p>
-    <p>因子文件路径：</p>
-    <p>{file_path_dict['I10R5']}</p>
-    <p>{file_path_dict['I10R2']}</p>
-    <p>{file_path_dict['I5R2']}</p>
-    <p>科创板涨跌幅文件路径：</p>
-    <p>{file_path_dict['raw daily bar']}</p>
-    <p>CNN因子分组收益表现：</p>
-    <center>{group_ret}</center>
-    <p>CNN因子分组收益排名：</p>
-    <center>{group_rank}</center>
+
     """
     Mail().send(
         subject,
@@ -72,7 +52,7 @@ def notify_with_email(df_html, talang1_ret, kc50_ret, group_ret, group_rank, fil
         attachs=[],
         pics=fig_paths,
         pic_disp=['科创板涨跌幅分布', '科创50涨跌幅分布'],
-        receivers=R.department['research'],
+        receivers=R.department['research'] + R.department['admin'],
     )
 
 
@@ -132,51 +112,6 @@ def plot_hist_performance(kc_stock_ret, port_ret, kc50_ret, stock_name, date):
     return path
 
 
-def hist_performance(kc_stock_ret, port_ret, kc50_ret, stock_name, date):
-    counts, bins = np.histogram(kc_stock_ret.values, bins=100)
-    bins = 0.5 * (bins[1:] + bins[:-1])
-    fig = px.bar(
-        x=bins,
-        y=counts,
-        title=f'{stock_name}涨跌幅分布',
-        labels={'x': '涨跌幅', 'y': '计数'},
-    )
-    fig.update_layout(
-        xaxis_title="涨跌幅",
-        yaxis_title="计数",
-        title_x=0.5,
-        legend_title="参数",
-        font=dict(
-            family="Courier New, monospace",
-            size=12,
-            color="RebeccaPurple",
-        ),
-        width=1200,
-        height=800,
-        plot_bgcolor='white',
-        paper_bgcolor='white',
-    )
-    line_dict = {
-        '踏浪1号涨跌幅': {'value': port_ret, 'color': '#F21526'},
-        '科创50涨跌幅': {'value': kc50_ret, 'color': '#78B4FC'},
-        f'{stock_name}涨跌幅均值': {'value': np.mean(kc_stock_ret), 'color': 'green'},
-        f'{stock_name}涨跌幅中位数': {'value': np.median(kc_stock_ret), 'color': 'orange'},
-    }
-    for label, item in line_dict.items():
-        fig.add_traces(
-            go.Scatter(
-                x=[item['value'], item['value']],
-                y=[0, max(counts) * 1.1],
-                mode='lines',
-                name=label,
-                line=dict(color=item['color'], width=1.5, dash='dash')
-            )
-        )
-    fig.show()
-    with open(f'performance/data/{stock_name}涨跌幅分布_{date}.html', 'w', encoding='utf-8') as f:
-        write_html(fig, f)
-
-
 def get_data(date=None):
     rq.init()
     date = time.strftime('%Y-%m-%d') if date is None else pd.to_datetime(date).strftime("%Y-%m-%d")
@@ -193,4 +128,4 @@ def get_data(date=None):
 
 
 if __name__ == '__main__':
-    daily_performance_eval('20231031')
+    daily_performance_eval()

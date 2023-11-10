@@ -13,10 +13,10 @@ from position.account_location import get_account_location
 
 def check_notify_position(receivers, date=None):
     date = date if date is not None else time.strftime('%Y%m%d')
-    account_list = ['talang1_credit','talang1', 'panlan1', 'tinglian2']
-    account_pos_dict = check_all_account_pos(account_list)
+    account_list = ['talang1', 'panlan1', 'tinglian2']
+    account_pos_dict = check_all_account_pos(account_list, date=date)
     subject = rf'[Position Check] {date}'
-    content = gen_check_email_content(account_pos_dict)
+    content = gen_check_email_content(account_pos_dict, date)
     Mail().send(subject=subject, body_content=content, receivers=receivers)
 
 
@@ -28,8 +28,8 @@ def check_all_account_pos(account_list, date=None):
     return account_pos_dict
 
 
-def gen_check_email_content(account_pos_dict):
-    account_loc_dict = get_account_location()
+def gen_check_email_content(account_pos_dict, date):
+    account_loc_dict = get_account_location(date)
     content = f"""
     <table width="800" border="0" cellspacing="0" cellpadding="4">
     <tr>
@@ -38,10 +38,9 @@ def gen_check_email_content(account_pos_dict):
     <td bgcolor="#EFEBDE" height="100" style="font-size:13px">
     """
     account_name_dict = {
-        'talang1_credit': '踏浪1号信用账户',
-        'panlan1': '盼澜1号普通账户',
+        'talang1': '踏浪1号信用账户',
+        'panlan1': '盼澜1号信用账户',
         'tinglian2': '听涟2号信用账户',
-        'talang1': '踏浪1号普通账户',
     }
     for account in account_pos_dict.keys():
         content += f"""
@@ -93,4 +92,4 @@ def check_account_pos(actual_pos_df, target_pos_df):
 
 
 if __name__ == '__main__':
-    check_notify_position(receivers=R.department['research']+R.department['tech'])
+    check_notify_position(receivers=R.department['research']+R.department['tech'], date='20231109')
