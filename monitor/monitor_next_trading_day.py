@@ -7,66 +7,79 @@
 
 import os
 import time
+
 import xlwings as xw
 import pandas as pd
+
 from util.send_email import Mail, R
 from util.utils import retry_save_excel
-from util.trading_calendar import TradingCalendar as TC
+from util.trading_calendar import TradingCalendar
 
-def update_monitor_next_trading_day(date, monitor_path, remote_monitor_dir, monitor_dir, remote_summary_dir):
+
+def update_monitor_next_trading_day(date, t0_monitor_path, remote_monitor_dir, remote_summary_dir):
     formatted_date = pd.to_datetime(date).strftime("%Y%m%d")
-    next_trading_day = TC().get_n_trading_day(formatted_date,1).strftime('%Y%m%d')
-    local_path = rf'{monitor_dir}/monitor_{next_trading_day}_formula.xlsx'
-    if os.path.exists(local_path):
-        print('[Monitor Next trading day update]File already exists')
+    next_trading_day = TradingCalendar().get_n_trading_day(formatted_date, 1).strftime('%Y%m%d')
+    stock_shares_df, tag_pos_df = renew_stock_list(remote_summary_dir, formatted_date)
+
+    if os.path.exists(t0_monitor_path):
+        """
+        表格内容
+        前三行是三个产品，
+        第四行是子策略持仓tag_pos_df的columns，
+        tag_pos_df下面空两行，
+        跟着是stock_shares_df的columns.
+        """
+        app = xw.App(visible=False, add_book=False)  # 新建一个处理excel的进程
+        app.display_alerts = False  # 关闭一些提示信息，可以加快运行速度
+        app.screen_updating = False  # 关闭工作表内容显示，可以加快运行速度
+        wb = app.books.open(t0_monitor_path)
+        sheet = wb.sheets[0]
+
+        # tag_pos_df第一行在表格中的行数
+        row0 = 5
+        # tag_pos_df最后一行在表格中的行数
+        row1 = 4 + len(tag_pos_df)
+        # stock_shares_df第一行在表格中的行数
+        row2 = 4 + len(tag_pos_df) + 4
+        # stock_shares_df最后一行在表格中的行数
+        row3 = 4 + len(tag_pos_df) + 4 + len(stock_shares_df)
+
+        # title
+        sheet['B1'].value = next_trading_day
+        # tag_pos_df
+        sheet[f'B{row0}:B{row1}'].value = tag_pos_df['index']
+        # stock_shares_df
+        sheet[f'A{row2}:A{row3}'].value = stock_shares_df['index']
+        sheet[f'C{row2}:C{row3}'].value = stock_shares_df['0']
+        for order in range(row2, row3 + 1):
+            sheet[f'B{order}'].formula = f'=EM_S_INFO_NAME(A{order})'
+            sheet[f'D{order}'].formula = f'=EM_S_INFO_INDUSTRY_SW2021(A{order},"1")'
+            sheet[f'E{order}'].formula = f'=EM_S_FREELIQCI_VALUE(A{order},B1,100000000)'
+            sheet[f'F{order}'].formula = f'=EM_S_VAL_MV2(A{order},B1,100000000)'
+            sheet[f'G{order}'].formula = f'=RTD("em.rtq",,A{order},"Time")'
+            sheet[f'H{order}'].formula = f'=RTD("em.rtq",,A{order},"DifferRange")'
+
+        rows_to_delete = range(row3, 180)
+        for row in rows_to_delete:
+            sheet.api.Rows(row).Delete()
+
+        remote_path = rf'{remote_monitor_dir}/monitor_{next_trading_day}_formula.xlsx'
+        retry_save_excel(wb=wb, file_path=remote_path)
+        wb.close()
+        app.quit()
+        print('[Monitor Next trading day update]Updated successfully')
+
+        Mail().send(subject=f'Monitor next trading day updated, archive today monitor in 2 min',
+                    body_content='',
+                    receivers=[R.staff['zhou']]
+                    )
+
+        time.sleep(120)
 
     else:
-        try:
-            app = xw.App(visible=False, add_book=False)
-            app.display_alerts = False
-            app.screen_updating = False
-            wb = app.books.open(monitor_path)
-            sheet = wb.sheets[0]
-
-            sheet['B1'].value = next_trading_day
-            stock_shares_df, tag_pos_df = renew_stock_list(remote_summary_dir, formatted_date)
-            for index in tag_pos_df.index:
-                sheet[f'B{index + 5}'].value = tag_pos_df.loc[index, 'index']
-            for index in stock_shares_df.index:
-                sheet[f'A{index + 98}'].value = stock_shares_df.loc[index, 'index']
-                sheet[f'B{index + 98}'].formula = f'=EM_S_INFO_NAME(A{index + 98})'
-                sheet[f'C{index + 98}'].value = stock_shares_df.loc[index, '0']
-                sheet[f'D{index + 98}'].formula = f'=EM_S_INFO_INDUSTRY_SW2021(A{index + 98},"1")'
-                sheet[f'E{index + 98}'].formula = f'=EM_S_FREELIQCI_VALUE(A{index + 98},B1,100000000)'
-                sheet[f'F{index + 98}'].formula = f'=EM_S_VAL_MV2(A{index + 98},B1,100000000)'
-                sheet[f'G{index + 98}'].formula = f'=RTD("em.rtq",,A{index + 98},"Time")'
-                sheet[f'H{index + 98}'].formula = f'=RTD("em.rtq",,A{index + 98},"DifferRange")'
-
-            rows_to_delete = range(98 + len(stock_shares_df), 180)
-            for row in rows_to_delete:
-                sheet.api.Rows(row).Delete()
-
-            retry_save_excel(wb=wb, file_path=local_path)
-
-            remote_path = rf'{remote_monitor_dir}/monitor_{next_trading_day}_formula.xlsx'
-            retry_save_excel(wb=wb, file_path=remote_path)
-            wb.close()
-            app.quit()
-            print('[Monitor Next trading day update]Updated successfully')
-
-
-            Mail().send(subject=f'Monitor next trading day updated, archive today monitor in 2 min',
-                        body_content='',
-                        receivers=[R.staff['zhou']]
-                        )
-
-            time.sleep(120)
-
-        except Exception as e:
-            print(e)
-            print('[Monitor Next trading day update]Update failed, retry in 10 seconds')
-            time.sleep(10)
-            update_monitor_next_trading_day()
+        print('[Monitor Next trading day update]Update failed, retry in 10 seconds')
+        time.sleep(10)
+        update_monitor_next_trading_day()
 
 
 def renew_stock_list(remote_summary_dir, today):
@@ -84,17 +97,3 @@ def renew_stock_list(remote_summary_dir, today):
         print('[Next trading day stock list]Update failed, retry in 20 seconds')
         time.sleep(20)
         renew_stock_list(remote_summary_dir, today)
-
-
-if __name__ == '__main__':
-    monitor_path = r'C:\Users\Yz02\Desktop\strategy_update\monitor_test.xlsx'
-    remote_monitor_dir = r'\\192.168.1.116\target_position\monitor'
-    monitor_dir = r'C:\Users\Yz02\Desktop\strategy_update'
-    remote_summary_dir = r'\\192.168.1.116\target_position\summary'
-    update_monitor_next_trading_day(
-        date='20231107',
-        monitor_path=monitor_path,
-        remote_monitor_dir=remote_monitor_dir,
-        monitor_dir=monitor_dir,
-        remote_summary_dir=remote_summary_dir
-    )

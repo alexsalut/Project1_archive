@@ -59,7 +59,7 @@ def run_daily_update():
         AccountCheck().notify_check_with_email()
         account_recorder(adjust=True)
 
-    elif current_minute == 1400:
+    elif current_minute == 1406:
         ST_List_Updater().st_list_update_and_confirm()
         download_check_kc50_composition()
 
