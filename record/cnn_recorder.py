@@ -11,7 +11,6 @@ import xlwings as xw
 import numpy as np
 
 
-
 class Cnn_Recorder:
     def __init__(self, account_path, monitor_path, date=None):
         self.date = date if date is not None else time.strftime('%Y%m%d')
@@ -61,15 +60,17 @@ class Cnn_Recorder:
 
         def get_value(df, string, i, j):
             loc = np.where(df.values == string)
-            return df.iloc[loc[0][0] + i, loc[1][0] + j]
-
+            try:
+                return df.iloc[loc[0][0] + i, loc[1][0] + j]
+            except IndexError:
+                print()
 
         monitor_data = pd.Series(index=['kc50_ret', 'strategy_ret', 'sub_strategy_ret', 'excess_ret', 'sub_excess_ret'],
                                  data=[
                                      get_value(monitor_df, '000688.SH', 0, 1),
-                                     get_value(monitor_df, '(踏浪1号）', 0, 1),
+                                     get_value(monitor_df, '踏浪1号', 0, 1),
                                      get_value(monitor_df, 'I5R2_all_20', 0, 6),
-                                     get_value(monitor_df, '(踏浪1号）', 0, 2),
+                                     get_value(monitor_df, '踏浪1号', 0, 2),
                                      get_value(monitor_df, 'I5R2_all_20', 0, 7),
                                  ],
                                  dtype=float)
@@ -80,9 +81,3 @@ class Cnn_Recorder:
         else:
             print('Get account rolling_check data successfully')
             return monitor_data
-
-
-if __name__ == '__main__':
-    account_path = r'C:\Users\Yz02\Desktop\strategy_update\cnn策略观察_20210925.xlsx'
-    monitor_path = r'C:\Users\Yz02\Desktop\strategy_update\monitor_20231108_formula.xlsx'
-    Cnn_Recorder(account_path=account_path, monitor_path=monitor_path).cnn_recorder()

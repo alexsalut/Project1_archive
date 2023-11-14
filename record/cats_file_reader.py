@@ -4,7 +4,9 @@
 # @Author  : Suying
 # @Site    : 
 # @File    : cats_file_reader.py
+
 import time
+
 import pandas as pd
 import rqdatac as rq
 
@@ -26,7 +28,6 @@ class CatsFileReader:
             '中信普通账户': self.get_normal_account_info(),
             '中信信用账户': self.get_credit_account_info(),
         }
-
         return cats_account
 
     def get_normal_account_info(self):
@@ -41,18 +42,17 @@ class CatsFileReader:
         cats_normal.update({'可转债市值': add_df_cell(group['Convertible'], '参考市值', is_df=True)})
         cats_normal.update({'其他证券市值': sum(
             [add_df_cell(group[key], '参考市值', is_df=True) for key in group.keys() if key in (['ETF', 'CS'])])})
-        # cats_normal.update({'成交额': self.get_transaction_vol()})
         cats_normal.update({'成交额': 0})
         return cats_normal
 
     def get_credit_account_info(self):
         credit_file_info = self.read_file(['CreditFund', 'CreditPosition'])
-        keys = ['账户净资产', '账户总负债', '融资负债', '融券负债', '融资融券费用', '维担比例', '账户证券市值','现金资产']
+        keys = ['账户净资产', '账户总负债', '融资负债', '融券负债', '融资融券费用', '维担比例', '账户证券市值', '现金资产']
 
         cats_credit = gen_info_dict(
             key_list=keys,
             col_list=['净资产', '负债总额', '融资合约金额', '融券合约金额', ['利息', '费用'], '维护担保比例',
-                      '证券市值','现金资产'],
+                      '证券市值', '现金资产'],
             df=credit_file_info['CreditFund'],
             is_df=True)
 
@@ -60,13 +60,9 @@ class CatsFileReader:
 
         cats_credit.update({'多头证券市值': sum(
             [add_df_cell(group[key], '参考市值', is_df=True) for key in group.keys() if key in (['Convertible', 'CS'])])})
-
-        cats_credit.update({
-            '多头现金类市值': add_df_cell(group['ETF'].query('名称 in ["银华日利","短融"]'), '参考市值', is_df=True)
-                              + cats_credit['现金资产']})
+        cats_credit.update({'多头现金类市值': add_df_cell(
+                group['ETF'].query('名称 in ["银华日利","短融"]'), '参考市值', is_df=True) + cats_credit['现金资产']})
         cats_credit.update({'可转债市值': add_df_cell(group['Convertible'], '参考市值', is_df=True)})
-
-
         cats_credit.update({'成交额': self.get_transaction_vol()})
 
         return cats_credit
@@ -83,7 +79,7 @@ class CatsFileReader:
         return data_dict
 
 
-def group_security(df, ticker_col, inverse=True, number_only=False):
+def group_security(df, ticker_col, inverse=True):
     rq.init()
     if inverse:
         df[ticker_col] = df[ticker_col].apply(lambda x: x.replace('SH', 'XSHG').replace('SZ', 'XSHE'))

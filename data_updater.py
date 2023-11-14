@@ -9,7 +9,6 @@ import time
 
 from choice.c_st_list_updater import ST_List_Updater
 from choice.c_kc50_weight_updater import KC50WeightUpdater
-# from choice.c_turnover_rate_updater import TurnoverRateUpdater
 from choice.kc50_composition import download_check_kc50_composition
 
 from t.ts_kline_updater import KlineUpdater
@@ -24,7 +23,6 @@ from rice_quant.risk_exposure import gen_expo_df
 from rice_quant.live_kline_updater import gen_ricequant_virtual_kline, gen_stock_list
 from performance_analysis.analysis import daily_performance_eval
 
-from web_data.index_futures import update_daily_futures
 from util.trading_calendar import TradingCalendar as TC
 from util.utils import SendEmailInfo
 from util.send_email import Mail, R
@@ -98,15 +96,19 @@ def gen_quick_virtual_kline(current_minute):
 
 
 def update_after_close():
-    KC50WeightUpdater().kc50_weight_update_and_confirm()
-    # TurnoverRateUpdater().turnover_rate_update_and_confirm()
-    RawDailyBarUpdater().update_and_confirm_raw_daily_bar()
-    KlineUpdater().update_confirm_adjusted_kline()
-    update_daily_futures()
+    # KC50WeightUpdater().kc50_weight_update_and_confirm()
+    # RawDailyBarUpdater().update_and_confirm_raw_daily_bar()
+    # KlineUpdater().update_confirm_adjusted_kline()
     daily_performance_eval()
     CheckTick().check_daily()
 
 
 if __name__ == '__main__':
-    auto_update()
+    # account_recorder(date='20231113')
+    # daily_performance_eval(date='20231113')
+    CheckTick(date='20231113').check_daily()
+
+
+    # auto_update()
+    # update_after_close()
 

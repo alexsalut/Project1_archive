@@ -4,12 +4,12 @@
 # @File    : account_info.py
 # @Software: PyCharm
 
-import os
 import time
-import glob
+
 import pandas as pd
+
 from file_location import FileLocation as FL
-from record.cats_file_reader import CatsFileReader, group_security
+from record.cats_file_reader import CatsFileReader
 from record.matic_file_reader import MaticFileReader
 
 
@@ -30,7 +30,7 @@ def read_account_info(date, account):
     else:
         raise ValueError('account name is not correct, please input right account name')
 
-    print(f'{date}获取导出单信息完成：', account,'\n', info)
+    print(f'{date}获取导出单信息完成：', account, '\n', info)
     return info
 
 
@@ -196,7 +196,3 @@ def get_nongchao2_info(date=None):
         date=date
     ).get_matic_account_info()
     return account_dict
-
-
-if __name__ == '__main__':
-    read_account_info(date='20231108', account='nongchao1')

@@ -5,11 +5,12 @@
 # @Site    : 
 # @File    : file_location.py
 
+import os
+
+
 class FileLocation:
 
     # 账户信息文件路径
-
-
     account_info_dir_dict = {
         'talang2': r'\\192.168.1.116\trade\broker\qmt_gf\account\Stock',
         'talang3': r'\\192.168.1.116\trade\broker\iQuant\account\Stock',
@@ -44,7 +45,7 @@ class FileLocation:
     }
 
 # 衍舟策略观察文件路径， monitor文件路径
-    monitor_dir = r'C:\Users\Yz02\Desktop\strategy_update'
+    monitor_dir = rf'{os.path.expanduser("~")}\Desktop\strategy_update'
     remote_monitor_dir = r'\\192.168.1.116\target_position\monitor'
     remote_summary_dir = r'\\192.168.1.116\target_position\summary'
     remote_target_pos_dir = r'\\192.168.1.116\trade\target_position\account'

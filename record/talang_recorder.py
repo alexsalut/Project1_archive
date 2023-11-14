@@ -4,6 +4,7 @@
 # @Author  : Suying
 # @Site    : 
 # @File    : talang_recorder.py
+
 import time
 
 import pandas as pd
@@ -12,7 +13,6 @@ import rqdatac as rq
 
 from record.account_info import read_account_info
 from account_check.get_clearing_info import SettleInfo
-from util.trading_calendar import TradingCalendar as TC
 
 
 class TalangRecorder:

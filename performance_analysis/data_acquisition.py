@@ -1,12 +1,13 @@
 import time
 
 import pandas as pd
+import rqdatac
 import rqdatac as rq
 
 
 def get_talang1_ret(date=None):
     date = pd.to_datetime(date).strftime('%Y%m%d') if date is not None else time.strftime('%Y%m%d')
-    account_df = pd.read_excel(rf'C:\Users\Yz02\Desktop\strategy_update\衍舟策略观察_{date}.xlsx', sheet_name='踏浪1号',
+    account_df = pd.read_excel(rf'\\192.168.1.116\target_position\monitor\衍舟策略观察_{date}.xlsx', sheet_name='踏浪1号',
                                index_col=0)
     account_df.index = account_df.index.astype(str)
     talang1_ret = account_df.loc[date, '当日收益率']
@@ -19,7 +20,7 @@ def get_kc50_stock_list(date=None):
     return rq.index_components('000688.XSHG', date=date)
 
 
-def retry_get_kc50_ret(date=None):
+def rq_retry_get_kc50_ret(date=None):
     date = pd.to_datetime(date).strftime('%Y-%m-%d') if date is not None else time.strftime('%Y-%m-%d')
 
     def get_kc50_ret(date1):
@@ -45,7 +46,3 @@ def get_kc_stock_info(date=None):
     date = date if date is not None else time.strftime('%Y-%m-%d')
     kc_stock_info_df = rq.all_instruments(type='CS', market='cn', date=date).query('board_type=="KSH"')
     return kc_stock_info_df
-
-
-if __name__ == '__main__':
-    print(retry_get_kc50_ret())

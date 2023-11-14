@@ -4,22 +4,21 @@
 # @Author  : Suying
 # @Site    : 
 # @File    : gen_stats.py
-from datetime import datetime, timedelta
+
+import mysql.connector
 
 import pandas as pd
-
-from weekly_product_report.obtain_nav import get_product_nav
 import rqdatac as rq
+
+from datetime import timedelta
 
 
 class ProductStats:
-    def __init__(self, end):
-        self.end = pd.to_datetime(end)
-        self.start = self.end - timedelta(days=7)
+    def __init__(self):
         self.index_code_dict = {
+            '踏浪1号': '000688.SH',
             '踏浪2号': '000905.SH',
             '踏浪3号': '000852.SH',
-            '踏浪1号': '000688.SH'
         }
         self.table_name_dict = {
             '弄潮2号': 'nongchao2_daily_value',
@@ -38,16 +37,18 @@ class ProductStats:
             '踏浪3号': pd.to_datetime('20230602'),
             '听涟2号': pd.to_datetime('20230407'),
             '盼澜1号': pd.to_datetime('20220909'),
-
         }
 
-    def get_all_stats(self):
-        nav_dict = get_product_nav(self.table_name_dict)
+    def get_all_stats(self, end_date):
+        connection = db_connect()
+        nav_dict = {k: get_db_data(connection, v)
+                    for k, v in self.table_name_dict.items()}
         reset_nav_dict = self.set_weekly_date(nav_dict)
-        stats = {}
-        for key in reset_nav_dict.keys():
-            stats[key] = self.get_statistics(nav_s=reset_nav_dict[key], key=key)
-
+        stats = {k: self.get_statistics(
+            key=k,
+            nav_s=v,
+            end_date=end_date,
+        ) for k, v in reset_nav_dict.items()}
         return stats
 
     def set_weekly_date(self, nav_dict):
@@ -65,20 +66,25 @@ class ProductStats:
             fridays.append(self.start_date[key])
         return nav_s.loc[fridays].sort_index()
 
-    def get_statistics(self, nav_s, key):
+    def get_statistics(self, nav_s, key, end_date):
+        end = pd.to_datetime(end_date)
+        start = end - timedelta(days=7)
         statistics = {
             '累计净值': nav_s.iloc[-1],
-            '当周收益': nav_s.loc[self.end] / nav_s.loc[self.start] - 1,
+            '当周收益': nav_s.loc[end] / nav_s.loc[start] - 1,
             '历史最大回撤': self.get_mdd(nav_s),
         }
         statistics.update({'年化收益': (nav_s.iloc[-1])**(52/(len(nav_s)-1)) - 1})
 
         if key in self.index_code_dict.keys():
-            index_nav_s = self.get_index_ret(self.index_code_dict[key], nav_s.index[0].strftime('%Y%m%d'),
-                                             self.end.strftime('%Y%m%d')).loc[nav_s.index]
+            index_nav_s = self.get_index_ret(
+                index_code=self.index_code_dict[key],
+                start=nav_s.index[0].strftime('%Y%m%d'),
+                end=end.strftime('%Y%m%d'),
+            ).loc[nav_s.index]
             excess_nav = nav_s / index_nav_s
             statistics.update({
-                '当周超额': excess_nav.loc[self.end] / excess_nav.loc[self.start] - 1,
+                '当周超额': excess_nav.loc[end] / excess_nav.loc[start] - 1,
                 '超额最大回撤': self.get_mdd(excess_nav),
                 '年化超额': (excess_nav.iloc[-1])**(52/(len(excess_nav)-1)) - 1,
             })
@@ -101,5 +107,30 @@ class ProductStats:
         return mdd
 
 
+def db_connect():
+    connection = mysql.connector.connect(host='39.98.41.75',
+                                         database='yanzhou_netvalue',
+                                         user='yanzhou',
+                                         password='yanzhou0801')
+    if connection.is_connected():
+        print('数据库连接成功')
+        return connection
+    else:
+        print('数据库连接失败')
+        return db_connect()
+
+
+def get_db_data(connection, table_name):
+    select_query = f"SELECT * FROM {table_name}"
+    cursor = connection.cursor()
+    cursor.execute(select_query)
+    rows = cursor.fetchall()
+    columns = [desc[0] for desc in cursor.description]
+    df = pd.DataFrame(rows, columns=columns).set_index('date', drop=True)
+    df.index = pd.to_datetime(df.index)
+    print(table_name, '净值获取成功')
+    return df
+
+
 if __name__ == '__main__':
-    ProductStats('20231103').get_all_stats()
+    ProductStats().get_all_stats(end_date='20231111')
