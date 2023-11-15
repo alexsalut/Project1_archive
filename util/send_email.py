@@ -4,20 +4,20 @@
 # @Author  : Suying
 # @Site    : 
 # @File    : send_email.py
+
+import os
 import smtplib
+
 # 负责构造文本
 from email.mime.text import MIMEText
 # 负责构造图片
 from email.mime.image import MIMEImage
-import imaplib
-import email
 # 负责将多个对象集合起来
 from email.mime.multipart import MIMEMultipart
 from email.header import Header
-import os
 
 
-class Mail(object):
+class Mail:
     def __init__(self):
         self.send_mail_host = "smtp.feishu.cn"  # SMTP服务器
         self.receive_mail_host = "imap.feishu.cn"
@@ -80,17 +80,17 @@ class Mail(object):
         # 关闭SMTP对象
         stp.quit()
 
-
-    def receive(self, save_dir, date_range=[3,1]):
+    def receive(self, save_dir, date_range=[3, 1]):
         import imaplib
         import email
         import os
         from email.header import decode_header
         from datetime import datetime, timedelta
 
+        if not os.path.exists(save_dir):
+            raise FileNotFoundError(f"No such directory: {save_dir}")
 
         # Directory to save attachments
-
         # Set the time range to select emails after 5 PM yesterday
         now = datetime.now()
         last = now - timedelta(days=date_range[0])

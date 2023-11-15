@@ -4,12 +4,13 @@
 # @Author  : Suying
 # @Site    : 
 # @File    : matic_file_reader.py
+
+import os
 import time
 import glob
-import os
 import pandas as pd
 
-from record.cats_file_reader import gen_info_dict, group_security
+from record.cats_file_reader import gen_info_dict
 
 
 class MaticFileReader:
@@ -63,8 +64,6 @@ class MaticFileReader:
     def get_security_asset(self, position_df):
         convertible = position_df.query('证券名称.str.contains("转")&(~证券名称.str.contains("ETF"))')[
             '市值（CNY）'].sum()
-        etf = position_df.query('证券名称.str.contains("ETF")')['市值（CNY）'].sum()
-
         cash_asset = position_df.query('证券名称.str.contains("银华日利")|证券名称.str.contains("短融") ')['市值（CNY）'].sum()
         stock = position_df.query('(~证券名称.str.contains("ETF"))&(~证券名称.str.contains("转"))')['市值（CNY）'].sum()
         return {'多头证券市值': convertible + stock, '现金类ETF市值': cash_asset, '可转债市值': convertible}
@@ -80,5 +79,8 @@ class MaticFileReader:
     def get_newest_file(self, dir, key):
         file_list = glob.glob(f'{dir}/*{key}*')
         time_list = [os.path.getmtime(file) for file in file_list]
-        newest_file = file_list[time_list.index(max(time_list))]
+        try:
+            newest_file = file_list[time_list.index(max(time_list))]
+        except ValueError:
+            print()
         return newest_file

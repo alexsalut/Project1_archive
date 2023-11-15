@@ -21,21 +21,14 @@ class TalangRecorder:
         self.account_path = account_path
         self.adjust = adjust
 
-    def record_talang(self):
+    def update(self):
         rq.init()
-        self.record_account_talang(sheet_name='踏浪1号')
-        self.record_account_talang(sheet_name='踏浪2号')
-        self.record_account_talang(sheet_name='踏浪3号')
+        self.update_account(account='踏浪1号')
+        self.update_account(account='踏浪2号')
+        self.update_account(account='踏浪3号')
 
-    def record_account_talang(self, sheet_name):
-        index_ret = self.retry_get_index_ret(sheet_name=sheet_name)
-        talang_dict = {
-            '踏浪2号': 'talang2',
-            '踏浪3号': 'talang3',
-            '踏浪1号': 'talang1'
-        }
-
-        account = talang_dict[sheet_name]
+    def update_account(self, account):
+        index_ret = self.rq_get_index_ret(sheet_name=account)
         if self.adjust is None:
             account_info_dict = read_account_info(date=self.date, account=account)
         else:
@@ -43,20 +36,23 @@ class TalangRecorder:
 
         try:
             self.input_talang_account_cell_value(
-                sheet_name=sheet_name,
+                sheet_name=account,
                 account_info_dict=account_info_dict,
                 index_ret=index_ret
             )
+
+        # Which exception ?
         except Exception as e:
             print(e)
-            print(f'{self.account_path} with sheet name {sheet_name} updating failed, retry in 10 seconds')
+            print(f'{self.account_path} with sheet name {account} updating failed, retry in 10 seconds')
             time.sleep(10)
-            self.record_account_talang(sheet_name=sheet_name)
+            self.update_account(account)
 
     def input_talang_account_cell_value(self, sheet_name, account_info_dict, index_ret):
         app = xw.App(visible=False, add_book=False)
+        print('Generate excel pid:', app.pid)
+
         wb = app.books.open(self.account_path)
-        time.sleep(10)
         sheet = wb.sheets[sheet_name]
         if self.adjust is None:
             last_row = sheet.cells(sheet.cells.last_cell.row, 1).end('up').row + 1
@@ -81,34 +77,29 @@ class TalangRecorder:
         wb.save(self.account_path)
         wb.close()
         app.quit()
-        print(f'{self.account_path} with sheet name {sheet_name} updating finished')
+        print(f'Sheet-{sheet_name} has been updated.')
 
-    def retry_get_index_ret(self, sheet_name):
+    def rq_get_index_ret(self, sheet_name):
         assert sheet_name in ['踏浪2号', '踏浪3号', '踏浪1号']
         index_code_dict = {
+            '踏浪1号': '000688.SH',
             '踏浪2号': '000905.SH',
             '踏浪3号': '000852.SH',
-            '踏浪1号': '000688.SH'
         }
 
         index_code = index_code_dict[sheet_name]
-
         order_book_ids = rq.id_convert(index_code)
 
-        def get_index_ret(order_book_ids, date):
-            index_ret = rq.get_price_change_rate(order_book_ids, start_date=date, end_date=date)
-            if index_ret is None:
-                current_time = time.strftime('%X')
-                print(f'no data for index {index_code} for {date} yet,{current_time}, retry in 10 seconds')
-                time.sleep(10)
+        def get_index_ret(_order_book_ids, date):
+            index_ret_df = rq.get_price_change_rate(_order_book_ids, start_date=date, end_date=date)
+            if index_ret_df is None:
+                print(time.strftime('%X'),
+                      f'RiceQuant has no data for {index_code}-{date} yet, retry in 5 min.')
+                time.sleep(300)
                 get_index_ret(order_book_ids, date)
             else:
-                print(f'{index_code} return is {index_ret.iloc[-1, 0]:.2%} for date {date}')
-                return index_ret.iloc[-1, 0]
+                print(f'RiceQuant has got data for {index_code}-{date}: {index_ret_df.iloc[-1, 0]:.2%}')
+                return index_ret_df.iloc[-1, 0]
 
         index_ret = get_index_ret(order_book_ids, self.date)
         return index_ret
-
-
-if __name__ == '__main__':
-    TalangRecorder(account_path=r'C:\Users\Yz02\Desktop\strategy_update\test.xlsx', date='20231110').record_talang()

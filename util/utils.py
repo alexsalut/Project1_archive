@@ -60,10 +60,11 @@ def send_email(subject, content, receiver):
 def retry_save_excel(wb, file_path):
     try:
         wb.save(file_path)
-        print(f'{file_path} has been saved')
+        print(f'File has been saved: {file_path}')
+    # Which exception ???
     except Exception as e:
         print(e)
-        print(f'{file_path} cannot be saved, wait for 10 seconds')
+        print(f'File cannot be saved, wait for 10 seconds: {file_path}')
         time.sleep(10)
         retry_save_excel(wb, file_path)
 
@@ -79,7 +80,7 @@ def retry_remove_excel(file_path):
         retry_remove_excel(file_path)
 
 
-def multi_task(func, tasks, n_cpu=30):
+def multi_task(func, tasks, n_cpu=10):
     pool = mul.Pool(processes=n_cpu)
     pool_result = [pool.apply_async(func, args=(task,))
                    for task in tasks]

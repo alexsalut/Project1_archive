@@ -4,8 +4,10 @@
 # @Author  : Suying
 # @Site    : 
 # @File    : txt_data.py
-import pandas as pd
+
 import re
+
+import pandas as pd
 
 
 class TxtData:

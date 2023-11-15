@@ -111,7 +111,7 @@ class KlineUpdater:
                 kline = adjusted_kline.loc[self.today]
                 raw_stock = raw_df[raw_df['ts_code'].str.startswith('68')]['ts_code'].str[:6].tolist()
                 kline_stock = [stock[2:] for stock in kline.index.tolist()]
-                return (list(set(raw_stock) - set(kline_stock)))
+                return list(set(raw_stock) - set(kline_stock))
             else:
                 print(f'{raw_path} does not exist. Download raw daily bar first.')
         else:

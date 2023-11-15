@@ -4,18 +4,22 @@
 # @Author  : Suying
 # @Site    : 
 # @File    : factor_quantile_eval.py
+
 import time
 
 import pandas as pd
 import rqdatac as rq
+
 from file_location import FileLocation as FL
 from util.utils import transfer_to_jy_ticker
+
 
 class FactorQuantileEval:
     def __init__(self, date=None):
         self.date = pd.to_datetime(date).strftime("%Y%m%d") if date is not None else time.strftime('%Y%m%d')
         self.file_path = self.get_file_path(self.date)
         print('File path:', self.file_path)
+
     def get_all_group_ret_rank(self):
         data = []
         for factor in ['I10R5', 'I10R2', 'I5R2']:
@@ -29,7 +33,6 @@ class FactorQuantileEval:
 
         return ret_text, rank_text
 
-
     def get_group_ret(self, factor):
         group_s = self.get_factor_group(factor)
         group_num = len(group_s.unique())
@@ -42,7 +45,6 @@ class FactorQuantileEval:
             stock_list = group_s[group_s == i].index.tolist()
             group_ret_s[f'CNN{i + 1}'] = ret_df.loc[stock_list, 'pct_chg'].mean()
         return group_ret_s
-
 
 # group stocks by factor into 5 groups in an ascending order
     def get_factor_group(self, factor):

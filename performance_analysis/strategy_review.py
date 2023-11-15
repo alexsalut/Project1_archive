@@ -3,7 +3,7 @@
 # @Time    : 2023/10/18 15:59
 # @Author  : Suying
 # @Site    : 
-# @File    : analysis.py
+# @File    : strategy_review.py
 
 import time
 
@@ -18,8 +18,7 @@ from performance_analysis.data_acquisition import \
     get_talang1_ret, get_kc_stock_pct, get_kc50_stock_list, rq_retry_get_kc50_ret
 
 
-def daily_performance_eval(date=None):
-
+def send_strategy_review(date=None):
     data_dict = get_data_dict(date)
     fig_paths = [plot_hist_performance(data_dict, stock_name=x)
                  for x in ['科创板股票', '科创50成分股']]
@@ -61,10 +60,10 @@ def plot_hist_performance(data_dict, stock_name):
     plt.xticks(fontsize=20)
     plt.ylabel('计数', fontsize=20)
     plt.yticks(fontsize=20)
-    plt.axvline(x=np.mean(kc_stock_ret), color='g', linestyle='--', label=f'{stock_name}均值')
-    plt.axvline(x=np.median(kc_stock_ret), color='orange', linestyle='--', label=f'{stock_name}中位数')
-    plt.axvline(x=data_dict['kc50_index'], color='b', linestyle='--', label='科创50指数')
-    plt.axvline(x=data_dict['talang1'], color='r', linestyle='--', label='踏浪1号')
+    plt.axvline(x=np.mean(kc_stock_ret), color='g', linestyle='--', linewidth=3, label=f'{stock_name}均值')
+    plt.axvline(x=np.median(kc_stock_ret), color='orange', linestyle='--', linewidth=3, label=f'{stock_name}中位数')
+    plt.axvline(x=data_dict['kc50_index'], color='b', linestyle='--', linewidth=4, label='科创50指数')
+    plt.axvline(x=data_dict['talang1'], color='r', linestyle='--', linewidth=4, label='踏浪1号')
     plt.rcParams['font.sans-serif'] = ['SimHei']
     plt.rcParams['axes.unicode_minus'] = False
     plt.legend(fontsize=20)
@@ -133,4 +132,4 @@ def format_number(value):
 
 
 if __name__ == '__main__':
-    daily_performance_eval(date='20231113')
+    send_strategy_review(date='20231115')

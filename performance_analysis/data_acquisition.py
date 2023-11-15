@@ -1,7 +1,6 @@
 import time
 
 import pandas as pd
-import rqdatac
 import rqdatac as rq
 
 

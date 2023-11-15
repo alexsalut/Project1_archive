@@ -16,8 +16,8 @@ class Monitor:
     seq = '*' * 10
 
     def update(self, today=None):
-        today = time.strftime('%Y%m%d') if today is None else today
         print(f'{self.seq * 2} Monitor Daily Update {self.seq * 2}')
+
         self.collect_related_data(today)
         self.update_next_trading_day()
         self.archive_today()
@@ -25,6 +25,7 @@ class Monitor:
     def collect_related_data(self, today):
         print(f'\n{self.seq} Collect Related Data {self.seq}')
 
+        today = time.strftime('%Y%m%d') if today is None else today
         next_trading_day = TradingCalendar().get_n_trading_day(today, 1).strftime('%Y%m%d')
 
         monitor_path = rf'{self.monitor_dir}/monitor_{today}_formula.xlsx'
@@ -34,7 +35,7 @@ class Monitor:
         stock_shares_path = rf'{self.summary_dir}/stock_shares_{today}.csv'
 
         monitor_values_df = self.get_monitor_values_df(monitor_path)
-        tag_pos_df = pd.read_csv(tag_pos_path, index_col=0,).reset_index(drop=False)
+        tag_pos_df = pd.read_csv(tag_pos_path, index_col=0).reset_index(drop=False)
         stock_shares_df = pd.read_csv(stock_shares_path, index_col=0).reset_index(drop=False)
 
         self.dataset = {
@@ -85,16 +86,17 @@ class Monitor:
 
         sheet['B1'].value = next_trading_day
         for index in tag_pos_df.index:
-            sheet[f'B{index + row1}'].value = tag_pos_df.loc[index, 'index']
+            sheet[f'B{row1 + index}'].value = tag_pos_df.loc[index, 'index']
+
         for index in stock_shares_df.index:
-            sheet[f'A{index + row2}'].value = stock_shares_df.loc[index, 'index']
-            sheet[f'B{index + row2}'].formula = f'=EM_S_INFO_NAME(A{index + row2})'
-            sheet[f'C{index + row2}'].value = stock_shares_df.loc[index, '0']
-            sheet[f'D{index + row2}'].formula = f'=EM_S_INFO_INDUSTRY_SW2021(A{index + row2},"1")'
-            sheet[f'E{index + row2}'].formula = f'=EM_S_FREELIQCI_VALUE(A{index + row2},B1,100000000)'
-            sheet[f'F{index + row2}'].formula = f'=EM_S_VAL_MV2(A{index + row2},B1,100000000)'
-            sheet[f'G{index + row2}'].formula = f'=RTD("em.rtq",,A{index + row2},"Time")'
-            sheet[f'H{index + row2}'].formula = f'=RTD("em.rtq",,A{index + row2},"DifferRange")'
+            sheet[f'A{row2 + index}'].value = stock_shares_df.loc[index, 'index']
+            sheet[f'B{row2 + index}'].formula = f'=EM_S_INFO_NAME(A{row2 + index})'
+            sheet[f'C{row2 + index}'].value = stock_shares_df.loc[index, '0']
+            sheet[f'D{row2 + index}'].formula = f'=EM_S_INFO_INDUSTRY_SW2021(A{row2 + index},"1")'
+            sheet[f'E{row2 + index}'].formula = f'=EM_S_FREELIQCI_VALUE(A{row2 + index},B1,100000000)'
+            sheet[f'F{row2 + index}'].formula = f'=EM_S_VAL_MV2(A{row2 + index},B1,100000000)'
+            sheet[f'G{row2 + index}'].formula = f'=RTD("em.rtq",,A{row2 + index},"Time")'
+            sheet[f'H{row2 + index}'].formula = f'=RTD("em.rtq",,A{row2 + index},"DifferRange")'
 
     def clear_extra_rows(self, sheet):
         row2 = self.dataset['row2']

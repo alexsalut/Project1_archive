@@ -14,29 +14,27 @@ from record.matic_file_reader import MaticFileReader
 
 
 def read_account_info(date, account):
-    print(f'{date}获取导出单信息：', account)
-    if account in ['talang2', 'talang3']:
+    print(f'\n{account}: 获取{date}导出单信息')
+    if account in ['踏浪2号', '踏浪3号']:
         info = get_talang23_info(account=account, date=date)
-    elif account == 'talang1':
+    elif account == '踏浪1号':
         info = get_talang1_info(date=date)
-    elif account == 'tinglian2':
+    elif account == '听涟2号':
         info = get_tinglian2_info(date=date)
-    elif account == 'panlan1':
+    elif account == '盼澜1号':
         info = get_panlan1_info(date=date)
-    elif account == 'nongchao1':
+    elif account == '弄潮1号':
         info = get_nongchao1_info(date=date)
-    elif account == 'nongchao2':
+    elif account == '弄潮2号':
         info = get_nongchao2_info(date=date)
     else:
-        raise ValueError('account name is not correct, please input right account name')
-
-    print(f'{date}获取导出单信息完成：', account, '\n', info)
+        raise ValueError('Account name is not correct, please input right account name.')
     return info
 
 
 def get_tinglian2_info(date=None):
-    emc_tinglian_dir = FL.account_info_dir_dict['tinglian2 emc']
-    cats_tinglian_dir = FL.account_info_dir_dict['tinglian2 cats']
+    emc_tinglian_dir = FL.account_info_dir_dict['听涟2号 emc']
+    cats_tinglian_dir = FL.account_info_dir_dict['听涟2号 cats']
     formatted_date1 = pd.to_datetime(date).strftime("%Y%m%d") if date is not None else time.strftime('%Y%m%d')
     formatted_date2 = pd.to_datetime(date).strftime("%Y-%m-%d") if date is not None else time.strftime('%Y-%m-%d')
 
@@ -58,7 +56,7 @@ def get_tinglian2_info(date=None):
         rf'{cats_tinglian_dir}/OptionFund_{formatted_date2}.csv',
         index_col=False,
     ).set_index('账户')  # cats 账户
-    cats_option_equity = cats_option_df.loc[FL.option_account_code_dict['tinglian2'], '资金总额']
+    cats_option_equity = cats_option_df.loc[FL.option_account_code_dict['听涟2号'], '资金总额']
 
     transaction_df = pd.read_csv(
         rf'{emc_tinglian_dir}/310310300343_RZRQ_MATCH.{formatted_date1}.csv',
@@ -67,18 +65,17 @@ def get_tinglian2_info(date=None):
     )
 
     stock_transaction_df = transaction_df.query(
-        f'资金账号=={FL.account_code["tinglian2"]}|业务类型.isin(["证券买入", "证券卖出"])')
+        f'资金账号=={FL.account_code["听涟2号"]}|业务类型.isin(["证券买入", "证券卖出"])')
     stock_transaction_vol = stock_transaction_df['成交数量'].mul(stock_transaction_df['成交价格']).sum()
 
-    option_dir = FL.account_info_dir_dict['tinglian2 cats']
+    option_dir = FL.account_info_dir_dict['听涟2号 cats']
     option_transaction_df = pd.read_csv(rf'{option_dir}/TransactionsStatisticsDaily_{formatted_date2}.csv',
-                                        index_col=False).set_index(
-        '账户')
-    option_code = FL.option_account_code_dict['tinglian2']
+                                        index_col=False).set_index('账户')
+    option_code = FL.option_account_code_dict['听涟2号']
     option_transaction_df = option_transaction_df.query(f'账户=={option_code}')
 
-    option_transaction_vol = option_transaction_df.query('证券代码.str.startswith("1000")', engine='python')[
-        '成交额'].sum()
+    option_transaction_vol = option_transaction_df.query(
+        '证券代码.str.startswith("1000")', engine='python')['成交额'].sum()
 
     info_dict = {
         'cats期权权益': cats_option_equity,
@@ -108,8 +105,8 @@ def get_talang23_info(account, date=None):
 
 
 def get_talang1_info(date=None):
-    account_dir = FL.account_info_dir_dict['talang1']
-    account_code = FL.account_code['talang1']
+    account_dir = FL.account_info_dir_dict['踏浪1号']
+    account_code = FL.account_code['踏浪1号']
 
     formatted_date = pd.to_datetime(date).strftime("%Y-%m-%d") if date is not None else time.strftime('%Y-%m-%d')
     stock_ordinary = \
@@ -134,24 +131,24 @@ def get_talang1_info(date=None):
 
 
 def get_panlan1_info(date=None):
-    panlan_dir = FL.account_info_dir_dict['panlan1']
+    panlan_dir = FL.account_info_dir_dict['盼澜1号']
     formatted_date2 = pd.to_datetime(date).strftime("%Y-%m-%d") if date is not None else time.strftime(
         '%Y-%m-%d')
     stock_normal_s = \
         pd.read_csv(rf'{panlan_dir}/StockFund_{formatted_date2}.csv', index_col=False).set_index(
             '账户').loc[
-            FL.account_code['panlan1']]
+            FL.account_code['盼澜1号']]
 
     stock_credit_s = pd.read_csv(rf'{panlan_dir}/CreditFund_{formatted_date2}.csv', index_col=False).set_index(
-        '账户').loc[FL.account_code['panlan1']]
+        '账户').loc[FL.account_code['盼澜1号']]
 
     option_s = pd.read_csv(rf'{panlan_dir}/OptionFund_{formatted_date2}.csv', index_col=False).set_index(
         '账户').loc[
-        FL.option_account_code_dict['panlan1']]
+        FL.option_account_code_dict['盼澜1号']]
 
     transaction_df = pd.read_csv(rf'{panlan_dir}/TransactionsStatisticsDaily_{formatted_date2}.csv',
                                  index_col=False).set_index(
-        '账户').loc[FL.account_code['panlan1']]
+        '账户').loc[FL.account_code['盼澜1号']]
 
     option_transaction_vol = transaction_df.query('证券代码.str.startswith("1000")', engine='python')['成交额'].sum()
     stock_transaction_vol = transaction_df.query('证券代码.str.len() == 9')['成交额'].sum()
@@ -174,13 +171,13 @@ def get_panlan1_info(date=None):
 
 def get_nongchao1_info(date=None):
     account_dict = CatsFileReader(
-        file_dir=FL.account_info_dir_dict['nongchao1 cats'],
-        account_code=FL.account_code['nongchao1 cats'],
+        file_dir=FL.account_info_dir_dict['弄潮1号 cats'],
+        account_code=FL.account_code['弄潮1号 cats'],
         date=date
     ).get_cats_account_info()
 
     matic_normal_dict = MaticFileReader(
-        file_dir=FL.account_info_dir_dict['nongchao1 matic'],
+        file_dir=FL.account_info_dir_dict['弄潮1号 matic'],
         account_code='衍舟弄潮1号',
         date=date
     ).get_normal_account_info()
@@ -191,7 +188,7 @@ def get_nongchao1_info(date=None):
 
 def get_nongchao2_info(date=None):
     account_dict = MaticFileReader(
-        file_dir=FL.account_info_dir_dict['nongchao2 matic'],
+        file_dir=FL.account_info_dir_dict['弄潮2号 matic'],
         account_code='衍舟弄潮2号',
         date=date
     ).get_matic_account_info()

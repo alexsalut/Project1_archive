@@ -18,7 +18,6 @@ class NongchaoRecorder:
         self.date = pd.to_datetime(date).strftime('%Y%m%d') if date is not None else time.strftime('%Y%m%d')
         self.account_path = account_path
         self.adjust = adjust
-        self.account = {'弄潮1号': 'nongchao1', '弄潮2号': 'nongchao2'}
         self.account_col = {
             '弄潮1号': {
                 '中信普通账户': ['Z', 'AA', 'AB', 'AC'],
@@ -49,10 +48,11 @@ class NongchaoRecorder:
         self.record_account_nongchao(sheet_name='弄潮2号')
 
     def record_account_nongchao(self, sheet_name):
-        account_info_dict = read_account_info(date=self.date, account=self.account[sheet_name])
+        account_info_dict = read_account_info(date=self.date, account=sheet_name)
         app = xw.App(visible=False, add_book=False)
+        print('Generate excel pid:', app.pid)
+
         wb = app.books.open(self.account_path)
-        time.sleep(10)  # why?
         sheet = wb.sheets[sheet_name]
         if self.adjust is None:
             last_row = sheet.cells(sheet.cells.last_cell.row, 1).end('up').row + 1

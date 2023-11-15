@@ -11,7 +11,7 @@ from position.get_account_position import AccountPosition as ap
 from position.account_location import get_account_location
 
 
-def check_notify_position(receivers, date=None):
+def send_position_check(receivers, date=None):
     date = date if date is not None else time.strftime('%Y%m%d')
     account_list = ['talang1', 'panlan1', 'tinglian2']
     account_pos_dict = check_all_account_pos(account_list, date=date)
@@ -73,7 +73,6 @@ def check_account_pos(actual_pos_df, target_pos_df):
         else:
             return ''
 
-
     styled_pos_df = pos_df.style.applymap(highlight_diff, subset=['实际-目标', '偏移比率%'])
     styled_pos_df = styled_pos_df.format(
         {'实际': '{:.0f}', '目标': '{:.0f}', '实际-目标': '{:.0f}', '偏移比率%': '{:.1f}'})
@@ -92,4 +91,4 @@ def check_account_pos(actual_pos_df, target_pos_df):
 
 
 if __name__ == '__main__':
-    check_notify_position(receivers=R.department['research']+R.department['tech'], date='20231109')
+    send_position_check(receivers=R.department['research'] + R.department['tech'], date='20231109')

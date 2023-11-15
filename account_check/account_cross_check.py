@@ -7,7 +7,9 @@
 
 import os
 import time
+
 import pandas as pd
+
 from account_check.get_clearing_info import SettleInfo
 from util.send_email import Mail, R
 from record.account_info import read_account_info
@@ -21,7 +23,7 @@ class AccountCheck:
         last_trading_day = TC().get_n_trading_day(time.strftime('%Y%m%d'), -1).strftime('%Y%m%d')
         self.date = date if date is not None else last_trading_day
         self.dir = FL().clearing_dir
-        self.account_path = rf'C:\Users\Yz02\Desktop\strategy_update\cnn策略观察_{self.date}.xlsx'
+        self.account_path = rf'~\Desktop\strategy_update\cnn策略观察_{self.date}.xlsx'
         self.account_name_dict = {
             'panlan1': '盼澜1号',
             'tinglian2': '听涟2号',
@@ -30,34 +32,33 @@ class AccountCheck:
             'talang3': '踏浪3号',
         }
 
-
     def notify_check_with_email(self):
+        Mail().receive(save_dir=self.dir)
         try:
             Mail().receive(save_dir=self.dir)
-            missed_string = self.check_all_file_exist()
-            if missed_string:
-                print(f'{missed_string}不存在')
-                Mail().send(
-                    subject=f'[各账户资产核对]{self.date}失败，两分钟后重试',
-                    body_content=f'{missed_string}不存在',
-                    receivers=R.department['research'][0],
-                )
-                time.sleep(120)
-                self.notify_check_with_email()
-            else:
-                check_info_dict = self.check_all_account_info()
-                email_info = self.gen_email_content(check_info_dict=check_info_dict)
-                Mail().send(
-                    subject=email_info['subject'],
-                    body_content=email_info['content'],
-                    receivers=R.department['research']+[R.department['tech'][0]],
-                    # receivers=[R.department['research'][0]],
-                )
-        except Exception as e:
-            print(e)
+        except FileNotFoundError:
             print('Error in notify_check_with_email, retry in 2 minutes.')
             time.sleep(120)
             self.notify_check_with_email()
+
+        missed_string = self.check_all_file_exist()
+        if missed_string:
+            print(f'{missed_string}不存在')
+            Mail().send(
+                subject=f'[各账户资产核对]{self.date}失败，两分钟后重试',
+                body_content=f'{missed_string}不存在',
+                receivers=R.department['research'][0],
+            )
+            time.sleep(120)
+            self.notify_check_with_email()
+        else:
+            check_info_dict = self.check_all_account_info()
+            email_info = self.gen_email_content(check_info_dict=check_info_dict)
+            Mail().send(
+                subject=email_info['subject'],
+                body_content=email_info['content'],
+                receivers=R.department['research']+[R.department['tech'][0]],
+            )
 
     def check_all_file_exist(self):
         f = SettleInfo(date=self.date)
@@ -124,11 +125,11 @@ class AccountCheck:
             '股票市值': record_df.loc[self.date, '总市值'],
             '股票交易额': record_df.loc[self.date, '成交额'],
         }
-        if account.startswith('talang'):
+        if account.startswith('踏浪'):
             record_info_dict.update({
                 '股票权益': record_df.loc[self.date, '总资产'],
             })
-        elif account in ['panlan1', 'tinglian2']:
+        elif account in ['盼澜1号', '听涟2号']:
             record_info_dict.update({
                 '期权权益': record_df.loc[self.date, '期权总权益'],
                 '股票权益': record_df.loc[self.date, '股票资产总值'],
@@ -136,7 +137,6 @@ class AccountCheck:
         return record_info_dict
 
 
-
 if __name__ == '__main__':
-    f = AccountCheck()
-    f.notify_check_with_email()
+    ac = AccountCheck()
+    ac.notify_check_with_email()
