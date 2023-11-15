@@ -1,0 +1,138 @@
+import time
+import datetime
+
+import xlwings as xw
+import pandas as pd
+
+from util.utils import retry_save_excel
+from util.trading_calendar import TradingCalendar
+from file_location import FileLocation
+
+
+class Monitor:
+    monitor_dir = FileLocation.remote_monitor_dir
+    summary_dir = FileLocation.remote_summary_dir
+    dataset = {}
+    seq = '*' * 10
+
+    def update(self, today=None):
+        today = time.strftime('%Y%m%d') if today is None else today
+        print(f'{self.seq * 2} Monitor Daily Update {self.seq * 2}')
+        self.collect_related_data(today)
+        self.update_next_trading_day()
+        self.archive_today()
+
+    def collect_related_data(self, today):
+        print(f'\n{self.seq} Collect Related Data {self.seq}')
+
+        next_trading_day = TradingCalendar().get_n_trading_day(today, 1).strftime('%Y%m%d')
+
+        monitor_path = rf'{self.monitor_dir}/monitor_{today}_formula.xlsx'
+        archive_path = rf'{self.monitor_dir}/monitor_{today}.xlsx'
+        next_monitor_path = rf'{self.monitor_dir}/monitor_{next_trading_day}_formula.xlsx'
+        tag_pos_path = rf'{self.summary_dir}/tag_pos_{today}.csv'
+        stock_shares_path = rf'{self.summary_dir}/stock_shares_{today}.csv'
+
+        monitor_values_df = self.get_monitor_values_df(monitor_path)
+        tag_pos_df = pd.read_csv(tag_pos_path, index_col=0,).reset_index(drop=False)
+        stock_shares_df = pd.read_csv(stock_shares_path, index_col=0).reset_index(drop=False)
+
+        self.dataset = {
+            'today': today,
+            'next_trading_day': next_trading_day,
+
+            'monitor_path': monitor_path,
+            'archive_path': archive_path,
+            'next_monitor_path': next_monitor_path,
+
+            'tag_pos_df': tag_pos_df,
+            'stock_shares_df': stock_shares_df,
+            'monitor_values_df': monitor_values_df,
+
+            # tag_pos_df第一行在monitor表格中的行数
+            'row1': 5,
+            # stock_shares_df第一行在表格中的行数
+            'row2': 4 + len(tag_pos_df) + 4,
+        }
+
+    def update_next_trading_day(self):
+        print(f'\n{self.seq} Update Next Trading Day {self.seq}')
+
+        monitor_path = self.dataset['monitor_path']
+        next_monitor_path = self.dataset['next_monitor_path']
+
+        app = xw.App(visible=False, add_book=False)
+        print('Generate excel pid:', app.pid)
+        app.display_alerts = False
+        app.screen_updating = False
+        wb = app.books.open(monitor_path)
+
+        sheet = wb.sheets[0]
+        self.update_sheet_value(sheet)
+        self.clear_extra_rows(sheet)
+
+        retry_save_excel(wb=wb, file_path=next_monitor_path)
+        wb.close()
+        app.quit()
+        app.kill()
+
+    def update_sheet_value(self, sheet):
+        row1 = self.dataset['row1']
+        row2 = self.dataset['row2']
+        tag_pos_df = self.dataset['tag_pos_df']
+        stock_shares_df = self.dataset['stock_shares_df']
+        next_trading_day = self.dataset['next_trading_day']
+
+        sheet['B1'].value = next_trading_day
+        for index in tag_pos_df.index:
+            sheet[f'B{index + row1}'].value = tag_pos_df.loc[index, 'index']
+        for index in stock_shares_df.index:
+            sheet[f'A{index + row2}'].value = stock_shares_df.loc[index, 'index']
+            sheet[f'B{index + row2}'].formula = f'=EM_S_INFO_NAME(A{index + row2})'
+            sheet[f'C{index + row2}'].value = stock_shares_df.loc[index, '0']
+            sheet[f'D{index + row2}'].formula = f'=EM_S_INFO_INDUSTRY_SW2021(A{index + row2},"1")'
+            sheet[f'E{index + row2}'].formula = f'=EM_S_FREELIQCI_VALUE(A{index + row2},B1,100000000)'
+            sheet[f'F{index + row2}'].formula = f'=EM_S_VAL_MV2(A{index + row2},B1,100000000)'
+            sheet[f'G{index + row2}'].formula = f'=RTD("em.rtq",,A{index + row2},"Time")'
+            sheet[f'H{index + row2}'].formula = f'=RTD("em.rtq",,A{index + row2},"DifferRange")'
+
+    def clear_extra_rows(self, sheet):
+        row2 = self.dataset['row2']
+        stock_shares_df = self.dataset['stock_shares_df']
+        rows_to_delete = range(row2 + len(stock_shares_df), 180)
+        for row in rows_to_delete:
+            sheet.api.Rows(row).Delete()
+
+    def archive_today(self):
+        print(f'\n{self.seq} Archive Today Monitor {self.seq}')
+
+        archive_path = self.dataset['archive_path']
+        monitor_values_df = self.dataset['monitor_values_df']
+
+        app = xw.App(visible=False, add_book=False)
+        wb = xw.books.open(self.dataset['monitor_path'])
+        sheet = wb.sheets['monitor目标持仓']
+
+        for index in monitor_values_df.index:
+            for col in monitor_values_df.columns:
+                sheet.range(f'{col}{index}').value = monitor_values_df.loc[index, col]
+
+        retry_save_excel(wb=wb, file_path=archive_path)
+        wb.close()
+        app.quit()
+
+    def get_monitor_values_df(self, monitor_path):
+        df = pd.read_excel(monitor_path, sheet_name=0, index_col=None, header=None)
+        if (df == 'Refreshing').any().any():
+            print('Monitor values are refreshing, wait for 10 seconds to retry for archiving')
+            self.get_monitor_values_df(monitor_path)
+        else:
+            print('Monitor values refreshed and ready to be archived')
+            df.index = df.index + 1
+            df = df.applymap(lambda x: str(x) if isinstance(x, datetime.time) else x)
+            df.columns = [chr(ord('A') + i) for i in range(len(df.columns))]
+            return df
+
+
+if __name__ == '__main__':
+    Monitor().update()
