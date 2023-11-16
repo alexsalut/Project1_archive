@@ -5,6 +5,7 @@
 # @Site    : 
 # @File    : get_settle_info.py
 
+import os
 import time
 
 import pandas as pd
@@ -17,7 +18,7 @@ from util.send_email import Mail, R
 class SettleInfo:
     def __init__(self, date=None):
         self.date = date if date is not None else time.strftime('%Y%m%d')
-        self.dir = r'C:\Users\Yz02\Desktop\Data\Save\账户对账单'
+        self.dir = rf'{os.path.expanduser("~")}\Desktop\Data\Save\账户对账单'
         self.account_path = rf'C:\Users\Yz02\Desktop\strategy_update\cnn策略观察_{self.date}.xlsx'
 
         formatted_date = pd.to_datetime(self.date).strftime('%Y-%m-%d')
@@ -91,7 +92,6 @@ class SettleInfo:
             '股票成交额': stock_transaction_vol,
             '期权成交额': cats_option_transaction_vol,
         }
-        info_dict.update({'期权权益': info_dict['cats期权权益']})
         return info_dict
 
     def generate_panlan1_settle_info(self):
@@ -193,14 +193,14 @@ class SettleInfo:
         def get_loc_value(df, value):
             return df.iloc[get_loc(df, value, col=False) + 1, get_loc(df, value, col=True)]
 
-        def get_transaction_vol(df, selected_cols):
+        def get_transaction_vol(df, selected_cols, selected_values):
             new_df = df.iloc[:, [get_loc(df, col) for col in selected_cols]]
             new_df.columns = ['摘要', '成交股数', '成交价格']
             new_df = new_df.query('摘要 in @selected_values')
             return new_df['成交股数'].mul(new_df['成交价格']).sum()
 
-        transaction_vol_stock = get_transaction_vol(stock_df, ['摘要', '成交股数', '成交价格'])
-        transaction_vol_credit = get_transaction_vol(credit_df, ['摘要代码', '发生数量', '成交价格'])
+        transaction_vol_stock = get_transaction_vol(stock_df, ['摘要', '成交股数', '成交价格'], ['证券买入', '证券卖出'])
+        transaction_vol_credit = get_transaction_vol(credit_df, ['业务类型', '发生数量', '成交价格'], ['证券买卖'])
         info_dict = {
             '股票权益': get_loc_value(stock_df, '总资产') + get_loc_value(credit_df, '净资产'),
             '股票市值': get_loc_value(stock_df, '资产市值') + get_loc_value(credit_df, '证券市值'),

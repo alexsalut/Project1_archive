@@ -11,7 +11,7 @@ import xlwings as xw
 import pandas as pd
 
 from file_location import FileLocation
-from record.account_info import read_account_info
+from record.account_info import read_terminal_info
 from account_check.get_clearing_info import SettleInfo
 
 
@@ -35,7 +35,7 @@ class PanlanTinglianRecorder:
         sheet = wb.sheets[self.account]
 
         if self.adjust is None:
-            account_info = read_account_info(self.formatted_date2, self.account)
+            account_info = read_terminal_info(self.formatted_date2, self.account)
             last_row = sheet.cells(sheet.cells.last_cell.row, 1).end('up').row + 1
         else:
             account_info = SettleInfo(date=self.formatted_date1).get_settle_info(account=self.account)

@@ -67,7 +67,8 @@ def send_fund_portfolio_exposure(date=None):
                 </style></head><body>{industry_text}</body></html>
                 """,
             attachs=file_list,
-            receivers=R.department['research'] + R.department['admin'],
+            receivers=R.staff['wu'],
+            # receivers=R.department['research'] + R.department['admin'],
         )
     except Exception as e:
         print(e)
@@ -165,3 +166,7 @@ def rq_get_index_exposure(date, index_ticker):
     index_exposure = index_comp_exposure.mul(index_weight, axis=0).sum()
     index_exposure.name = index_ticker
     return index_exposure
+
+
+if __name__ == '__main__':
+    send_fund_portfolio_exposure(date='20231115')

@@ -33,7 +33,6 @@ class FileLocation:
         '听涟2号': 310310300343,  # emc
         '弄潮1号 cats': 4069336,  # cats
         '弄潮1号 cats_HK': 7200001295,
-
     }
 
     # 资产账户

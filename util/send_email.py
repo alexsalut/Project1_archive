@@ -23,8 +23,12 @@ class Mail:
         self.receive_mail_host = "imap.feishu.cn"
         self.send_port = 25  # 端口号465
         self.receive_port = 993
-        self.account = 'zhou.sy@yz-fund.com.cn'
-        self.mail_license = 'FIhxF55WGb84C17V'
+        if os.path.expanduser('~').endswith('SZW808'):
+            self.account = 'wu.yw@yz-fund.com.cn'
+            self.mail_license = 'Dgj603z8sazYfVdT'
+        else:
+            self.account = 'zhou.sy@yz-fund.com.cn'
+            self.mail_license = 'FIhxF55WGb84C17V'
 
     def send(self, subject, body_content, attachs=[], pics=[], pic_disp=[], receivers=[]):
         mm = MIMEMultipart('related')  # 构建MIMEMultipart对象代表邮件本身，可以往里面添加文本、图片、附件等
@@ -150,7 +154,7 @@ class R:
     }
     department = {
         'research': ['zhou.sy@yz-fund.com.cn', 'wu.yw@yz-fund.com.cn'],
-        'tech': ['liu.ch@yz-fund.com.cn', 'ling.sh@yz-fund.com.cn',],
+        'tech': ['liu.ch@yz-fund.com.cn', 'ling.sh@yz-fund.com.cn'],
         'admin': ['chen.zf@yz-fund.com.cn']
 
     }

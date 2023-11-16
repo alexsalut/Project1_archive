@@ -37,7 +37,7 @@ class AccountPosition:
 
     def get_actual_position(self):
         try:
-            encoding = 'gbk' if self.account == 'tinglian2' else None
+            encoding = 'gbk' if self.account == '听涟2号' else None
             actual_df = pd.read_csv(
                 self.location_dict['actual'],
                 encoding=encoding,
@@ -65,28 +65,25 @@ class AccountPosition:
 
     def get_position_col(self):
         # 普通账户目前有三种，分别是盼澜1号，踏浪1号，听涟2号
-        account_col_dict = {}
-        account_col_dict['panlan1'] = {
-            'actual code': '代码',
-            'actual name': '名称',
-            'actual': '当前余额',
-            'actual market val': '参考市值',
-            'actual account': '账户',
-            'target code': '代码',
-            'target': '目标',
+        account_col_dict = {
+            '盼澜1号': {
+                'actual code': '代码',
+                'actual name': '名称',
+                'actual': '当前余额',
+                'actual market val': '参考市值',
+                'actual account': '账户',
+                'target code': '代码',
+                'target': '目标',
+            },
+            '听涟2号': {
+                'actual code': '证券代码',
+                'actual name': '证券名称',
+                'actual': '持仓数量',
+                'actual market val': '市值',
+            },
         }
-        account_col_dict['talang1'] = account_col_dict['panlan1']
-        account_col_dict['tinglian2'] = {
-            'actual code': '证券代码',
-            'actual name': '证券名称',
-            'actual': '持仓数量',
-            'actual market val': '市值',
-        }
+        account_col_dict['踏浪1号'] = account_col_dict['盼澜1号']
         if self.account in account_col_dict.keys():
             return account_col_dict[self.account]
         else:
             raise ValueError(f'Error: account {self.account} is not supported')
-
-
-if __name__ == '__main__':
-    AccountPosition('talang1_credit', '20231019').get_target_position()

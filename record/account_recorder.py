@@ -12,13 +12,13 @@ from util.trading_calendar import TradingCalendar
 
 def account_recorder(date=None, adjust=None):
     seq = '*' * 50
-    print(f"{seq} Update Account Recorder {seq}")
+    print(f"\n{seq} Update Account Recorder {seq}")
 
     formatted_date = time.strftime('%Y%m%d') if date is None else date
     last_trading_day = TradingCalendar().get_n_trading_day(formatted_date, -1).strftime('%Y%m%d')
 
     monitor_dir = FileLocation.remote_monitor_dir
-    old_account_path = rf'{monitor_dir}\衍舟策略观察_{last_trading_day}_formula.xlsx'
+    old_account_path = rf'{monitor_dir}\衍舟策略观察_{last_trading_day}.xlsx'
     account_path = rf'{monitor_dir}\衍舟策略观察_{formatted_date}.xlsx'
     monitor_path = rf'{monitor_dir}\monitor_{formatted_date}.xlsx'
 

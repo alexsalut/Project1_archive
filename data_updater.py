@@ -32,7 +32,6 @@ def auto_update():
     while True:
         today = time.strftime('%Y%m%d')  # 每次循环重新记录下
         if today in TradingCalendar.trading_calendar:
-            print(time.strftime('%X'))
             run_daily_update()
         else:
             print(time.strftime('%X'),
@@ -57,7 +56,7 @@ def run_daily_update():
         receivers = SendEmailInfo.department['research'] + SendEmailInfo.department['tech']
         send_position_check(receivers)
 
-    elif current_minute == 1505:
+    elif current_minute == 1526:
         Monitor().update()
         account_recorder()
 
@@ -68,6 +67,9 @@ def run_daily_update():
 
     elif current_minute > 1700:
         send_fund_portfolio_exposure()
+
+    elif current_minute % 5 == 0:
+        print(time.strftime('%x %X'))
 
     time.sleep(60)
 

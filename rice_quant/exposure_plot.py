@@ -4,16 +4,15 @@
 # @Author  : Suying
 # @Site    : 
 # @File    : exposure_plot.py
+
 import os
+
 import pandas as pd
+import numpy as np
+import rqdatac as rq
 
 from file_location import FileLocation as FL
 from matplotlib import pyplot as plt
-import numpy as np
-import seaborn as sns
-import rqdatac as rq
-import plotly.subplots as sp
-import plotly.graph_objects as go
 
 
 def plot_all_barra_expo(date=None):
@@ -25,6 +24,7 @@ def plot_all_barra_expo(date=None):
         file_path = plot_single_barra_expo(barra_df[factor])
         file_list.append(file_path)
     return file_list
+
 
 def plot_single_barra_expo(barra_s):
     factor = barra_s.name
@@ -49,7 +49,7 @@ def gen_relative_barra_expo_history(start, end):
     data = []
     for date in date_list:
         df = gen_relative_barra_expo(date)
-        print(f'{date} finished processing\n')
+        print(f'{date} finished processing')
         data.append(df)
     barra_df = pd.concat(data, axis=1).T
     return barra_df

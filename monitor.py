@@ -13,18 +13,19 @@ class Monitor:
     monitor_dir = FileLocation.remote_monitor_dir
     summary_dir = FileLocation.remote_summary_dir
     dataset = {}
-    seq = '*' * 10
+    seq = '*' * 25
 
     def update(self, today=None):
-        print(f'{self.seq * 2} Monitor Daily Update {self.seq * 2}')
+        print(f'\n{self.seq * 2} Monitor Daily Update {self.seq * 2}')
 
         self.collect_related_data(today)
         self.update_next_trading_day()
         self.archive_today()
 
-    def collect_related_data(self, today):
-        print(f'\n{self.seq} Collect Related Data {self.seq}')
+        print(f'{self.seq * 2} Monitor Daily Update is Done! {self.seq * 2}\n')
 
+    def collect_related_data(self, today):
+        print(f'{self.seq} Collect Related Data {self.seq}')
         today = time.strftime('%Y%m%d') if today is None else today
         next_trading_day = TradingCalendar().get_n_trading_day(today, 1).strftime('%Y%m%d')
 
@@ -41,15 +42,12 @@ class Monitor:
         self.dataset = {
             'today': today,
             'next_trading_day': next_trading_day,
-
             'monitor_path': monitor_path,
             'archive_path': archive_path,
             'next_monitor_path': next_monitor_path,
-
             'tag_pos_df': tag_pos_df,
             'stock_shares_df': stock_shares_df,
             'monitor_values_df': monitor_values_df,
-
             # tag_pos_df第一行在monitor表格中的行数
             'row1': 5,
             # stock_shares_df第一行在表格中的行数
@@ -57,7 +55,7 @@ class Monitor:
         }
 
     def update_next_trading_day(self):
-        print(f'\n{self.seq} Update Next Trading Day {self.seq}')
+        print(f'{self.seq} Update Next Trading Day {self.seq}')
 
         monitor_path = self.dataset['monitor_path']
         next_monitor_path = self.dataset['next_monitor_path']
@@ -89,14 +87,15 @@ class Monitor:
             sheet[f'B{row1 + index}'].value = tag_pos_df.loc[index, 'index']
 
         for index in stock_shares_df.index:
-            sheet[f'A{row2 + index}'].value = stock_shares_df.loc[index, 'index']
-            sheet[f'B{row2 + index}'].formula = f'=EM_S_INFO_NAME(A{row2 + index})'
-            sheet[f'C{row2 + index}'].value = stock_shares_df.loc[index, '0']
-            sheet[f'D{row2 + index}'].formula = f'=EM_S_INFO_INDUSTRY_SW2021(A{row2 + index},"1")'
-            sheet[f'E{row2 + index}'].formula = f'=EM_S_FREELIQCI_VALUE(A{row2 + index},B1,100000000)'
-            sheet[f'F{row2 + index}'].formula = f'=EM_S_VAL_MV2(A{row2 + index},B1,100000000)'
-            sheet[f'G{row2 + index}'].formula = f'=RTD("em.rtq",,A{row2 + index},"Time")'
-            sheet[f'H{row2 + index}'].formula = f'=RTD("em.rtq",,A{row2 + index},"DifferRange")'
+            row = row2 + index
+            sheet[f'A{row}'].value = stock_shares_df.loc[index, 'index']
+            sheet[f'B{row}'].formula = f'=EM_S_INFO_NAME(A{row})'
+            sheet[f'C{row}'].value = stock_shares_df.loc[index, '0']
+            sheet[f'D{row}'].formula = f'=EM_S_INFO_INDUSTRY_SW2021(A{row},"1")'
+            sheet[f'E{row}'].formula = f'=EM_S_FREELIQCI_VALUE(A{row},B1,100000000)'
+            sheet[f'F{row}'].formula = f'=EM_S_VAL_MV2(A{row},B1,100000000)'
+            sheet[f'G{row}'].formula = f'=RTD("em.rtq",,A{row},"Time")'
+            sheet[f'H{row}'].formula = f'=RTD("em.rtq",,A{row},"DifferRange")'
 
     def clear_extra_rows(self, sheet):
         row2 = self.dataset['row2']
@@ -106,8 +105,7 @@ class Monitor:
             sheet.api.Rows(row).Delete()
 
     def archive_today(self):
-        print(f'\n{self.seq} Archive Today Monitor {self.seq}')
-
+        print(f'{self.seq} Archive Today Monitor {self.seq}')
         archive_path = self.dataset['archive_path']
         monitor_values_df = self.dataset['monitor_values_df']
 

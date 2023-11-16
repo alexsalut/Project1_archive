@@ -10,7 +10,7 @@ import time
 import pandas as pd
 import xlwings as xw
 
-from record.account_info import read_account_info
+from record.account_info import read_terminal_info
 
 
 class NongchaoRecorder:
@@ -48,7 +48,7 @@ class NongchaoRecorder:
         self.record_account_nongchao(sheet_name='弄潮2号')
 
     def record_account_nongchao(self, sheet_name):
-        account_info_dict = read_account_info(date=self.date, account=sheet_name)
+        account_info_dict = read_terminal_info(date=self.date, account=sheet_name)
         app = xw.App(visible=False, add_book=False)
         print('Generate excel pid:', app.pid)
 

@@ -6,6 +6,7 @@
 # @File    : position.py
 
 import time
+
 from util.send_email import Mail, R
 from position.get_account_position import AccountPosition as ap
 from position.account_location import get_account_location
@@ -13,7 +14,7 @@ from position.account_location import get_account_location
 
 def send_position_check(receivers, date=None):
     date = date if date is not None else time.strftime('%Y%m%d')
-    account_list = ['talang1', 'panlan1', 'tinglian2']
+    account_list = ['踏浪1号', '盼澜1号', '听涟2号']
     account_pos_dict = check_all_account_pos(account_list, date=date)
     subject = rf'[Position Check] {date}'
     content = gen_check_email_content(account_pos_dict, date)
@@ -23,8 +24,10 @@ def send_position_check(receivers, date=None):
 def check_all_account_pos(account_list, date=None):
     account_pos_dict = {}
     for account in account_list:
-        account_pos_dict[account] = check_account_pos(ap(account, date).get_actual_position(),
-                                                      ap(account, date).get_target_position())
+        account_pos_dict[account] = check_account_pos(
+            actual_pos_df=ap(account, date).get_actual_position(),
+            target_pos_df=ap(account, date).get_target_position(),
+        )
     return account_pos_dict
 
 
@@ -38,9 +41,9 @@ def gen_check_email_content(account_pos_dict, date):
     <td bgcolor="#EFEBDE" height="100" style="font-size:13px">
     """
     account_name_dict = {
-        'talang1': '踏浪1号信用账户',
-        'panlan1': '盼澜1号信用账户',
-        'tinglian2': '听涟2号信用账户',
+        '踏浪1号': '踏浪1号信用账户',
+        '盼澜1号': '盼澜1号信用账户',
+        '听涟2号': '听涟2号信用账户',
     }
     for account in account_pos_dict.keys():
         content += f"""
@@ -91,4 +94,4 @@ def check_account_pos(actual_pos_df, target_pos_df):
 
 
 if __name__ == '__main__':
-    send_position_check(receivers=R.department['research'] + R.department['tech'], date='20231109')
+    send_position_check(receivers=R.department['research'])

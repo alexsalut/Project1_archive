@@ -12,28 +12,20 @@ import pandas as pd
 
 from account_check.get_clearing_info import SettleInfo
 from util.send_email import Mail, R
-from record.account_info import read_account_info
+from record.account_info import read_terminal_info
 from util.trading_calendar import TradingCalendar as TC
 from file_location import FileLocation as FL
 
 
 class AccountCheck:
     def __init__(self, account=None, date=None):
-        self.account = [account] if account is not None else ['talang1', 'talang2', 'talang3', 'panlan1', 'tinglian2']
+        self.account = [account] if account is not None else ['踏浪1号', '踏浪2号', '踏浪3号', '盼澜1号', '听涟2号']
         last_trading_day = TC().get_n_trading_day(time.strftime('%Y%m%d'), -1).strftime('%Y%m%d')
         self.date = date if date is not None else last_trading_day
         self.dir = FL().clearing_dir
-        self.account_path = rf'~\Desktop\strategy_update\cnn策略观察_{self.date}.xlsx'
-        self.account_name_dict = {
-            'panlan1': '盼澜1号',
-            'tinglian2': '听涟2号',
-            'talang1': '踏浪1号',
-            'talang2': '踏浪2号',
-            'talang3': '踏浪3号',
-        }
+        self.account_path = rf'\\192.168.1.116\target_position\monitor\衍舟策略观察_{self.date}.xlsx'
 
     def notify_check_with_email(self):
-        Mail().receive(save_dir=self.dir)
         try:
             Mail().receive(save_dir=self.dir)
         except FileNotFoundError:
@@ -47,7 +39,7 @@ class AccountCheck:
             Mail().send(
                 subject=f'[各账户资产核对]{self.date}失败，两分钟后重试',
                 body_content=f'{missed_string}不存在',
-                receivers=R.department['research'][0],
+                receivers=R.department['research'],
             )
             time.sleep(120)
             self.notify_check_with_email()
@@ -61,12 +53,8 @@ class AccountCheck:
             )
 
     def check_all_file_exist(self):
-        f = SettleInfo(date=self.date)
-        file_list = f.file_path_list
-        missed_file_list = []
-        for file in file_list:
-            if not os.path.exists(file):
-                missed_file_list.append(file)
+        file_list = SettleInfo(date=self.date).file_path_list
+        missed_file_list = [f for f in file_list if not os.path.exists(f)]
         missed_file_string = '\n'.join(missed_file_list)
         return missed_file_string
 
@@ -78,7 +66,7 @@ class AccountCheck:
 
     def check_account_info(self, account):
         clearing_info = SettleInfo(date=self.date).get_settle_info(account=account)
-        record_info = read_account_info(date=self.date, account=account)
+        record_info = read_terminal_info(date=self.date, account=account)
         clearing_info_s = pd.Series(clearing_info, name='对账单')
         record_info_s = pd.Series(record_info, name='导出单')
         info_df = pd.concat([clearing_info_s, record_info_s], axis=1)
@@ -99,7 +87,6 @@ class AccountCheck:
         styled_info_df = styled_info_df.replace('<tr', '<tr style="border-bottom: 1px solid black;"')
         styled_info_df = styled_info_df.replace('<th', '<th style="border-right: 1px solid black;"')
         styled_info_df = styled_info_df.replace('<td', '<td style="border-right: 1px solid black;"')
-
         return styled_info_df
 
     def gen_email_content(self, check_info_dict):
@@ -113,13 +100,13 @@ class AccountCheck:
         """
         for account in check_info_dict.keys():
             content += f"""
-                <p><b>{self.account_name_dict[account]}账户核对结果：</b></p>
+                <p><b>{account}账户核对结果：</b></p>
                 <center>{check_info_dict[account]}</center>
             """
         return {'subject': subject, 'content': content}
 
     def get_record_info(self, account):
-        record_df = pd.read_excel(self.account_path, sheet_name=self.account_name_dict[account], index_col=0)
+        record_df = pd.read_excel(self.account_path, sheet_name=account, index_col=0)
         record_df.index = record_df.index.astype(str)
         record_info_dict = {
             '股票市值': record_df.loc[self.date, '总市值'],

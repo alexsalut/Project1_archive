@@ -13,8 +13,8 @@ from record.cats_file_reader import CatsFileReader
 from record.matic_file_reader import MaticFileReader
 
 
-def read_account_info(date, account):
-    print(f'\n{account}: 获取{date}导出单信息')
+def read_terminal_info(date, account):
+    print(f'\n{account}: 获取{date}交易终端导出信息')
     if account in ['踏浪2号', '踏浪3号']:
         info = get_talang23_info(account=account, date=date)
     elif account == '踏浪1号':
@@ -45,13 +45,6 @@ def get_tinglian2_info(date=None):
     )
     stock_equity = stock_df.loc[0, '资产总值'] - stock_df.loc[0, '总负债']
 
-    emc_option_df = pd.read_csv(
-        rf'{emc_tinglian_dir}/310317000090_OPTION_FUND.{formatted_date1}.csv',
-        index_col=False,
-        encoding='gbk'
-    )  # emc 账户
-    emc_option_equity = emc_option_df.loc[0, '资产总值']
-
     cats_option_df = pd.read_csv(
         rf'{cats_tinglian_dir}/OptionFund_{formatted_date2}.csv',
         index_col=False,
@@ -78,9 +71,7 @@ def get_tinglian2_info(date=None):
         '证券代码.str.startswith("1000")', engine='python')['成交额'].sum()
 
     info_dict = {
-        'cats期权权益': cats_option_equity,
-        'emc期权权益': emc_option_equity,
-        '期权权益': cats_option_equity + emc_option_equity,
+        '期权权益': cats_option_equity,
         '股票权益': stock_equity,
         '股票市值': stock_df.loc[0, '总市值'],
         '成交额': stock_transaction_vol + option_transaction_vol,
@@ -116,8 +107,7 @@ def get_talang1_info(date=None):
         pd.read_csv(rf'{account_dir}/CreditFund_{formatted_date}.csv', index_col=False).set_index('账户').loc[
             account_code]
     trades = pd.read_csv(rf'{account_dir}/TransactionsStatisticsDaily_{formatted_date}.csv',
-                         index_col=False).set_index(
-        '账户').loc[account_code]
+                         index_col=False).set_index('账户').loc[account_code]
     account_info_dict = {
         '股票权益': stock_ordinary['账户资产'] + stock_credit['净资产'],
         '股票市值': stock_ordinary['证券市值'] + stock_credit['证券市值'],

@@ -11,7 +11,7 @@ import pandas as pd
 import xlwings as xw
 import rqdatac as rq
 
-from record.account_info import read_account_info
+from record.account_info import read_terminal_info
 from account_check.get_clearing_info import SettleInfo
 
 
@@ -20,6 +20,7 @@ class TalangRecorder:
         self.date = pd.to_datetime(date).strftime('%Y%m%d') if date is not None else time.strftime('%Y%m%d')
         self.account_path = account_path
         self.adjust = adjust
+        print('TalangRecorder initialized!')
 
     def update(self):
         rq.init()
@@ -30,7 +31,7 @@ class TalangRecorder:
     def update_account(self, account):
         index_ret = self.rq_get_index_ret(sheet_name=account)
         if self.adjust is None:
-            account_info_dict = read_account_info(date=self.date, account=account)
+            account_info_dict = read_terminal_info(date=self.date, account=account)
         else:
             account_info_dict = SettleInfo(date=self.date).get_settle_info(account=account)
 
