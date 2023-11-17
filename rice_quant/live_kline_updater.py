@@ -4,15 +4,36 @@
 # @Author  : Suying
 # @Site    : 
 # @File    : live_kline_updater.py
+
 import time
 import datetime
+
 import pandas as pd
 import rqdatac as rq
+
 from util.send_email import Mail, R
 from choice.kc_stock_number import get_kc_stock_num
 
 
-def gen_ricequant_virtual_kline(stock_list,date=None):
+def gen_quick_virtual_kline(current_minute):
+    date = time.strftime('%Y%m%d')
+    stock_list = gen_stock_list(date)
+
+    while int(time.strftime('%H%M')) == current_minute:
+        print(time.strftime('%X'), 'Wait for update!')
+        time.sleep(0.1)
+    gen_ricequant_virtual_kline(stock_list, date)
+
+
+def gen_stock_list(date=None):
+    formatted_date = time.strftime('%Y%m%d') if date is None else date
+    rq.init()
+    cn_stks_df = rq.all_instruments(type='CS', market='cn', date=formatted_date)
+    kc_stks_df = cn_stks_df.query("board_type == 'KSH'").set_index('order_book_id')
+    return kc_stks_df.index
+
+
+def gen_ricequant_virtual_kline(stock_list, date=None):
     formatted_date = time.strftime('%Y%m%d') if date is None else date
     current_min = int(time.strftime('%H%M'))
     print(f'Generating RiceQuant virtual kline at {datetime.datetime.now()}')
@@ -25,6 +46,7 @@ def gen_ricequant_virtual_kline(stock_list,date=None):
 
     check_rq_virtual_kline(rq_vk_df)
     print(datetime.datetime.now())
+
 
 def gen_rq_vk_df(stock_list):
     snapshot = rq.current_snapshot(stock_list)
@@ -39,19 +61,6 @@ def gen_rq_vk_df(stock_list):
     vk_df.index = ['sh' + x[:6] for x in vk_df.index]
     vk_df.index.name = 'symbol'
     return vk_df
-
-def gen_stock_list(date=None):
-    formatted_date = time.strftime('%Y%m%d') if date is None else date
-    rq.init()
-    cn_stks_df = rq.all_instruments(type='CS', market='cn', date=formatted_date)
-    kc_stks_df = cn_stks_df.query("board_type == 'KSH'").set_index('order_book_id')
-
-    # 获取快照数据
-
-    return kc_stks_df.index
-
-
-
 
 
 def check_rq_virtual_kline(rq_vk_df):
@@ -80,7 +89,7 @@ def check_rq_virtual_kline(rq_vk_df):
         print('No error found in RiceQuant virtual kline')
     else:
         print('Error found in RiceQuant virtual kline, sending email...')
-        notify_with_email({**error_dict,**info_dict})
+        notify_with_email({**error_dict, **info_dict})
 
 
 def notify_with_email(error_dict):
@@ -104,9 +113,3 @@ def notify_with_email(error_dict):
     
     """
     Mail().send(subject=subject, body_content=text, receivers=R.department['research'][0])
-
-
-
-if __name__ == '__main__':
-    gen_ricequant_virtual_kline(gen_stock_list())
-

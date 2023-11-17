@@ -4,12 +4,14 @@
 # @Author  : Suying
 # @Site    : 
 # @File    : comparison_expo.py
+
 import time
 
 import pandas as pd
-from util.file_location import FileLocation as FL
 import rqdatac as rq
 import matplotlib.pyplot as plt
+
+from util.file_location import FileLocation as FL
 
 
 def compare_expo(date=None):
@@ -23,7 +25,7 @@ def compare_expo(date=None):
 
 
 def plot_single_expo(single_factor_expo_df, factor):
-    fig = plt.figure(figsize=(10, 6))
+    plt.figure(figsize=(10, 6))
     plt.plot(single_factor_expo_df)
     plt.legend(single_factor_expo_df.columns, loc='upper right')
     plt.title(factor, fontsize=20)
@@ -34,6 +36,7 @@ def plot_single_expo(single_factor_expo_df, factor):
     plt.savefig(fr'.\Data\{factor}对比.png')
     plt.show()
     plt.close()
+
 
 def gen_expo_history(start, end):
     rq.init()
@@ -52,14 +55,8 @@ def get_daily_expo(date):
     exposure_save_dir = FL().exposure_dir
     expo_df = pd.read_csv(fr'{exposure_save_dir}\expo_{formatted_date}.csv', index_col=0, header=[0, 1], encoding='gbk')
     talang_expo_df = expo_df.loc[:, (['talang2', 'talang3'], slice(None))]
-    talang_expo_df = talang_expo_df.loc[:, (slice(None), ['port', '000905.XSHG','000852.XSHG'])]
-    talang_expo_df = talang_expo_df.loc[['liquidity', 'book_to_price', 'leverage', 'residual_volatility'],:]
+    talang_expo_df = talang_expo_df.loc[:, (slice(None), ['port', '000905.XSHG', '000852.XSHG'])]
+    talang_expo_df = talang_expo_df.loc[['liquidity', 'book_to_price', 'leverage', 'residual_volatility'], :]
 
     talang_expo_s = talang_expo_df.stack().stack().rename(date)
     return talang_expo_s
-
-
-
-
-if __name__ == '__main__':
-    compare_expo(date='20231026')

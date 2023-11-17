@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2023/8/10 9:03
 # @Author  : Youwei Wu, Suying Zhou
-# @File    : data_updater.py
+# @File    : daily_update.py
 # @Software: PyCharm
 
 import time
@@ -13,19 +13,17 @@ from choice.kc50_composition import download_check_kc50_composition
 from t.ts_kline_updater import KlineUpdater
 from t.ts_raw_daily_bar_updater import RawDailyBarUpdater
 
-from position.position_check import send_position_check
-
 from record.account_recorder import account_recorder
-from monitor import Monitor
 
 from rice_quant.risk_exposure import send_fund_portfolio_exposure
-from rice_quant.live_kline_updater import gen_ricequant_virtual_kline, gen_stock_list
+from rice_quant.live_kline_updater import gen_quick_virtual_kline
 from performance_analysis.strategy_review import send_strategy_review
-
 from util.trading_calendar import TradingCalendar
-from util.utils import SendEmailInfo
-from tick_check import Tick
-from equity_check import send_equity_check
+
+from regular_update.monitor import Monitor
+from regular_update.tick_check import Tick
+from regular_update.equity_check import send_equity_check
+from regular_update.position_check import send_position_check
 
 
 def auto_update():
@@ -53,8 +51,7 @@ def run_daily_update():
         gen_quick_virtual_kline(current_minute)
 
     elif current_minute in [1453, 1501]:
-        receivers = SendEmailInfo.department['research'] + SendEmailInfo.department['tech']
-        send_position_check(receivers)
+        send_position_check()
 
     elif current_minute == 1531:
         Monitor().update()
@@ -74,16 +71,6 @@ def run_daily_update():
     time.sleep(60)
 
 
-def gen_quick_virtual_kline(current_minute):
-    date = time.strftime('%Y%m%d')
-    stock_list = gen_stock_list(date)
-
-    while int(time.strftime('%H%M')) == current_minute:
-        print(time.strftime('%X'), 'Wait for update!')
-        time.sleep(0.1)
-    gen_ricequant_virtual_kline(stock_list, date)
-
-
 def update_data_after_close():
     KC50WeightUpdater().kc50_weight_update_and_confirm()
     RawDailyBarUpdater().update_and_confirm_raw_daily_bar()
@@ -91,5 +78,4 @@ def update_data_after_close():
 
 
 if __name__ == '__main__':
-    send_equity_check()
-    # auto_update()
+    auto_update()

@@ -4,12 +4,6 @@
 # @File    : fq_kline.py
 # @Software: PyCharm
 
-"""
-本脚本用于生成图像识别模型的回测数据，
-训练数据区间为2000-2016年，
-测试数据区间为2017-至今。
-"""
-
 import glob
 
 import pandas as pd

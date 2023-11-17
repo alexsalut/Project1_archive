@@ -46,7 +46,6 @@ def update_fund_recorder(account_path, date_to_update, adjust):
     PanlanTinglianRecorder(account_path=account_path, account='盼澜1号', date=date_to_update, adjust=adjust).record_account()
     PanlanTinglianRecorder(account_path=account_path, account='听涟2号', date=date_to_update, adjust=adjust).record_account()
 
-
     
 def send_email(account_path, date_to_update):
     content = f"""
