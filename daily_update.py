@@ -11,17 +11,17 @@ from choice.c_kc50_weight_updater import KC50WeightUpdater
 from choice.kc50_composition import download_check_kc50_composition
 from t.ts_kline_updater import KlineUpdater
 from t.ts_raw_daily_bar_updater import RawDailyBarUpdater
-from rice_quant.risk_exposure import send_fund_portfolio_exposure
-from rice_quant.live_kline_updater import gen_quick_virtual_kline
 
 from record.account_recorder import account_recorder
 from performance_analysis.strategy_review import send_strategy_review
 from util.trading_calendar import TradingCalendar
 
+from regular_update.equity_check import send_equity_check
+from regular_update.live_virtual_kline import gen_live_virtual_kline
+from regular_update.position_check import send_position_check
+from regular_update.risk_exposure import send_risk_exposure
 from regular_update.monitor import Monitor
 from regular_update.tick_check import Tick
-from regular_update.equity_check import send_equity_check
-from regular_update.position_check import send_position_check
 
 
 def auto_update():
@@ -46,7 +46,7 @@ def run_daily_update():
         download_check_kc50_composition()
 
     elif current_minute in [1429, 1444]:
-        gen_quick_virtual_kline(current_minute)
+        gen_live_virtual_kline(current_minute)
 
     elif current_minute in [1453, 1501]:
         send_position_check()
@@ -61,7 +61,7 @@ def run_daily_update():
         Tick().check_daily()
 
     elif current_minute > 1700:
-        send_fund_portfolio_exposure()
+        send_risk_exposure()
 
     elif current_minute % 5 == 0:
         print(time.strftime('%x %X'))

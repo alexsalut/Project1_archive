@@ -3,7 +3,7 @@
 # @Time    : 2023/9/25 8:44
 # @Author  : Suying
 # @Site    : 
-# @File    : live_kline_updater.py
+# @File    : live_virtual_kline.py
 
 import time
 import datetime
@@ -15,7 +15,7 @@ from util.send_email import Mail, R
 from choice.kc_stock_number import get_kc_stock_num
 
 
-def gen_quick_virtual_kline(current_minute):
+def gen_live_virtual_kline(current_minute):
     date = time.strftime('%Y%m%d')
     stock_list = gen_stock_list(date)
 
