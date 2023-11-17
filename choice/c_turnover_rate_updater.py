@@ -12,7 +12,7 @@ from EmQuantAPI import c
 
 from util.send_email import Mail, R
 from util.utils import transfer_to_jy_ticker
-from file_location import FileLocation as FL
+from util.file_location import FileLocation as FL
 
 
 class TurnoverRateUpdater:

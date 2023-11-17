@@ -73,7 +73,8 @@ class MultiStrategyPerf:
             wb.save(self.account_path)
             wb.close()
             app.quit()
-            print(f'Sheet {sheet_name} updated successfully: {self.account_path}')
+            print(f'Sheet-{sheet_name} has been updated.')
+
         except Exception as e:
             print(e)
             print(f'Sheet {sheet_name} updated in failure, retry in 1 min: {self.account_path}')

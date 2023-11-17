@@ -10,7 +10,7 @@ import pandas as pd
 
 from util.send_email import Mail, R
 from t.fq_kline import FqKLine
-from file_location import FileLocation as FL
+from util.file_location import FileLocation as FL
 
 
 class KlineUpdater:

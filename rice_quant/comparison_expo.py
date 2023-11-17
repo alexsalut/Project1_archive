@@ -7,7 +7,7 @@
 import time
 
 import pandas as pd
-from file_location import FileLocation as FL
+from util.file_location import FileLocation as FL
 import rqdatac as rq
 import matplotlib.pyplot as plt
 

@@ -3,66 +3,60 @@
 # @Time    : 2023/10/17 10:00
 # @Author  : Suying
 # @Site    : 
-# @File    : account_cross_check.py
+# @File    : equity_check.py
 
 import os
 import time
 
 import pandas as pd
 
-from account_check.get_clearing_info import SettleInfo
+from util.get_clearing_info import SettleInfo
 from util.send_email import Mail, R
 from record.account_info import read_terminal_info
-from util.trading_calendar import TradingCalendar as TC
-from file_location import FileLocation as FL
+from util.trading_calendar import TradingCalendar
+from util.file_location import FileLocation
 
 
-class AccountCheck:
+def send_equity_check(date=None):
+    EquityCheck(date=date).notify_check_with_email()
+
+
+class EquityCheck:
     def __init__(self, account=None, date=None):
         self.account = [account] if account is not None else ['踏浪1号', '踏浪2号', '踏浪3号', '盼澜1号', '听涟2号']
-        last_trading_day = TC().get_n_trading_day(time.strftime('%Y%m%d'), -1).strftime('%Y%m%d')
+        last_trading_day = TradingCalendar().get_n_trading_day(time.strftime('%Y%m%d'), -1).strftime('%Y%m%d')
         self.date = date if date is not None else last_trading_day
-        self.dir = FL().clearing_dir
+        self.dir = FileLocation.clearing_dir
         self.account_path = rf'\\192.168.1.116\target_position\monitor\衍舟策略观察_{self.date}.xlsx'
 
     def notify_check_with_email(self):
-        try:
-            Mail().receive(save_dir=self.dir)
-        except FileNotFoundError:
-            print('Error in notify_check_with_email, retry in 2 minutes.')
-            time.sleep(120)
-            self.notify_check_with_email()
-
-        missed_string = self.check_all_file_exist()
-        if missed_string:
-            print(f'{missed_string}不存在')
-            Mail().send(
-                subject=f'[各账户资产核对]{self.date}失败，两分钟后重试',
-                body_content=f'{missed_string}不存在',
-                receivers=R.department['research'],
-            )
-            time.sleep(120)
-            self.notify_check_with_email()
-        else:
-            check_info_dict = self.check_all_account_info()
-            email_info = self.gen_email_content(check_info_dict=check_info_dict)
-            Mail().send(
-                subject=email_info['subject'],
-                body_content=email_info['content'],
-                receivers=R.department['research']+[R.department['tech'][0]],
-            )
-
-    def check_all_file_exist(self):
+        Mail().receive(save_dir=self.dir,
+                       user='trading_1@yz-fund.com.cn',
+                       pwd='BO6iJOUXZwDdndz0')
         file_list = SettleInfo(date=self.date).file_path_list
         missed_file_list = [f for f in file_list if not os.path.exists(f)]
-        missed_file_string = '\n'.join(missed_file_list)
-        return missed_file_string
 
-    def check_all_account_info(self):
-        check_info_dict = {}
-        for account in self.account:
-            check_info_dict[account] = self.check_account_info(account=account)
-        return check_info_dict
+        if missed_file_list:
+            self.retry(missed_file_list)
+
+        check_info_dict = {x: self.check_account_info(x) for x in self.account}
+        email_info = self.gen_email_content(check_info_dict=check_info_dict)
+        Mail().send(
+            subject=email_info['subject'],
+            body_content=email_info['content'],
+            receivers=R.department['research']+[R.department['tech'][0]],
+        )
+
+    def retry(self, missed_file_list):
+        missed_string = '\n\n'.join(missed_file_list)
+        print(f'{missed_string}不存在')
+        Mail().send(
+            subject=f'[各账户资产核对]{self.date}对账单文件缺失，两分钟后重试。',
+            body_content=f'{missed_string}不存在',
+            receivers=R.department['research'],
+        )
+        time.sleep(120)
+        self.notify_check_with_email()
 
     def check_account_info(self, account):
         clearing_info = SettleInfo(date=self.date).get_settle_info(account=account)
@@ -122,8 +116,3 @@ class AccountCheck:
                 '股票权益': record_df.loc[self.date, '股票资产总值'],
             })
         return record_info_dict
-
-
-if __name__ == '__main__':
-    ac = AccountCheck()
-    ac.notify_check_with_email()

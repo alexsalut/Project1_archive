@@ -7,7 +7,7 @@
 
 # 目前日常滚动更新的是盼澜1和听涟2的账户盈亏情况
 import time
-from file_location import FileLocation as FL
+from util.file_location import FileLocation as FL
 from rolling_check.account_info import output_account_pl
 from util.trading_calendar import TradingCalendar as TC
 

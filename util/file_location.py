@@ -63,7 +63,6 @@ class FileLocation:
     future_dir = r'\\192.168.1.116\cffe'
 
 # 结算单存储路径
-#     clearing_dir = rf'{os.path.expanduser("~")}\Desktop\Data\Save\账户对账单'
-    clearing_dir = r'C:\Users\SZW808\Desktop\Data\Save\账户对账单'
+    clearing_dir = rf'{os.path.expanduser("~")}\Desktop\Data\Save\账户对账单'
 # 因子数据存储路径
     factor_dir = r'\\192.168.1.116\trade\cnn_factor'

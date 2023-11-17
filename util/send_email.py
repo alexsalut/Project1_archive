@@ -84,7 +84,7 @@ class Mail:
         # 关闭SMTP对象
         stp.quit()
 
-    def receive(self, save_dir, date_range=[3, 1]):
+    def receive(self, save_dir, date_range=[3, 1], user=None, pwd=None):
         import imaplib
         import email
         import os
@@ -102,7 +102,9 @@ class Mail:
 
         # Connect to the IMAP server
         mail = imaplib.IMAP4_SSL(self.receive_mail_host)
-        mail.login(self.account, self.mail_license)
+        user = self.account if user is None else user
+        pwd = self.mail_license if pwd is None else pwd
+        mail.login(user, pwd)
         mail.select('INBOX')
 
         # Construct the search criteria with the date format '17-Jul-2022'
@@ -158,7 +160,3 @@ class R:
         'admin': ['chen.zf@yz-fund.com.cn']
 
     }
-
-
-if __name__ == '__main__':
-    Mail().receive(save_dir=r'C:\Users\Yz02\Desktop\Data\Save\账户对账单')

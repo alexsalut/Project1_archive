@@ -10,7 +10,7 @@ import pandas as pd
 from EmQuantAPI import c
 
 from util.send_email import Mail, R
-from file_location import FileLocation as FL
+from util.file_location import FileLocation as FL
 
 
 def download_check_kc50_composition(date=None):

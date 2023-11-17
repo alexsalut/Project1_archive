@@ -1,7 +1,7 @@
 import time
 import shutil
 
-from file_location import FileLocation
+from util.file_location import FileLocation
 from record.multi_strategy_perf import MultiStrategyPerf
 from record.talang_recorder import TalangRecorder
 from record.panlan1_tinglian2_recorder import PanlanTinglianRecorder
@@ -41,10 +41,12 @@ def account_recorder(date=None, adjust=None):
 
 def update_fund_recorder(account_path, date_to_update, adjust):
     TalangRecorder(account_path=account_path, date=date_to_update, adjust=adjust).update()
+    NongchaoRecorder(account_path=account_path, date=date_to_update, adjust=adjust).record_nongchao()
+    # PanlanTinglian这里有问题，亮哥程序只生成一个excel pid并且不会quit掉
     PanlanTinglianRecorder(account_path=account_path, account='盼澜1号', date=date_to_update, adjust=adjust).record_account()
     PanlanTinglianRecorder(account_path=account_path, account='听涟2号', date=date_to_update, adjust=adjust).record_account()
-    NongchaoRecorder(account_path=account_path, date=date_to_update, adjust=adjust).record_nongchao()
-    
+
+
     
 def send_email(account_path, date_to_update):
     content = f"""
@@ -66,4 +68,4 @@ def send_email(account_path, date_to_update):
 
 
 if __name__ == '__main__':
-    account_recorder(date='20231115')
+    account_recorder(date='20231116')

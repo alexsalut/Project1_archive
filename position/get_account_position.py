@@ -6,7 +6,7 @@
 # @File    : get_account_position.py
 import time
 import pandas as pd
-from file_location import FileLocation as FL
+from util.file_location import FileLocation as FL
 from position.account_location import get_account_location
 
 

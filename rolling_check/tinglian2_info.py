@@ -6,8 +6,7 @@
 # @File    : tinglian2_info.py
 import time
 import pandas as pd
-from file_location import FileLocation as FL
-from util.trading_calendar import TradingCalendar as TC
+from util.file_location import FileLocation as FL
 
 tinglian2_account_dir = FL().account_info_dir_dict['tinglian2']
 

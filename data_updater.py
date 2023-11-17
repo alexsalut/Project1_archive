@@ -24,8 +24,8 @@ from performance_analysis.strategy_review import send_strategy_review
 
 from util.trading_calendar import TradingCalendar
 from util.utils import SendEmailInfo
-from tick_check.tick_check import Tick
-from account_check.account_cross_check import AccountCheck
+from tick_check import Tick
+from equity_check import send_equity_check
 
 
 def auto_update():
@@ -41,8 +41,8 @@ def auto_update():
 
 def run_daily_update():
     current_minute = int(time.strftime('%H%M'))
-    if current_minute == 830:
-        AccountCheck().notify_check_with_email()
+    if current_minute == 820:
+        send_equity_check()
         account_recorder(adjust=True)
 
     elif current_minute == 1400:
@@ -56,7 +56,7 @@ def run_daily_update():
         receivers = SendEmailInfo.department['research'] + SendEmailInfo.department['tech']
         send_position_check(receivers)
 
-    elif current_minute == 1526:
+    elif current_minute == 1531:
         Monitor().update()
         account_recorder()
 
@@ -91,4 +91,5 @@ def update_data_after_close():
 
 
 if __name__ == '__main__':
-    auto_update()
+    send_equity_check()
+    # auto_update()

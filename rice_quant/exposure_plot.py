@@ -11,7 +11,7 @@ import pandas as pd
 import numpy as np
 import rqdatac as rq
 
-from file_location import FileLocation as FL
+from util.file_location import FileLocation as FL
 from matplotlib import pyplot as plt
 
 

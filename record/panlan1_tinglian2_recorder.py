@@ -10,9 +10,9 @@ import time
 import xlwings as xw
 import pandas as pd
 
-from file_location import FileLocation
+from util.file_location import FileLocation
 from record.account_info import read_terminal_info
-from account_check.get_clearing_info import SettleInfo
+from util.get_clearing_info import SettleInfo
 
 
 class PanlanTinglianRecorder:

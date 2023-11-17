@@ -11,7 +11,7 @@ import time
 import pandas as pd
 import numpy as np
 
-from account_check.txt_data import TxtData
+from util.txt_data import TxtData
 from util.send_email import Mail, R
 
 

@@ -8,7 +8,7 @@ import time
 
 import pandas as pd
 
-from file_location import FileLocation as FL
+from util.file_location import FileLocation as FL
 from record.cats_file_reader import CatsFileReader
 from record.matic_file_reader import MaticFileReader
 
@@ -49,7 +49,7 @@ def get_tinglian2_info(date=None):
         rf'{cats_tinglian_dir}/OptionFund_{formatted_date2}.csv',
         index_col=False,
     ).set_index('账户')  # cats 账户
-    cats_option_equity = cats_option_df.loc[FL.option_account_code_dict['听涟2号'], '资金总额']
+    cats_option_equity = cats_option_df.loc[FL.option_account_code_dict['听涟2号'], '客户总权益']
 
     transaction_df = pd.read_csv(
         rf'{emc_tinglian_dir}/310310300343_RZRQ_MATCH.{formatted_date1}.csv',
@@ -124,27 +124,23 @@ def get_panlan1_info(date=None):
     panlan_dir = FL.account_info_dir_dict['盼澜1号']
     formatted_date2 = pd.to_datetime(date).strftime("%Y-%m-%d") if date is not None else time.strftime(
         '%Y-%m-%d')
-    stock_normal_s = \
-        pd.read_csv(rf'{panlan_dir}/StockFund_{formatted_date2}.csv', index_col=False).set_index(
-            '账户').loc[
-            FL.account_code['盼澜1号']]
+    stock_normal_s = pd.read_csv(rf'{panlan_dir}/StockFund_{formatted_date2}.csv', index_col=False).set_index(
+            '账户').loc[FL.account_code['盼澜1号']]
 
     stock_credit_s = pd.read_csv(rf'{panlan_dir}/CreditFund_{formatted_date2}.csv', index_col=False).set_index(
         '账户').loc[FL.account_code['盼澜1号']]
 
     option_s = pd.read_csv(rf'{panlan_dir}/OptionFund_{formatted_date2}.csv', index_col=False).set_index(
-        '账户').loc[
-        FL.option_account_code_dict['盼澜1号']]
+        '账户').loc[FL.option_account_code_dict['盼澜1号']]
 
     transaction_df = pd.read_csv(rf'{panlan_dir}/TransactionsStatisticsDaily_{formatted_date2}.csv',
-                                 index_col=False).set_index(
-        '账户').loc[FL.account_code['盼澜1号']]
+                                 index_col=False).set_index('账户').loc[FL.account_code['盼澜1号']]
 
     option_transaction_vol = transaction_df.query('证券代码.str.startswith("1000")', engine='python')['成交额'].sum()
     stock_transaction_vol = transaction_df.query('证券代码.str.len() == 9')['成交额'].sum()
 
     info_dict = {
-        '期权权益': option_s['资金总额'],
+        '期权权益': option_s['客户总权益'],
         '股票权益': stock_normal_s['账户资产'] + stock_credit_s['净资产'],
         '股票市值': stock_normal_s['证券市值'] + stock_credit_s['证券市值'],
         '普通账户股票权益': stock_normal_s['账户资产'],

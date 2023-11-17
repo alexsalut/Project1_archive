@@ -94,12 +94,3 @@ class TxtData:
                     if len(sep_line) == len(cols):
                         clearing_dict[element].loc[i] = sep_line
         return clearing_dict
-
-
-if __name__ == '__main__':
-    f_path = [
-        r'C:\Users\Yz02\Desktop\Data\Save\账户对账单\310300016431衍舟听涟2号20231016(期权).TXT',
-        r'C:\Users\Yz02\Desktop\Data\Save\账户对账单\310310300343衍舟听涟2号20231016(两融).TXT',
-        r'C:\Users\Yz02\Desktop\Data\Save\账户对账单\190000612973普通对账单_20231016.txt'
-    ]
-    option_clearing_file_data = TxtData(f_path[2]).gen_clearing_file_data(encoding='utf-8')

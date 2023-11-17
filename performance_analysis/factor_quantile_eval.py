@@ -10,7 +10,7 @@ import time
 import pandas as pd
 import rqdatac as rq
 
-from file_location import FileLocation as FL
+from util.file_location import FileLocation as FL
 from util.utils import transfer_to_jy_ticker
 
 

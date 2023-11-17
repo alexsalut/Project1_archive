@@ -12,7 +12,7 @@ import xlwings as xw
 import rqdatac as rq
 
 from record.account_info import read_terminal_info
-from account_check.get_clearing_info import SettleInfo
+from util.get_clearing_info import SettleInfo
 
 
 class TalangRecorder:

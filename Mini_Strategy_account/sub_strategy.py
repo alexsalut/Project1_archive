@@ -11,7 +11,7 @@ import glob
 import pandas as pd
 import numpy as np
 
-from file_location import FileLocation
+from util.file_location import FileLocation
 
 
 def get_mini_strategy_history_ret(start):
