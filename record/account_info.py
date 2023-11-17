@@ -49,7 +49,7 @@ def get_tinglian2_info(date=None):
         rf'{cats_tinglian_dir}/OptionFund_{formatted_date2}.csv',
         index_col=False,
     ).set_index('账户')  # cats 账户
-    cats_option_equity = cats_option_df.loc[FL.option_account_code_dict['听涟2号'], '客户总权益']
+    cats_option_equity = cats_option_df.loc[FL.option_account_code_dict['听涟2号'], '资金总额']
 
     transaction_df = pd.read_csv(
         rf'{emc_tinglian_dir}/310310300343_RZRQ_MATCH.{formatted_date1}.csv',
@@ -140,7 +140,7 @@ def get_panlan1_info(date=None):
     stock_transaction_vol = transaction_df.query('证券代码.str.len() == 9')['成交额'].sum()
 
     info_dict = {
-        '期权权益': option_s['客户总权益'],
+        '期权权益': option_s['资金总额'],
         '股票权益': stock_normal_s['账户资产'] + stock_credit_s['净资产'],
         '股票市值': stock_normal_s['证券市值'] + stock_credit_s['证券市值'],
         '普通账户股票权益': stock_normal_s['账户资产'],

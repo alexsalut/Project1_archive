@@ -16,7 +16,7 @@ class Monitor:
     seq = '*' * 25
 
     def update(self, today=None):
-        print(f'\n{self.seq * 2} Monitor Daily Update {self.seq * 2}')
+        print(f'\n{self.seq * 2} Update Monitor {self.seq * 2}')
 
         self.collect_related_data(today)
         self.update_next_trading_day()

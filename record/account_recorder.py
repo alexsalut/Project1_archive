@@ -11,8 +11,8 @@ from util.trading_calendar import TradingCalendar
 
 
 def account_recorder(date=None, adjust=None):
-    seq = '*' * 50
-    print(f"\n{seq} Update Account Recorder {seq}")
+    sep = '*' * 25
+    print(f"\n{sep*2} Update Account Recorder {sep*2}")
 
     formatted_date = time.strftime('%Y%m%d') if date is None else date
     last_trading_day = TradingCalendar().get_n_trading_day(formatted_date, -1).strftime('%Y%m%d')
@@ -26,6 +26,7 @@ def account_recorder(date=None, adjust=None):
         date_to_update = formatted_date
         print(f'Copy \n  {old_account_path}\nto\n  {account_path}')
         shutil.copyfile(src=old_account_path, dst=account_path)
+        print(f'{sep} Update Multi-Strategy Performance {sep}')
         MultiStrategyPerf(
             account_path=account_path,
             monitor_path=monitor_path,
@@ -35,14 +36,16 @@ def account_recorder(date=None, adjust=None):
         account_path = old_account_path
         date_to_update = last_trading_day
 
+    print(f'{sep} Update Fund Record {sep}')
     update_fund_recorder(account_path, date_to_update, adjust)
     send_email(account_path, date_to_update)
 
 
 def update_fund_recorder(account_path, date_to_update, adjust):
     TalangRecorder(account_path=account_path, date=date_to_update, adjust=adjust).update()
+    # nongchao2会生成2个excel pid, why?
     NongchaoRecorder(account_path=account_path, date=date_to_update, adjust=adjust).record_nongchao()
-    # PanlanTinglian这里有问题，亮哥程序只生成一个excel pid并且不会quit掉
+    # PanlanTinglian这里有问题，亮哥程序只生成1个excel pid且不会quit掉
     PanlanTinglianRecorder(account_path=account_path, account='盼澜1号', date=date_to_update, adjust=adjust).record_account()
     PanlanTinglianRecorder(account_path=account_path, account='听涟2号', date=date_to_update, adjust=adjust).record_account()
 
@@ -64,7 +67,3 @@ def send_email(account_path, date_to_update):
         body_content=content,
         receivers=R.department['research'] + R.department['admin'],
     )
-
-
-if __name__ == '__main__':
-    account_recorder(date='20231116')

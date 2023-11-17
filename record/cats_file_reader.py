@@ -40,8 +40,8 @@ class CatsFileReader:
 
         group = group_security(normal_file_info['StockPosition'], 'SymbolFull', inverse=True)
         cats_normal.update({'可转债市值': add_df_cell(group['Convertible'], '参考市值', is_df=True)})
-        cats_normal.update({'其他证券市值': sum(
-            [add_df_cell(group[key], '参考市值', is_df=True) for key in group.keys() if key in (['ETF', 'CS'])])})
+        cats_normal.update({'其他证券市值': sum([add_df_cell(group[key], '参考市值', is_df=True)
+                                                 for key in group.keys() if key in (['ETF', 'CS'])])})
         cats_normal.update({'成交额': 0})
         return cats_normal
 
@@ -87,9 +87,8 @@ def group_security(df, ticker_col, inverse=True):
     security_type = rq.instruments(df[ticker_col].tolist(), market='cn')
     df['security type'] = [x.type for x in security_type]
     security_type = ['Convertible', 'ETF', 'CS']
-    group_dict = {
-        type: df.query(f'`security type` == "{type}"') for type in security_type
-    }
+    group_dict = {_type: df.query(f'`security type` == "{_type}"')
+                  for _type in security_type}
     return group_dict
 
 

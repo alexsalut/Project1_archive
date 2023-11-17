@@ -115,8 +115,3 @@ class NongchaoRecorder:
 
         sheet.range(f'{col_list[10]}{last_row}').value = sum([account['成交额'] for account in account_dict.values()])
         sheet.range(f'{col_list[11]}{last_row}').formula = f'=({col_list[10]}{last_row}/{col_list[0]}{last_row})'
-
-
-if __name__ == '__main__':
-    NongchaoRecorder(account_path=r'C:\Users\Yz02\Desktop\strategy_update\衍舟策略观察_20231109.xlsx', date='20231108').record_nongchao()
-    NongchaoRecorder(account_path=r'C:\Users\Yz02\Desktop\strategy_update\衍舟策略观察_20231109.xlsx', date='20231109').record_nongchao()

@@ -9,14 +9,12 @@ import time
 from choice.c_st_list_updater import ST_List_Updater
 from choice.c_kc50_weight_updater import KC50WeightUpdater
 from choice.kc50_composition import download_check_kc50_composition
-
 from t.ts_kline_updater import KlineUpdater
 from t.ts_raw_daily_bar_updater import RawDailyBarUpdater
-
-from record.account_recorder import account_recorder
-
 from rice_quant.risk_exposure import send_fund_portfolio_exposure
 from rice_quant.live_kline_updater import gen_quick_virtual_kline
+
+from record.account_recorder import account_recorder
 from performance_analysis.strategy_review import send_strategy_review
 from util.trading_calendar import TradingCalendar
 

@@ -61,7 +61,8 @@ class MaticFileReader:
 
         return normal_asset
 
-    def get_security_asset(self, position_df):
+    @staticmethod
+    def get_security_asset(position_df):
         convertible = position_df.query('证券名称.str.contains("转")&(~证券名称.str.contains("ETF"))')[
             '市值（CNY）'].sum()
         cash_asset = position_df.query('证券名称.str.contains("银华日利")|证券名称.str.contains("短融") ')['市值（CNY）'].sum()
@@ -76,11 +77,9 @@ class MaticFileReader:
 
         return data_dict
 
-    def get_newest_file(self, dir, key):
-        file_list = glob.glob(f'{dir}/*{key}*')
+    @staticmethod
+    def get_newest_file(directory, key):
+        file_list = glob.glob(f'{directory}/*{key}*')
         time_list = [os.path.getmtime(file) for file in file_list]
-        try:
-            newest_file = file_list[time_list.index(max(time_list))]
-        except ValueError:
-            print()
+        newest_file = file_list[time_list.index(max(time_list))]
         return newest_file

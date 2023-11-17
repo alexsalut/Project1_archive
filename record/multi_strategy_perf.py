@@ -19,7 +19,6 @@ class MultiStrategyPerf:
         self.monitor_path = monitor_path
 
     def update(self):
-        print('\nUpdate multi-strategy performance...')
         monitor_data = self.get_monitor_data()
         self.fill_today_perf(monitor_data)
 
