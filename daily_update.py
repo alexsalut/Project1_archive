@@ -76,4 +76,4 @@ def update_data_after_close():
 
 
 if __name__ == '__main__':
-    auto_update()
+    send_risk_exposure(date='20231117')

@@ -62,6 +62,12 @@ def gen_relative_barra_expo(date):
     expo_df = pd.read_csv(fr'{exposure_save_dir}\expo_{formatted_date}.csv', index_col=0, header=[0, 1], encoding='gbk')
     relative_df = expo_df.loc[:, (slice(None), 'relative')].droplevel(1, axis=1)
     barra_relative_df = relative_df.loc[:'residual_volatility']
+    barra_relative_df = barra_relative_df.rename(columns={
+        'panlan': '踏浪1号',
+        'talang1': '踏浪1号',
+        'talang2': '踏浪2号',
+        'talang3': '踏浪3号',
+    })
     barra_relative_df.columns = pd.MultiIndex.from_product([[date], barra_relative_df.columns])
     return barra_relative_df
 
