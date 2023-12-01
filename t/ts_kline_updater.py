@@ -122,7 +122,3 @@ class KlineUpdater:
             tushare_dir=self.raw_dir,
             save_path=self.save_path,
         ).gen_qfq_kline()
-
-
-if __name__ == '__main__':
-    KlineUpdater('20230926').update_confirm_adjusted_kline()

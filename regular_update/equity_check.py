@@ -10,7 +10,7 @@ import time
 
 import pandas as pd
 
-from util.get_clearing_info import SettleInfo
+from record.get_clearing_info import SettleInfo
 from util.send_email import Mail, R
 from record.account_info import read_terminal_info
 from util.trading_calendar import TradingCalendar
@@ -23,11 +23,11 @@ def send_equity_check(date=None):
 
 class EquityCheck:
     def __init__(self, account=None, date=None):
-        self.account = [account] if account is not None else ['踏浪1号', '踏浪2号', '踏浪3号', '盼澜1号', '听涟2号']
+        self.account = [account] if account is not None else ['弄潮1号', '弄潮2号', '踏浪1号', '踏浪2号', '踏浪3号', '盼澜1号', '听涟2号']
         last_trading_day = TradingCalendar().get_n_trading_day(time.strftime('%Y%m%d'), -1).strftime('%Y%m%d')
         self.date = date if date is not None else last_trading_day
         self.dir = FileLocation.clearing_dir
-        self.account_path = rf'\\192.168.1.116\target_position\monitor\衍舟策略观察_{self.date}.xlsx'
+        self.account_path = rf'{FileLocation.remote_monitor_dir}\衍舟策略观察_{self.date}.xlsx'
 
     def notify_check_with_email(self):
         Mail().receive(save_dir=self.dir,
@@ -51,19 +51,23 @@ class EquityCheck:
         missed_string = '\n\n'.join(missed_file_list)
         print(f'{missed_string}不存在')
         Mail().send(
-            subject=f'[各账户资产核对]{self.date}对账单文件缺失，两分钟后重试。',
+            subject=f'[各账户资产核对]{self.date}对账单文件缺失，10分钟后重试。',
             body_content=f'{missed_string}不存在',
             receivers=R.department['research'],
         )
-        time.sleep(120)
+        time.sleep(600)
         self.notify_check_with_email()
 
     def check_account_info(self, account):
         clearing_info = SettleInfo(date=self.date).get_settle_info(account=account)
         record_info = read_terminal_info(date=self.date, account=account)
-        clearing_info_s = pd.Series(clearing_info, name='对账单')
-        record_info_s = pd.Series(record_info, name='导出单')
-        info_df = pd.concat([clearing_info_s, record_info_s], axis=1)
+        if account in ['弄潮1号','弄潮2号']:
+            info_df = self.gen_dict_to_df(clearing_info, record_info)
+        else:
+            clearing_info_s = pd.Series(clearing_info, name='对账单')
+            record_info_s = pd.Series(record_info, name='导出单')
+            info_df = pd.concat([clearing_info_s, record_info_s], axis=1)
+
         info_df['差值'] = info_df['对账单'] - info_df['导出单']
 
         def highlight_diff(s):
@@ -82,6 +86,21 @@ class EquityCheck:
         styled_info_df = styled_info_df.replace('<th', '<th style="border-right: 1px solid black;"')
         styled_info_df = styled_info_df.replace('<td', '<td style="border-right: 1px solid black;"')
         return styled_info_df
+
+    def gen_dict_to_df(self, settle_dict, record_dict):
+        data = []
+        for key, value in settle_dict.items():
+            common_key = value.keys() & record_dict[key].keys()
+            common_key = [k for k in common_key if k not in ['成交额']]
+            key_deduct = key.replace('账户', '')
+            new_key = [f'{key_deduct}{k}' for k in common_key]
+            settle = pd.Series([value[k] for k in common_key], index=new_key, name='对账单')
+            record = pd.Series([record_dict[key][k] for k in common_key], index=new_key, name='导出单')
+            df = pd.concat([settle, record], axis=1)
+            data.append(df)
+        df = pd.concat(data, axis=0)
+        return df
+
 
     def gen_email_content(self, check_info_dict):
         subject = f'[Equity Check]{self.date}'
@@ -116,3 +135,7 @@ class EquityCheck:
                 '股票权益': record_df.loc[self.date, '股票资产总值'],
             })
         return record_info_dict
+
+
+if __name__ == '__main__':
+    send_equity_check()

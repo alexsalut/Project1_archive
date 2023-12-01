@@ -35,6 +35,8 @@ def plot_single_barra_expo(barra_s):
         ax[i].bar(np.arange(len(expo_df.index)), expo_df[account].values)
         ax[i].set_title(account)
     plt.xlabel('Date')
+    plt.rcParams['font.sans-serif'] = ['SimHei']
+    plt.rcParams['axes.unicode_minus'] = False
     plt.xticks(np.arange(len(expo_df.index)), expo_df.index, rotation=45, ha='right')
 
     plt.suptitle(factor, fontsize=20)
@@ -70,7 +72,3 @@ def gen_relative_barra_expo(date):
     })
     barra_relative_df.columns = pd.MultiIndex.from_product([[date], barra_relative_df.columns])
     return barra_relative_df
-
-
-if __name__ == '__main__':
-    plot_all_barra_expo(date='20231031')

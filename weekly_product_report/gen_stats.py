@@ -12,6 +12,8 @@ import rqdatac as rq
 
 from datetime import timedelta
 
+from util.trading_calendar import TradingCalendar as tc
+
 
 class ProductStats:
     def __init__(self):
@@ -39,54 +41,82 @@ class ProductStats:
             '盼澜1号': pd.to_datetime('20220909'),
         }
 
-    def get_all_stats(self, end_date):
+    def get_all_stats(self, start_date, end_date):
+        nav_dict = self.get_nav_history()
+
+        check_end = {key: pd.to_datetime(end_date) in nav_dict[key].index for key in nav_dict.keys()}
+        check_start = {key: pd.to_datetime(start_date) in nav_dict[key].index for key in nav_dict.keys()}
+
+        if all([value for value in check_end.values()]) and all([value for value in check_start.values()]):
+            reset_nav_dict = self.set_weekly_date(nav_dict)
+            stats = {k: self.get_statistics(
+                key=k,
+                nav_s=v,
+                start_date=start_date,
+                end_date=end_date,
+            ) for k, v in reset_nav_dict.items()}
+            return stats
+        else:
+            print(end_date,check_end)
+            print(start_date, check_start)
+            print(start_date, end_date, '净值数据不完整，请检查数据库')
+
+    def get_nav_history(self):
         connection = db_connect()
         nav_dict = {k: get_db_data(connection, v)
                     for k, v in self.table_name_dict.items()}
-        reset_nav_dict = self.set_weekly_date(nav_dict)
-        stats = {k: self.get_statistics(
-            key=k,
-            nav_s=v,
-            end_date=end_date,
-        ) for k, v in reset_nav_dict.items()}
-        return stats
+        return nav_dict
 
     def set_weekly_date(self, nav_dict):
         reset_nav_dict = {}
         for key in nav_dict.keys():
-            reset_nav_dict[key] = nav_dict[key].loc[self.start_date[key]:, 'cumu_netvalue']
-            reset_nav_dict[key] = self.select_fridays(reset_nav_dict[key], key)
-            reset_nav_dict[key] /= reset_nav_dict[key].iloc[0]
+            reset_nav_dict[key] = self.select_trading_days(nav_dict, key)
             print(key, '净值初始时间重置成功', '初始时间为', self.start_date[key].strftime('%Y%m%d'))
         return reset_nav_dict
 
-    def select_fridays(self, nav_s, key):
-        fridays = [date for date in nav_s.index if date.weekday() == 4]
-        if self.start_date[key] not in fridays:
-            fridays.append(self.start_date[key])
-        return nav_s.loc[fridays].sort_index()
+    def select_trading_days(self, nav_dict, key):
+        nav_s = nav_dict[key].loc[self.start_date[key]:, 'cumu_netvalue']
+        weeks = pd.Series([date.strftime('%Y%W') for date in nav_s.index], index=nav_s.index, name='week')
+        weekdays = pd.Series([int(date.strftime('%w')) for date in nav_s.index], index=nav_s.index, name='weekday')
+        calendar = pd.concat([weeks, weekdays], axis=1)
+        calendar = calendar.query('(weekday > 0)&(weekday < 6)')
 
-    def get_statistics(self, nav_s, key, end_date):
+        last_trade_day_of_week = calendar.groupby(['week']).tail(1).index
+        if pd.to_datetime(self.start_date[key]) not in last_trade_day_of_week:
+            last_trade_day_of_week = last_trade_day_of_week.insert(0, pd.to_datetime(self.start_date[key]))
+        return nav_s.loc[last_trade_day_of_week]
+
+    def get_statistics(self, nav_s, key, start_date, end_date):
         end = pd.to_datetime(end_date)
-        start = end - timedelta(days=7)
+        start = pd.to_datetime(start_date)
+        week_num = tc().calculate_trading_weeks(start=nav_s.index[0], end=end) - 1
+        print(key, '周数为', week_num, '周', '开始时间为', nav_s.index[0], '结束时间为', end)
+
         statistics = {
-            '累计净值': nav_s.iloc[-1],
+            '累计净值': nav_s.loc[end],
             '当周收益': nav_s.loc[end] / nav_s.loc[start] - 1,
-            '历史最大回撤': self.get_mdd(nav_s),
+            '历史最大回撤': self.get_mdd(nav_s.loc[:end]),
         }
-        statistics.update({'年化收益': (nav_s.iloc[-1])**(52/(len(nav_s)-1)) - 1})
+        statistics['年化收益'] = (nav_s.loc[end]/nav_s.iloc[0]) ** (52 / week_num) - 1
 
         if key in self.index_code_dict.keys():
             index_nav_s = self.get_index_ret(
                 index_code=self.index_code_dict[key],
                 start=nav_s.index[0].strftime('%Y%m%d'),
                 end=end.strftime('%Y%m%d'),
-            ).loc[nav_s.index]
+            )
+
+            common_index = index_nav_s.index.intersection(nav_s.index)
+            assert end in common_index
+            assert start in common_index
+            index_nav_s = index_nav_s.loc[common_index]
+            nav_s = nav_s.loc[common_index]
+
             excess_nav = nav_s / index_nav_s
             statistics.update({
                 '当周超额': excess_nav.loc[end] / excess_nav.loc[start] - 1,
                 '超额最大回撤': self.get_mdd(excess_nav),
-                '年化超额': (excess_nav.iloc[-1])**(52/(len(excess_nav)-1)) - 1,
+                '年化超额': (excess_nav.loc[end]/excess_nav.iloc[0]) ** (52 / week_num) - 1,
             })
 
         return statistics
@@ -132,5 +162,9 @@ def get_db_data(connection, table_name):
     return df
 
 
+
 if __name__ == '__main__':
-    ProductStats().get_all_stats(end_date='20231111')
+    ProductStats().get_nav_history()
+
+
+

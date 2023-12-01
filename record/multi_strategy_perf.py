@@ -8,8 +8,10 @@
 import time
 
 import pandas as pd
-import xlwings as xw
 import numpy as np
+import xlwings as xw
+
+from util.utils import find_index_loc_in_excel
 
 
 class MultiStrategyPerf:
@@ -23,10 +25,6 @@ class MultiStrategyPerf:
         self.fill_today_perf(monitor_data)
 
     def get_monitor_data(self):
-        def get_value(df, string, i, j):
-            loc = np.where(df.values == string)
-            return df.iloc[loc[0][0] + i, loc[1][0] + j]
-
         monitor_df = pd.read_excel(self.monitor_path, sheet_name=0, index_col=False, header=None)
         monitor_data = pd.Series(
             data=[
@@ -50,32 +48,31 @@ class MultiStrategyPerf:
 
     def fill_today_perf(self, monitor_data):
         sheet_name = '多策略超额'
-        try:
-            app = xw.App(visible=False, add_book=False)
-            wb = app.books.open(self.account_path)
-            sheet = wb.sheets[sheet_name]
-            print('Generate excel pid:', app.pid)
+        app = xw.App(visible=False, add_book=False)
+        wb = app.books.open(self.account_path)
+        sheet = wb.sheets[sheet_name]
+        print('Generate excel pid:', app.pid)
 
-            last_row = sheet.cells(sheet.cells.last_cell.row, 1).end('up').row + 1
-            sheet.range(f'A{last_row}').value = self.date  # date
-            sheet.range(f'B{last_row}').value = monitor_data['strategy_ret']  # 策略涨幅
-            sheet.range(f'C{last_row}').value = monitor_data['kc50_ret']  # 科创50涨幅
+        row_to_fill = find_index_loc_in_excel(self.account_path, sheet_name, self.date)
+        sheet.range(f'A{row_to_fill}').value = self.date  # date
+        sheet.range(f'B{row_to_fill}').value = monitor_data['strategy_ret']  # 策略涨幅
+        sheet.range(f'C{row_to_fill}').value = monitor_data['kc50_ret']  # 科创50涨幅
 
-            print(f'[{sheet_name}] 科创50收益率', monitor_data['kc50_ret'])
-            sheet.range(f'D{last_row}').formula = f'=B{last_row}-C{last_row}'  # 指增超额
-            sheet.range(f'E{last_row}').formula = f'=SUM(D2:D{last_row})'  # 累计指增超额算术
-            sheet.range(f'F{last_row}').formula = f'=F{last_row - 1}*(1+B{last_row})'  # 多头净值
-            sheet.range(f'G{last_row}').formula = f'=G{last_row - 1}*(1+C{last_row})'  # 指数净值
-            sheet.range(f'H{last_row}').formula = f'=F{last_row}/G{last_row}'  # 累计超额净值
-            sheet.range(f'I{last_row}').formula = f'=H{last_row}-1'  # 累计超额-几何
-            sheet.range(f'J{last_row}').formula = f'=H{last_row}/MAX(H2:H{last_row})-1'  # 超额回撤
-            wb.save(self.account_path)
-            wb.close()
-            app.quit()
-            print(f'Sheet-{sheet_name} has been updated.')
+        print(f'[{sheet_name}] 科创50收益率', monitor_data['kc50_ret'])
+        sheet.range(f'D{row_to_fill}').formula = f'=B{row_to_fill}-C{row_to_fill}'  # 指增超额
+        sheet.range(f'E{row_to_fill}').formula = f'=SUM(D2:D{row_to_fill})'  # 累计指增超额算术
+        sheet.range(f'F{row_to_fill}').formula = f'=F{row_to_fill - 1}*(1+B{row_to_fill})'  # 多头净值
+        sheet.range(f'G{row_to_fill}').formula = f'=G{row_to_fill - 1}*(1+C{row_to_fill})'  # 指数净值
+        sheet.range(f'H{row_to_fill}').formula = f'=F{row_to_fill}/G{row_to_fill}'  # 累计超额净值
+        sheet.range(f'I{row_to_fill}').formula = f'=H{row_to_fill}-1'  # 累计超额-几何
+        sheet.range(f'J{row_to_fill}').formula = f'=H{row_to_fill}/MAX(H2:H{row_to_fill})-1'  # 超额回撤
+        wb.save(self.account_path)
+        wb.close()
+        app.quit()
+        app.kill()
+        print(f'Sheet-{sheet_name} has been updated.')
 
-        except Exception as e:
-            print(e)
-            print(f'Sheet {sheet_name} updated in failure, retry in 1 min: {self.account_path}')
-            time.sleep(60)
-            self.fill_today_perf(monitor_data)
+def get_value(df, string, i, j):
+    loc = np.where(df.values == string)
+    return df.iloc[loc[0][0] + i, loc[1][0] + j]
+

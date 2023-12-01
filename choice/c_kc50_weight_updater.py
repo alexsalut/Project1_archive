@@ -98,7 +98,3 @@ class KC50WeightUpdater:
 
         df.to_pickle(save_path)
         print(f'[{index_ticker} weight] {date} file has downloaded.')
-
-
-if __name__ == '__main__':
-    kc50_weight_updater = KC50WeightUpdater()

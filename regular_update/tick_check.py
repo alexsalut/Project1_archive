@@ -206,3 +206,6 @@ class CheckMethod:
         time_interval_s = self.new_df.index.to_series().diff() / 3000000
         time_interval_s = time_interval_s[(time_interval_s.index < 130000000) | (time_interval_s.index > 130020000)]
         return any(time_interval_s > 50)
+
+if __name__ == '__main__':
+    Tick('20231120').check_daily()

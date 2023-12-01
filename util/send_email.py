@@ -79,12 +79,14 @@ class Mail:
         # 登录邮箱，传递参数1：邮箱地址，参数2：邮箱授权码
         stp.login(self.account, self.mail_license)
         # 发送邮件，传递参数1：发件人邮箱地址，参数2：收件人邮箱地址，参数3：把邮件内容格式改为str
+        if isinstance(receivers, str):
+            receivers = [receivers]
         stp.sendmail(self.account, receivers, mm.as_string())
         print("邮件发送成功")
         # 关闭SMTP对象
         stp.quit()
 
-    def receive(self, save_dir, date_range=[3, 1], user=None, pwd=None):
+    def receive(self, save_dir, date_range=[3, 1], user=None, pwd=None, file_list=None):
         import imaplib
         import email
         import os
@@ -136,14 +138,14 @@ class Mail:
 
                     if filename:
                         # Construct the full path to save the attachment
-                        full_path = os.path.join(save_dir, filename)
-                        with open(full_path, 'wb') as attachment:
-                            attachment.write(part.get_payload(decode=True))
-                            print(f'{full_path} has been saved')
+                        if file_list is None or filename in file_list:
+                            full_path = os.path.join(save_dir, filename)
+                            with open(full_path, 'wb') as attachment:
+                                attachment.write(part.get_payload(decode=True))
+                                print(f'{full_path} has been saved')
 
         # Close the connection
         mail.logout()
-        print('邮件下载成功')
 
 
 class R:

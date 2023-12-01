@@ -29,6 +29,9 @@ def read_terminal_info(date, account):
         info = get_nongchao2_info(date=date)
     else:
         raise ValueError('Account name is not correct, please input right account name.')
+    print(f'[{account}导出单信息]:\n')
+    for key, value in info.items():
+        print(f'{key}:{value}\n')
     return info
 
 
@@ -49,7 +52,7 @@ def get_tinglian2_info(date=None):
         rf'{cats_tinglian_dir}/OptionFund_{formatted_date2}.csv',
         index_col=False,
     ).set_index('账户')  # cats 账户
-    cats_option_equity = cats_option_df.loc[FL.option_account_code_dict['听涟2号'], '资金总额']
+    cats_option_equity = cats_option_df.loc[FL.option_account_code_dict['听涟2号'], '客户总权益']
 
     transaction_df = pd.read_csv(
         rf'{emc_tinglian_dir}/310310300343_RZRQ_MATCH.{formatted_date1}.csv',
@@ -125,7 +128,7 @@ def get_panlan1_info(date=None):
     formatted_date2 = pd.to_datetime(date).strftime("%Y-%m-%d") if date is not None else time.strftime(
         '%Y-%m-%d')
     stock_normal_s = pd.read_csv(rf'{panlan_dir}/StockFund_{formatted_date2}.csv', index_col=False).set_index(
-            '账户').loc[FL.account_code['盼澜1号']]
+        '账户').loc[FL.account_code['盼澜1号']]
 
     stock_credit_s = pd.read_csv(rf'{panlan_dir}/CreditFund_{formatted_date2}.csv', index_col=False).set_index(
         '账户').loc[FL.account_code['盼澜1号']]
@@ -140,7 +143,7 @@ def get_panlan1_info(date=None):
     stock_transaction_vol = transaction_df.query('证券代码.str.len() == 9')['成交额'].sum()
 
     info_dict = {
-        '期权权益': option_s['资金总额'],
+        '期权权益': option_s['客户总权益'],
         '股票权益': stock_normal_s['账户资产'] + stock_credit_s['净资产'],
         '股票市值': stock_normal_s['证券市值'] + stock_credit_s['证券市值'],
         '普通账户股票权益': stock_normal_s['账户资产'],
@@ -155,7 +158,7 @@ def get_panlan1_info(date=None):
     return info_dict
 
 
-def get_nongchao1_info(date=None):
+def get_nongchao1_info(date=None, check=False):
     account_dict = CatsFileReader(
         file_dir=FL.account_info_dir_dict['弄潮1号 cats'],
         account_code=FL.account_code['弄潮1号 cats'],
@@ -179,3 +182,6 @@ def get_nongchao2_info(date=None):
         date=date
     ).get_matic_account_info()
     return account_dict
+
+if __name__ == '__main__':
+    read_terminal_info(date='20231130', account='弄潮1号')

@@ -55,7 +55,3 @@ def c_download_kc50_composition(date, save_path):
     c.stop()
     df.to_csv(save_path, index=False)
     print(f'[kc50 composition] {date} file has downloaded.')
-
-
-if __name__ == '__main__':
-    c_download_kc50_composition(date='20230919')

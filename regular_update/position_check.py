@@ -6,7 +6,7 @@
 # @File    : position.py
 
 import time
-
+import os
 import pandas as pd
 
 from util.send_email import Mail
@@ -117,6 +117,7 @@ def get_account_location(date=None):
             'target': rf'{fl.remote_target_pos_dir}/tag_pos_踏浪1号信用账户_{formatted_date1}.csv',
         },
     }
+
     return account_position_dict
 
 
@@ -128,7 +129,7 @@ class AccountPosition:
         self.location_dict = get_account_location(self.date)[self.account]
 
     def get_target_position(self):
-        try:
+        if os.path.exists(self.location_dict['target']):
             target_df = pd.read_csv(
                 self.location_dict['target'],
                 index_col=False,
@@ -138,16 +139,14 @@ class AccountPosition:
             ).set_index('代码')
             target_df.index = target_df.index.str[2:]
             return target_df
-        except Exception as e:
-            print(e)
-            print(
-                f'Error: {self.account}目标持仓数据获取失败，请检查{self.location_dict["target"]}文件是否存在，两分钟后重试')
-            time.sleep(120)
-            self.get_target_position()
+        else:
+            print(f'Error: {self.location_dict["target"]} does not exist')
+            raise FileNotFoundError
+
 
     def get_actual_position(self):
-        try:
-            encoding = 'gbk' if self.account == '听涟2号' else None
+        encoding = 'gbk' if self.account == '听涟2号' else None
+        if os.path.exists(self.location_dict['actual']):
             actual_df = pd.read_csv(
                 self.location_dict['actual'],
                 encoding=encoding,
@@ -166,12 +165,9 @@ class AccountPosition:
                 actual_df = actual_df.query(f'账户=={fl.account_code[self.account]}')
             actual_df = actual_df[['名称', '实际', '市值']]
             return actual_df[actual_df['实际'] != 0]
-        except Exception as e:
-            print(e)
-            print(
-                f'Error: {self.account}实际持仓数据获取失败，请检查{self.location_dict["actual"]}文件是否存在，两分钟后重试')
-            time.sleep(120)
-            self.get_actual_position()
+        else:
+            print(f'Error: {self.location_dict["actual"]} does not exist')
+            raise FileNotFoundError
 
     def get_position_col(self):
         # 普通账户目前有三种，分别是盼澜1号，踏浪1号，听涟2号
@@ -197,3 +193,7 @@ class AccountPosition:
             return account_col_dict[self.account]
         else:
             raise ValueError(f'Error: account {self.account} is not supported')
+
+
+if __name__ == '__main__':
+    send_position_check()

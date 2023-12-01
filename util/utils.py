@@ -3,6 +3,7 @@ import time
 import os
 
 import pandas as pd
+import numpy as np
 
 import multiprocessing as mul
 from email.mime.text import MIMEText
@@ -95,8 +96,11 @@ class SendEmailInfo:
         'admin': ['chen.zf@yz-fund.com.cn']
     }
 
-
-if __name__ == '__main__':
-    c.start()
-    data = c.css("688120.SZ", "TRADESTATUS", "TradeDate=2023-10-23").Data
-    c.stop()
+def find_index_loc_in_excel(file_path, sheet_name, value):
+    df = pd.read_excel(file_path, sheet_name=sheet_name, index_col=False, header=None)
+    df[0] = df[0].astype(str).str.split('.').str[0]
+    loc = np.where(df[0].values == value)
+    if loc[0].size == 0:
+        return len(df)+1
+    else:
+        return loc[0][0] + 1

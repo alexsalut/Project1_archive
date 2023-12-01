@@ -1,3 +1,4 @@
+import os.path
 import time
 import datetime
 
@@ -7,7 +8,7 @@ import pandas as pd
 from util.utils import retry_save_excel
 from util.trading_calendar import TradingCalendar
 from util.file_location import FileLocation
-
+from util.send_email import Mail, R
 
 class Monitor:
     monitor_dir = FileLocation.remote_monitor_dir
@@ -17,63 +18,67 @@ class Monitor:
 
     def update(self, today=None):
         print(f'\n{self.seq * 2} Update Monitor {self.seq * 2}')
-
         self.collect_related_data(today)
         self.update_next_trading_day()
         self.archive_today()
 
         print(f'{self.seq * 2} Monitor Daily Update is Done! {self.seq * 2}\n')
 
-    def collect_related_data(self, today):
+    def collect_related_data(self, today, starting_row=6):
         print(f'{self.seq} Collect Related Data {self.seq}')
-        today = time.strftime('%Y%m%d') if today is None else today
-        next_trading_day = TradingCalendar().get_n_trading_day(today, 1).strftime('%Y%m%d')
+        formatted_today = time.strftime('%Y%m%d') if today is None else today
+        next_trading_day = TradingCalendar().get_n_trading_day(formatted_today, 1).strftime('%Y%m%d')
 
-        monitor_path = rf'{self.monitor_dir}/monitor_{today}_formula.xlsx'
-        archive_path = rf'{self.monitor_dir}/monitor_{today}.xlsx'
-        next_monitor_path = rf'{self.monitor_dir}/monitor_{next_trading_day}_formula.xlsx'
-        tag_pos_path = rf'{self.summary_dir}/tag_pos_{today}.csv'
-        stock_shares_path = rf'{self.summary_dir}/stock_shares_{today}.csv'
+        tag_pos_path = rf'{self.summary_dir}/tag_pos_{formatted_today}.csv'
+        stock_shares_path = rf'{self.summary_dir}/stock_shares_{formatted_today}.csv'
 
-        monitor_values_df = self.get_monitor_values_df(monitor_path)
         tag_pos_df = pd.read_csv(tag_pos_path, index_col=0).reset_index(drop=False)
-        stock_shares_df = pd.read_csv(stock_shares_path, index_col=0).reset_index(drop=False)
 
         self.dataset = {
-            'today': today,
-            'next_trading_day': next_trading_day,
-            'monitor_path': monitor_path,
-            'archive_path': archive_path,
-            'next_monitor_path': next_monitor_path,
+            'today': formatted_today,
+            'next_trading_day': TradingCalendar().get_n_trading_day(formatted_today, 1).strftime('%Y%m%d'),
+            'template_path': rf'{self.monitor_dir}/monitor_template.xlsx',
+            'monitor_path': rf'{self.monitor_dir}/monitor_{formatted_today}_formula.xlsx',
+            'archive_path': rf'{self.monitor_dir}/monitor_{formatted_today}.xlsx',
+            'next_monitor_path': rf'{self.monitor_dir}/monitor_{next_trading_day}_formula.xlsx',
             'tag_pos_df': tag_pos_df,
-            'stock_shares_df': stock_shares_df,
-            'monitor_values_df': monitor_values_df,
+            'stock_shares_df': pd.read_csv(stock_shares_path, index_col=0).reset_index(drop=False),
             # tag_pos_df第一行在monitor表格中的行数
-            'row1': 5,
+            'row1': starting_row,
             # stock_shares_df第一行在表格中的行数
-            'row2': 4 + len(tag_pos_df) + 4,
+            'row2': starting_row + len(tag_pos_df) + 3,
         }
 
     def update_next_trading_day(self):
         print(f'{self.seq} Update Next Trading Day {self.seq}')
 
-        monitor_path = self.dataset['monitor_path']
+        template_path = self.dataset['template_path']
         next_monitor_path = self.dataset['next_monitor_path']
+        if not os.path.exists(next_monitor_path):
+            app = xw.App(visible=False, add_book=False)
+            print('Generate excel pid:', app.pid)
+            app.display_alerts = False
+            app.screen_updating = False
+            wb = app.books.open(template_path)
 
-        app = xw.App(visible=False, add_book=False)
-        print('Generate excel pid:', app.pid)
-        app.display_alerts = False
-        app.screen_updating = False
-        wb = app.books.open(monitor_path)
+            sheet = wb.sheets[0]
+            self.clear_previous_rows(sheet)
+            self.update_sheet_value(sheet)
 
-        sheet = wb.sheets[0]
-        self.update_sheet_value(sheet)
-        self.clear_extra_rows(sheet)
 
-        retry_save_excel(wb=wb, file_path=next_monitor_path)
-        wb.close()
-        app.quit()
-        app.kill()
+            retry_save_excel(wb=wb, file_path=next_monitor_path)
+            wb.close()
+            app.quit()
+            app.kill()
+            print('*' * 25, 'Next Monitor Updated, Archive in 2 mins', '*' * 25)
+            Mail().send(
+                subject=f'Archive today monitor',
+                body_content=f'{next_monitor_path} 更新完成',
+                receivers=[R.staff['zhou']]
+            )
+            time.sleep(120)
+        else:
+            print(f'{next_monitor_path} already exists, no need to update')
 
     def update_sheet_value(self, sheet):
         row1 = self.dataset['row1']
@@ -97,29 +102,32 @@ class Monitor:
             sheet[f'G{row}'].formula = f'=RTD("em.rtq",,A{row},"Time")'
             sheet[f'H{row}'].formula = f'=RTD("em.rtq",,A{row},"DifferRange")'
 
-    def clear_extra_rows(self, sheet):
+    def clear_previous_rows(self, sheet):
         row2 = self.dataset['row2']
-        stock_shares_df = self.dataset['stock_shares_df']
-        rows_to_delete = range(row2 + len(stock_shares_df), 180)
+        rows_to_delete = range(row2, 180)
         for row in rows_to_delete:
             sheet.api.Rows(row).Delete()
 
     def archive_today(self):
         print(f'{self.seq} Archive Today Monitor {self.seq}')
         archive_path = self.dataset['archive_path']
-        monitor_values_df = self.dataset['monitor_values_df']
+        if not os.path.exists(archive_path):
+            monitor_values_df = self.get_monitor_values_df(self.dataset['monitor_path'])
 
-        app = xw.App(visible=False, add_book=False)
-        wb = xw.books.open(self.dataset['monitor_path'])
-        sheet = wb.sheets['monitor目标持仓']
+            app = xw.App(visible=False, add_book=False)
+            wb = xw.books.open(self.dataset['monitor_path'])
+            sheet = wb.sheets['monitor目标持仓']
 
-        for index in monitor_values_df.index:
-            for col in monitor_values_df.columns:
-                sheet.range(f'{col}{index}').value = monitor_values_df.loc[index, col]
+            for index in monitor_values_df.index:
+                for col in monitor_values_df.columns:
+                    sheet.range(f'{col}{index}').value = monitor_values_df.loc[index, col]
 
-        retry_save_excel(wb=wb, file_path=archive_path)
-        wb.close()
-        app.quit()
+            retry_save_excel(wb=wb, file_path=archive_path)
+            wb.close()
+            app.quit()
+            app.kill()
+        else:
+            print(f'{archive_path} already exists, no need to archive')
 
     def get_monitor_values_df(self, monitor_path):
         df = pd.read_excel(monitor_path, sheet_name=0, index_col=None, header=None)
@@ -133,6 +141,5 @@ class Monitor:
             df.columns = [chr(ord('A') + i) for i in range(len(df.columns))]
             return df
 
-
 if __name__ == '__main__':
-    Monitor().update()
+    Monitor().update(today='20231130')

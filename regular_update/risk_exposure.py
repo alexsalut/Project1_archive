@@ -121,11 +121,14 @@ def get_port_exposure(date, port_weight):
         print(f'[{time.strftime("%x %X")}] '
               f'RiceQuant has no risk-exposure data({date}) yet, retry in 10 min.')
         time.sleep(600)
-        get_port_exposure(date, port_weight)
+        return get_port_exposure(date, port_weight)
 
-    stock_exposure = rq_exposure.reset_index('date', drop=True)
-    portfolio_exposure = stock_exposure.mul(port_weight, axis=0).sum()
-    return portfolio_exposure
+    else:
+        stock_exposure = rq_exposure.reset_index('date', drop=True)
+        portfolio_exposure = stock_exposure.mul(port_weight, axis=0).sum()
+        return portfolio_exposure
+
+
 
 
 def get_index_exposure(date, fund):
@@ -139,6 +142,11 @@ def get_index_exposure(date, fund):
         raise
 
     index_exposure = rq_get_index_exposure(date, index_ticker)
+    if index_exposure is None:
+        print(f'[{time.strftime("%x %X")}] '
+              f'RiceQuant has no risk-exposure data({date}) yet, retry in 10 min.')
+        time.sleep(5)
+        index_exposure = get_index_exposure(date, fund)
     return index_exposure
 
 
@@ -171,6 +179,5 @@ def rq_get_index_exposure(date, index_ticker):
     index_exposure.name = index_ticker
     return index_exposure
 
-
 if __name__ == '__main__':
-    send_risk_exposure()
+    send_risk_exposure('20231128')

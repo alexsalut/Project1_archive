@@ -16,14 +16,14 @@ from weekly_product_report.gen_stats import ProductStats
 
 
 class WeeklyReport:
-    def __init__(self, end=None):
-        self.dir = rf'{os.path.expanduser("~")}\Desktop\产品每周汇总'
+    def __init__(self, start=None, end=None):
+        self.dir = r'C:\Users\Yz02\Desktop\产品每周汇总'
         os.makedirs(self.dir, exist_ok=True)
 
         self.end = end if end is not None else self.get_last_friday()
-        self.start = (pd.to_datetime(self.end) - timedelta(days=7)).strftime('%Y%m%d')
-        self.last_report_path = rf'{self.dir}\\衍舟业绩周报_{self.start}.xlsx'
-        self.report_path = rf'{self.dir}\\衍舟业绩周报_{self.end}.xlsx'
+        self.start = (pd.to_datetime(self.end) - timedelta(days=7)).strftime('%Y%m%d') if start is None else start
+        self.template_report_path = rf'{self.dir}\衍舟业绩周报_新模版.xlsx'
+        self.report_path = rf'{self.dir}\衍舟业绩周报_{self.end}.xlsx'
 
         self.enhance_cols = {
             '累计净值': 'D',
@@ -60,21 +60,24 @@ class WeeklyReport:
         }
 
     def gen_report(self):
-        # self.copy_last_file()
-        shutil.copyfile(src=self.last_report_path, dst=self.report_path)
-        stats = ProductStats(end=self.end).get_all_stats()
+        print('*'*32,f'Generating {self.report_path}...', '*'*32)
+        self.copy_template_file()
+        shutil.copyfile(src=self.template_report_path, dst=self.report_path)
+        stats = ProductStats().get_all_stats(self.start, self.end)
         self.gen_separate_report(stats, sheet_name='公开版')
         self.gen_separate_report(stats, sheet_name='内部版')
 
-    def copy_last_file(self):
+    def copy_template_file(self):
         app = xw.App(visible=False, add_book=False)
-        wb = app.books.open(self.last_report_path)
+        wb = app.books.open(self.template_report_path)
         wb.save(self.report_path)
         wb.close()
         app.quit()
-        print(f'Copy {self.last_report_path} to {self.report_path} successfully')
+        app.kill()
+        print(f'Copy {self.template_report_path} to {self.report_path} successfully')
 
     def gen_separate_report(self, stats, sheet_name='公开版'):
+        print(f'Generating {sheet_name}...')
         app = xw.App(visible=False, add_book=False)
         wb = app.books.open(self.report_path)
         sheet = wb.sheets[sheet_name]
@@ -90,12 +93,15 @@ class WeeklyReport:
                                   f'】'
 
         for product, product_index in product_index_dict.items():
+            print('Generating', product, '...')
             product_cols = self.enhance_cols if product in self.product_type_dict['指增'] else self.hedge_cols
             self.input_product_stats(sheet, product_index, product_cols, stats[product])
+            print("Product", product, "generated")
 
         wb.save(self.report_path)
         wb.close()
         app.quit()
+        app.kill()
         print('Sheet', sheet_name, 'generated')
 
     def input_product_stats(self, sheet, product_index, product_cols, product_stats):
@@ -108,5 +114,6 @@ class WeeklyReport:
         return last_friday.strftime('%Y%m%d')
 
 
+
 if __name__ == '__main__':
-    WeeklyReport().gen_report()
+    WeeklyReport(start='20231117',end='20231124').gen_report()

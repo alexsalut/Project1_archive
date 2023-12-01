@@ -10,7 +10,9 @@ import time
 import glob
 import pandas as pd
 
+from util.clearing_file_reader import update_asset
 from record.cats_file_reader import gen_info_dict
+from util.clearing_file_reader import get_instruments_type
 
 
 class MaticFileReader:
@@ -37,37 +39,29 @@ class MaticFileReader:
     def get_credit_account_info(self):
         credit = self.read_file(['信用资产', '信用持仓', '信用成交'])
         credit_asset = gen_info_dict(
-            key_list=['账户净资产', '账户总负债', '融资负债', '融券负债', '融资融券费用', '维担比例', '账户证券市值', '现金资产'],
+            key_list=['账户净资产', '账户总负债', '融资负债', '融券负债', '融资融券费用', '维担比例', '账户证券市值',
+                      '资金余额'],
             col_list=['净资产', '合约总负债', '融资市值', '融券市值', ['利息', '费用'], '维持担保比例',
                       '证券市值', '现金资产'],
             df=credit['信用资产'],
             is_df=True)
 
         credit_asset.update({'成交额': credit['信用成交']['成交金额'].sum()})
-        credit_asset.update(self.get_security_asset(credit['信用持仓']))
-        credit_asset.update({'多头现金类市值': credit_asset['现金资产'] + credit_asset['现金类ETF市值']})
+        credit['信用持仓']['证券代码'] = credit['信用持仓']['证券代码'].astype(str)
+        credit_asset = update_asset(credit_asset, credit['信用持仓'], '证券代码', '证券名称', '市值（CNY）')
 
         return credit_asset
 
     def get_normal_account_info(self):
         normal = self.read_file(['普通资产', '普通持仓', '普通成交'])
         normal_asset = gen_info_dict(
-            key_list=['账户净资产', '账户证券市值', '成交额'],
-            col_list=['总资产', '证券市值', '总成交金额'],
+            key_list=['账户净资产', '账户证券市值', '成交额', '资金余额'],
+            col_list=['总资产', '证券市值', '总成交金额', '可用资金'],
             df=normal['普通资产'],
             is_df=True)
-
-        normal_asset.update(self.get_security_asset(normal['普通持仓']))
-
+        normal['普通持仓']['证券代码'] = normal['普通持仓']['证券代码'].astype(str)
+        normal_asset = update_asset(normal_asset, normal['普通持仓'], '证券代码', '证券名称', '市值（CNY）')
         return normal_asset
-
-    @staticmethod
-    def get_security_asset(position_df):
-        convertible = position_df.query('证券名称.str.contains("转")&(~证券名称.str.contains("ETF"))')[
-            '市值（CNY）'].sum()
-        cash_asset = position_df.query('证券名称.str.contains("银华日利")|证券名称.str.contains("短融") ')['市值（CNY）'].sum()
-        stock = position_df.query('(~证券名称.str.contains("ETF"))&(~证券名称.str.contains("转"))')['市值（CNY）'].sum()
-        return {'多头证券市值': convertible + stock, '现金类ETF市值': cash_asset, '可转债市值': convertible}
 
     def read_file(self, filetype_list):
         data_dict = {}
