@@ -22,7 +22,7 @@ from regular_update.position_check import send_position_check
 from regular_update.risk_exposure import send_risk_exposure
 from regular_update.monitor import Monitor
 from regular_update.tick_check import Tick
-
+from regular_update.rzrq_limit import download_rzrq_limit_file
 
 def auto_update():
     while True:
@@ -37,28 +37,35 @@ def auto_update():
 
 def run_daily_update():
     current_minute = int(time.strftime('%H%M'))
-    if current_minute == 820:
+    if current_minute == 730:
         send_equity_check()
-        account_recorder(adjust=True)
+        account_recorder(adjust='对账单', if_last_trading_day=True)
+
+    elif current_minute == 830:
+        download_rzrq_limit_file()
 
     elif current_minute == 1400:
         ST_List_Updater().st_list_update_and_confirm()
         download_check_kc50_composition()
 
-    elif current_minute in [1429, 1444]:
-        gen_live_virtual_kline(current_minute)
+    elif current_minute == 1429:
+        gen_live_virtual_kline(current_minute, execute_min=1430)
 
-    elif current_minute in [1453, 1501]:
+    elif current_minute == 1444:
+        gen_live_virtual_kline(current_minute, execute_min=1445)
+
+    elif current_minute == 1453:
         send_position_check()
 
-    elif current_minute == 1531:
+    elif current_minute == 1501:
+        send_position_check()
         Monitor().update()
         account_recorder()
 
     elif current_minute == 1630:
         update_data_after_close()
         send_strategy_review()
-        Tick().check_daily()
+        # Tick().check_daily()
 
     elif current_minute > 1700:
         send_risk_exposure()

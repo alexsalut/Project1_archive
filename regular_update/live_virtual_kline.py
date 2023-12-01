@@ -12,17 +12,18 @@ import pandas as pd
 import rqdatac as rq
 
 from util.send_email import Mail, R
-from choice.kc_stock_number import get_kc_stock_num
+from EmQuantAPI import c
 
 
-def gen_live_virtual_kline(current_minute):
+def gen_live_virtual_kline(current_minute, execute_min):
     date = time.strftime('%Y%m%d')
     stock_list = gen_stock_list(date)
+    if current_minute == execute_min-1:
+        while int(time.strftime('%H%M')) == current_minute:
+            print(time.strftime('%X'), 'Wait for update!')
+            time.sleep(0.1)
 
-    while int(time.strftime('%H%M')) == current_minute:
-        print(time.strftime('%X'), 'Wait for update!')
-        time.sleep(0.1)
-    gen_ricequant_virtual_kline(stock_list, date)
+    gen_ricequant_virtual_kline(stock_list, execute_min, date)
 
 
 def gen_stock_list(date=None):
@@ -33,9 +34,11 @@ def gen_stock_list(date=None):
     return kc_stks_df.index
 
 
-def gen_ricequant_virtual_kline(stock_list, date=None):
+def gen_ricequant_virtual_kline(stock_list, execution_min, date=None):
     formatted_date = time.strftime('%Y%m%d') if date is None else date
     current_min = int(time.strftime('%H%M'))
+    if current_min >execution_min:
+        current_min = execution_min
     print(f'Generating RiceQuant virtual kline at {datetime.datetime.now()}')
     rq_vk_df = gen_rq_vk_df(stock_list)
     rq_vk_df.to_pickle(
@@ -113,3 +116,10 @@ def notify_with_email(error_dict):
     
     """
     Mail().send(subject=subject, body_content=text, receivers=R.department['research'][0])
+
+
+def get_kc_stock_num():
+    c.start()
+    num = c.cses("B_001057", "SECTORCOUNT", "TradeDate=2023-09-25,IsHistory=0").Data['B_001057'][0]
+    c.stop()
+    return num
