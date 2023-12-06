@@ -20,6 +20,7 @@ class CatsFileReader:
             'StockFund': rf'{file_dir}\StockFund_{self.date}.csv',
             'StockPosition': rf'{file_dir}\StockPosition_{self.date}.csv',
             'Transaction': rf'{file_dir}\TransactionsStatisticsDaily_{self.date}.csv',
+            'OptionPosition': rf'{file_dir}\OptionPosition_{self.date}.csv',
         }
         self.account_code = account_code
 
@@ -66,6 +67,14 @@ class CatsFileReader:
         return cats_credit
 
 
+
+    def get_trading_position(self, file_type):
+        position_df = self.read_file([file_type])[file_type].query(f'账户=={self.account_code}')
+        return position_df
+
+    def get_transaction_df(self):
+        transaction_df = self.read_file(['Transaction'])['Transaction'].query(f'账户=={self.account_code}')
+        return transaction_df
 
     def get_transaction_vol(self):
         transaction_df = self.read_file(['Transaction'])['Transaction']
