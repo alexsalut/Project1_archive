@@ -17,7 +17,7 @@ class FileLocation:
         '踏浪1号': r'\\192.168.1.116\trade\broker\cats\account',
         '盼澜1号': r'\\192.168.1.116\trade\broker\cats\account',
         '听涟2号 emc': r'\\192.168.1.116\trade\broker\emc\account',
-        '听涟2号 cats': r'\\192.168.1.116\trade\broker\cats\account',
+        '听涟2号': r'\\192.168.1.116\trade\broker\cats\account',
         '弄潮1号 cats': r'Z:\投研\数据\交易记录\nongchao\cats',
         '弄潮1号 matic': r'Z:\投研\数据\交易记录\nongchao\matic',
         '弄潮2号 matic': r'Z:\投研\数据\交易记录\nongchao\matic',
@@ -29,14 +29,13 @@ class FileLocation:
         '踏浪2号': 14748783,  # qmt
         '踏浪3号': 190000612973,  # iQuant
         '盼澜1号': 4082225,  # cats
-        '踏浪1号_credit': 4089106,  # cats
         '听涟2号': 310310300343,  # emc
         '弄潮1号 cats': 4069336,  # cats
         '弄潮1号 cats_HK': 7200001295,
     }
 
     # 资产账户
-    option_account_code_dict = {
+    option_account_code = {
         '盼澜1号': 4082225,  # cats
         '听涟2号': 4088701,  # cats
     }
@@ -46,6 +45,11 @@ class FileLocation:
     remote_monitor_dir = r'\\192.168.1.116\target_position\monitor'
     remote_summary_dir = r'\\192.168.1.116\target_position\summary'
     remote_target_pos_dir = r'\\192.168.1.116\trade\target_position\account'
+    record_path = r'\\192.168.1.116\target_position\monitor\衍舟策略观察.xlsx'
+
+# 交易导出单路径
+    cats_dir = r'\\192.168.1.116\trade\broker\cats\account'
+    emc_dir = r'\\192.168.1.116\trade\broker\emc\account'
 
 # choice终端获取数据存储路径
     kc50_weight_dir = r"\\192.168.1.116\choice\reference\index_weight\sh000688\cache"

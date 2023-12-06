@@ -57,8 +57,8 @@ def run_daily_update():
     elif current_minute == 1453:
         send_position_check()
 
-    elif current_minute == 1501:
-        send_position_check()
+    elif current_minute == 1517:
+        # send_position_check()
         Monitor().update()
         account_recorder()
 

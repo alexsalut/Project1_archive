@@ -36,7 +36,7 @@ class SettleInfo:
         # 期权账户
         self.option_account_path = {
             '盼澜1号': rf'{self.dir}/衍舟盼澜1号-个股期权对账单-9008023342_{self.date}.xlsx',
-            '听涟2号 cats': rf'{self.dir}/衍舟听涟2号-个股期权对账单-9008023665_{self.date}.xlsx',
+            '听涟2号': rf'{self.dir}/衍舟听涟2号-个股期权对账单-9008023665_{self.date}.xlsx',
         }
         # 信用账户
         self.credit_account_path = {
@@ -77,7 +77,7 @@ class SettleInfo:
 
     def generate_tinglian2_settle_info(self):
         emc_stock_account = read_clearing_file(self.credit_account_path['听涟2号'], '东财信用账户')
-        cats_option_account = read_clearing_file(self.option_account_path['听涟2号 cats'], '中信期权账户')
+        cats_option_account = read_clearing_file(self.option_account_path['听涟2号'], '中信期权账户')
 
         info_dict = {
             '期权权益': cats_option_account['账户净资产'],
@@ -161,4 +161,4 @@ class SettleInfo:
         return info_dict
 
 if __name__ == '__main__':
-    SettleInfo('20231130').get_settle_info('弄潮1号')
+    SettleInfo('20231204').get_settle_info('弄潮1号')

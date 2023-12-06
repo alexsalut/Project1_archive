@@ -48,6 +48,7 @@ class Monitor:
             # stock_shares_df第一行在表格中的行数
             'row2': starting_row + len(tag_pos_df) + 3,
         }
+        return self.dataset
 
     def update_next_trading_day(self):
         print(f'{self.seq} Update Next Trading Day {self.seq}')
@@ -142,4 +143,4 @@ class Monitor:
             return df
 
 if __name__ == '__main__':
-    Monitor().update(today='20231130')
+    Monitor().update()

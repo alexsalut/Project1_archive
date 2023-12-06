@@ -37,7 +37,7 @@ def read_terminal_info(date, account):
 
 def get_tinglian2_info(date=None):
     emc_tinglian_dir = FL.account_info_dir_dict['听涟2号 emc']
-    cats_tinglian_dir = FL.account_info_dir_dict['听涟2号 cats']
+    cats_tinglian_dir = FL.account_info_dir_dict['听涟2号']
     formatted_date1 = pd.to_datetime(date).strftime("%Y%m%d") if date is not None else time.strftime('%Y%m%d')
     formatted_date2 = pd.to_datetime(date).strftime("%Y-%m-%d") if date is not None else time.strftime('%Y-%m-%d')
 
@@ -52,7 +52,7 @@ def get_tinglian2_info(date=None):
         rf'{cats_tinglian_dir}/OptionFund_{formatted_date2}.csv',
         index_col=False,
     ).set_index('账户')  # cats 账户
-    cats_option_equity = cats_option_df.loc[FL.option_account_code_dict['听涟2号'], '客户总权益']
+    cats_option_equity = cats_option_df.loc[FL.option_account_code['听涟2号'], '客户总权益']
 
     transaction_df = pd.read_csv(
         rf'{emc_tinglian_dir}/310310300343_RZRQ_MATCH.{formatted_date1}.csv',
@@ -64,10 +64,10 @@ def get_tinglian2_info(date=None):
         f'资金账号=={FL.account_code["听涟2号"]}|业务类型.isin(["证券买入", "证券卖出"])')
     stock_transaction_vol = stock_transaction_df['成交数量'].mul(stock_transaction_df['成交价格']).sum()
 
-    option_dir = FL.account_info_dir_dict['听涟2号 cats']
+    option_dir = FL.account_info_dir_dict['听涟2号']
     option_transaction_df = pd.read_csv(rf'{option_dir}/TransactionsStatisticsDaily_{formatted_date2}.csv',
                                         index_col=False).set_index('账户')
-    option_code = FL.option_account_code_dict['听涟2号']
+    option_code = FL.option_account_code['听涟2号']
     option_transaction_df = option_transaction_df.query(f'账户=={option_code}')
 
     option_transaction_vol = option_transaction_df.query(
@@ -134,7 +134,7 @@ def get_panlan1_info(date=None):
         '账户').loc[FL.account_code['盼澜1号']]
 
     option_s = pd.read_csv(rf'{panlan_dir}/OptionFund_{formatted_date2}.csv', index_col=False).set_index(
-        '账户').loc[FL.option_account_code_dict['盼澜1号']]
+        '账户').loc[FL.option_account_code['盼澜1号']]
 
     transaction_df = pd.read_csv(rf'{panlan_dir}/TransactionsStatisticsDaily_{formatted_date2}.csv',
                                  index_col=False).set_index('账户').loc[FL.account_code['盼澜1号']]

@@ -71,4 +71,4 @@ def send_email(account_path, date_to_update, adjust):
     )
 
 if __name__ == '__main__':
-    account_recorder()
+    account_recorder(adjust='对账单', if_last_trading_day=True)
