@@ -27,3 +27,5 @@ def download_rzrq_limit_file(date=None):
         time.sleep(600)
         download_rzrq_limit_file(date=date)
 
+
+download_rzrq_limit_file()
