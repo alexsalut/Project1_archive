@@ -60,10 +60,12 @@ class WeeklyReport:
         }
 
     def gen_report(self):
+        print('*'*32,f'Obtaining nav and generating stats...', '*'*32)
+        stats = ProductStats().get_all_stats(self.start, self.end)
         print('*'*32,f'Generating {self.report_path}...', '*'*32)
         self.copy_template_file()
         shutil.copyfile(src=self.template_report_path, dst=self.report_path)
-        stats = ProductStats().get_all_stats(self.start, self.end)
+
         self.gen_separate_report(stats, sheet_name='公开版')
         self.gen_separate_report(stats, sheet_name='内部版')
 
@@ -116,4 +118,4 @@ class WeeklyReport:
 
 
 if __name__ == '__main__':
-    WeeklyReport(start='20231117',end='20231124').gen_report()
+    WeeklyReport(start='20231124',end='20231201').gen_report()

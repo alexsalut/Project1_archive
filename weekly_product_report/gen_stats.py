@@ -5,14 +5,12 @@
 # @Site    : 
 # @File    : gen_stats.py
 
-import mysql.connector
 
 import pandas as pd
 import rqdatac as rq
 
-from datetime import timedelta
-
 from util.trading_calendar import TradingCalendar as tc
+from weekly_product_report.obtain_nav import db_connect, get_db_data
 
 
 class ProductStats:
@@ -57,7 +55,7 @@ class ProductStats:
             ) for k, v in reset_nav_dict.items()}
             return stats
         else:
-            print(end_date,check_end)
+            print(end_date, check_end)
             print(start_date, check_start)
             print(start_date, end_date, '净值数据不完整，请检查数据库')
 
@@ -97,7 +95,7 @@ class ProductStats:
             '当周收益': nav_s.loc[end] / nav_s.loc[start] - 1,
             '历史最大回撤': self.get_mdd(nav_s.loc[:end]),
         }
-        statistics['年化收益'] = (nav_s.loc[end]/nav_s.iloc[0]) ** (52 / week_num) - 1
+        statistics['年化收益'] = (nav_s.loc[end] / nav_s.iloc[0]) ** (52 / week_num) - 1
 
         if key in self.index_code_dict.keys():
             index_nav_s = self.get_index_ret(
@@ -116,7 +114,7 @@ class ProductStats:
             statistics.update({
                 '当周超额': excess_nav.loc[end] / excess_nav.loc[start] - 1,
                 '超额最大回撤': self.get_mdd(excess_nav),
-                '年化超额': (excess_nav.loc[end]/excess_nav.iloc[0]) ** (52 / week_num) - 1,
+                '年化超额': (excess_nav.loc[end] / excess_nav.iloc[0]) ** (52 / week_num) - 1,
             })
 
         return statistics
@@ -137,34 +135,5 @@ class ProductStats:
         return mdd
 
 
-def db_connect():
-    connection = mysql.connector.connect(host='39.98.41.75',
-                                         database='yanzhou_netvalue',
-                                         user='yanzhou',
-                                         password='yanzhou0801')
-    if connection.is_connected():
-        print('数据库连接成功')
-        return connection
-    else:
-        print('数据库连接失败')
-        return db_connect()
-
-
-def get_db_data(connection, table_name):
-    select_query = f"SELECT * FROM {table_name}"
-    cursor = connection.cursor()
-    cursor.execute(select_query)
-    rows = cursor.fetchall()
-    columns = [desc[0] for desc in cursor.description]
-    df = pd.DataFrame(rows, columns=columns).set_index('date', drop=True)
-    df.index = pd.to_datetime(df.index)
-    print(table_name, '净值获取成功')
-    return df
-
-
-
 if __name__ == '__main__':
     ProductStats().get_nav_history()
-
-
-
