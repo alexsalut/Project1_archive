@@ -10,7 +10,7 @@ from choice.c_st_list_updater import ST_List_Updater
 from choice.c_kc50_weight_updater import KC50WeightUpdater
 from choice.kc50_composition import download_check_kc50_composition
 from t.ts_kline_updater import KlineUpdater
-from t.ts_raw_daily_bar_updater import RawDailyBarUpdater
+from t.ts_raw_daily_bar_updater import RawdailyBarUpdater
 
 from record.account_recorder import account_recorder
 from performance_analysis.strategy_review import send_strategy_review
@@ -23,6 +23,9 @@ from regular_update.risk_exposure import send_risk_exposure
 from regular_update.monitor import Monitor
 from regular_update.tick_check import Tick
 from regular_update.rzrq_limit import download_rzrq_limit_file
+from product_ret_analysis.product_ret_decomposition import ProductRetDecomposition
+
+
 
 def auto_update():
     while True:
@@ -57,14 +60,15 @@ def run_daily_update():
     elif current_minute == 1453:
         send_position_check()
 
-    elif current_minute == 1517:
-        # send_position_check()
+    elif current_minute == 1501:
+        send_position_check()
         Monitor().update()
         account_recorder()
 
     elif current_minute == 1630:
         update_data_after_close()
         send_strategy_review()
+        ProductRetDecomposition().gen_email()
         # Tick().check_daily()
 
     elif current_minute > 1700:
@@ -78,7 +82,7 @@ def run_daily_update():
 
 def update_data_after_close():
     KC50WeightUpdater().kc50_weight_update_and_confirm()
-    RawDailyBarUpdater().update_and_confirm_raw_daily_bar()
+    RawdailyBarUpdater().update_and_confirm_raw_daily_bar()
     KlineUpdater().update_confirm_adjusted_kline()
 
 

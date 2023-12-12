@@ -57,8 +57,8 @@ class KlineUpdater:
             &nbsp&nbsp{info_dict['Open&Close out of High&Low']}
             <p>Extreme High&Low Difference(>30%):</p> 
             &nbsp&nbsp{info_dict['Extreme High&Low Difference']}
-            <p>Extreme Daily Ret(>20.05%):</p> 
-            &nbsp&nbsp{info_dict['Extreme Daily Ret']}
+            <p>Extreme daily Ret(>20.05%):</p> 
+            &nbsp&nbsp{info_dict['Extreme daily Ret']}
             <p>Missing kc stocks compared with raw daily bar:</p>
             &nbsp&nbsp{info_dict['Missing kc stocks compared with Tushare']}
             """
@@ -76,7 +76,7 @@ class KlineUpdater:
             'Zero',
             'Open&Close out of High&Low',
             'Extreme High&Low Difference',
-            'Extreme Daily Ret',
+            'Extreme daily Ret',
             'Missing kc stocks compared with Tushare',
         ]
         info_dict = {key: self.df_check(adjusted_kline, option=key) for key in keys}
@@ -102,7 +102,7 @@ class KlineUpdater:
             return adjusted_kline[
                 (adjusted_kline['high'] - adjusted_kline['low']) / adjusted_kline['low'] > 0.3].dropna(
                 how='all').index.tolist()
-        elif option == 'Extreme Daily Ret':
+        elif option == 'Extreme daily Ret':
             return adjusted_kline.query('abs(pct_chg)>0.2005')['pct_chg'].apply(lambda x: f'{x:.2%}').index.tolist()
         elif option == 'Missing kc stocks compared with Tushare':
             raw_path = rf'{self.raw_dir}/{self.today[:4]}/{self.today[:6]}/raw_daily_{self.today}.csv'

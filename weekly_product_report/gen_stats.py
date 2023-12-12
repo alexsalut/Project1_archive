@@ -21,13 +21,13 @@ class ProductStats:
             '踏浪3号': '000852.SH',
         }
         self.table_name_dict = {
-            '弄潮2号': 'nongchao2_daily_value',
-            '弄潮1号': 'nongchao_daily_value',
-            '踏浪1号': 'talang_daily_value',
-            '踏浪2号': 'talang2_daily_value',
-            '踏浪3号': 'talang3_daily_value',
-            '听涟2号': 'tinglian2_daily_value',
-            '盼澜1号': 'panlan_daily_value',
+            '弄潮2号': 'nongchao2_weekly_value',
+            '弄潮1号': 'nongchao_weekly_value',
+            '踏浪1号': 'talang_weekly_value',
+            '踏浪2号': 'talang2_weekly_value',
+            '踏浪3号': 'talang3_weekly_value',
+            '听涟2号': 'tinglian2_weekly_value',
+            '盼澜1号': 'panlan_weekly_value',
         }
         self.start_date = {
             '弄潮1号': pd.to_datetime('20230303'),
@@ -44,20 +44,23 @@ class ProductStats:
 
         check_end = {key: pd.to_datetime(end_date) in nav_dict[key].index for key in nav_dict.keys()}
         check_start = {key: pd.to_datetime(start_date) in nav_dict[key].index for key in nav_dict.keys()}
+        available_product = [key for key in check_end.keys() if check_end[key] and check_start[key]]
 
         if all([value for value in check_end.values()]) and all([value for value in check_start.values()]):
-            reset_nav_dict = self.set_weekly_date(nav_dict)
-            stats = {k: self.get_statistics(
-                key=k,
-                nav_s=v,
-                start_date=start_date,
-                end_date=end_date,
-            ) for k, v in reset_nav_dict.items()}
-            return stats
+            print('净值数据完整，开始计算业绩')
         else:
             print(end_date, check_end)
             print(start_date, check_start)
             print(start_date, end_date, '净值数据不完整，请检查数据库')
+
+        reset_nav_dict = self.set_daily_date(nav_dict)
+        stats = {k: self.get_statistics(
+            key=k,
+            nav_s=reset_nav_dict[k],
+            start_date=start_date,
+            end_date=end_date,
+        ) for k in available_product}
+        return stats
 
     def get_nav_history(self):
         connection = db_connect()
@@ -65,7 +68,7 @@ class ProductStats:
                     for k, v in self.table_name_dict.items()}
         return nav_dict
 
-    def set_weekly_date(self, nav_dict):
+    def set_daily_date(self, nav_dict):
         reset_nav_dict = {}
         for key in nav_dict.keys():
             reset_nav_dict[key] = self.select_trading_days(nav_dict, key)
@@ -73,7 +76,7 @@ class ProductStats:
         return reset_nav_dict
 
     def select_trading_days(self, nav_dict, key):
-        nav_s = nav_dict[key].loc[self.start_date[key]:, 'cumu_netvalue']
+        nav_s = nav_dict[key].loc[self.start_date[key]:, 'cumu_netvalue2']
         weeks = pd.Series([date.strftime('%Y%W') for date in nav_s.index], index=nav_s.index, name='week')
         weekdays = pd.Series([int(date.strftime('%w')) for date in nav_s.index], index=nav_s.index, name='weekday')
         calendar = pd.concat([weeks, weekdays], axis=1)

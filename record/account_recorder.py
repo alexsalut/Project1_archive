@@ -28,13 +28,13 @@ def account_recorder(date=None, adjust='导出单', if_last_trading_day=False):
     monitor_dir = FileLocation.remote_monitor_dir
     account_path = rf'{monitor_dir}\衍舟策略观察.xlsx'
     monitor_path = rf'{monitor_dir}\monitor_{date_to_update}.xlsx'
-
-    print(f'{sep} Update Multi-Strategy Performance {sep}')
-    MultiStrategyPerf(
-        account_path=account_path,
-        monitor_path=monitor_path,
-        date=date_to_update,
-    ).update()
+    if not if_last_trading_day:
+        print(f'{sep} Update Multi-Strategy Performance {sep}')
+        MultiStrategyPerf(
+            account_path=account_path,
+            monitor_path=monitor_path,
+            date=date_to_update,
+        ).update()
 
     print(f'{sep} Update Fund Record {sep}')
     update_fund_recorder(account_path, monitor_path, date_to_update, adjust)

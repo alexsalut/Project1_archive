@@ -21,6 +21,7 @@ class CatsFileReader:
             'StockPosition': rf'{file_dir}\StockPosition_{self.date}.csv',
             'Transaction': rf'{file_dir}\TransactionsStatisticsDaily_{self.date}.csv',
             'OptionPosition': rf'{file_dir}\OptionPosition_{self.date}.csv',
+            'StockOrder': rf'{file_dir}\StockOrder_{self.date}.csv',
         }
         self.account_code = account_code
 
@@ -32,22 +33,21 @@ class CatsFileReader:
         return cats_account
 
     def get_normal_account_info(self):
-        normal_file_info = self.read_file(['StockFund', 'StockPosition'])
+        normal_file_info = self.read_file(['StockFund', 'StockPosition','StockOrder'])
         cats_normal = gen_info_dict(
             key_list=['账户净资产', '账户证券市值','资金余额'],
             col_list=['账户资产', '参考市值','当前余额'],
             df=normal_file_info['StockFund'],
             is_df=True)
 
-        cats_normal['成交额'] = 0
+        cats_normal['成交额'] = self.get_transaction_vol(normal_file_info['StockOrder'], type='normal')
         normal_file_info['StockPosition']['SymbolFull'] = normal_file_info['StockPosition']['SymbolFull'].str.split('.',expand=True)[0]
         cats_normal = update_asset(cats_normal, normal_file_info['StockPosition'], 'SymbolFull', '名称', '参考市值')
-
 
         return cats_normal
 
     def get_credit_account_info(self):
-        credit_file_info = self.read_file(['CreditFund', 'CreditPosition'])
+        credit_file_info = self.read_file(['CreditFund', 'CreditPosition','StockOrder'])
         keys = ['账户净资产', '账户总负债', '融资负债', '融券负债', '融资融券费用', '维担比例', '账户证券市值',
                 '资金余额']
 
@@ -59,11 +59,10 @@ class CatsFileReader:
             is_df=True)
 
         cats_credit['维担比例'] = float(cats_credit['维担比例'].replace('%',''))/100
-        cats_credit['成交额'] = self.get_transaction_vol()
+        cats_credit['成交额'] = self.get_transaction_vol(credit_file_info['StockOrder'], type='credit')
 
         credit_file_info['CreditPosition']['SymbolFull'] = credit_file_info['CreditPosition']['SymbolFull'].str.split('.',expand=True)[0]
         cats_credit = update_asset(cats_credit, credit_file_info['CreditPosition'], 'SymbolFull', '名称', '参考市值')
-
         return cats_credit
 
 
@@ -76,9 +75,16 @@ class CatsFileReader:
         transaction_df = self.read_file(['Transaction'])['Transaction'].query(f'账户=={self.account_code}')
         return transaction_df
 
-    def get_transaction_vol(self):
-        transaction_df = self.read_file(['Transaction'])['Transaction']
-        return transaction_df['成交额'].sum()
+    def get_transaction_vol(self,df, type='normal'):
+        if type == 'normal':
+            order_df = df.query('订单号.str.startswith("SZHTS0")')
+        elif type == 'credit':
+            order_df = df.query('订单号.str.startswith("SZHTSC")')
+        else:
+            raise ValueError('成交额计算错误, 交易价格为NaN，请检查持仓文件')
+
+        transaction_vol = order_df['成交额'].sum()
+        return transaction_vol
 
     def read_file(self, filetype_list):
         data_dict = {}

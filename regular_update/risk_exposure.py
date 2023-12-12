@@ -180,4 +180,4 @@ def rq_get_index_exposure(date, index_ticker):
     return index_exposure
 
 if __name__ == '__main__':
-    send_risk_exposure('20231128')
+    send_risk_exposure('20231207')

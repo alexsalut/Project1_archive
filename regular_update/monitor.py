@@ -20,9 +20,8 @@ class Monitor:
         print(f'\n{self.seq * 2} Update Monitor {self.seq * 2}')
         self.collect_related_data(today)
         self.update_next_trading_day()
-        self.archive_today()
 
-        print(f'{self.seq * 2} Monitor Daily Update is Done! {self.seq * 2}\n')
+        print(f'{self.seq * 2} Monitor daily Update is Done! {self.seq * 2}\n')
 
     def collect_related_data(self, today, starting_row=6):
         print(f'{self.seq} Collect Related Data {self.seq}')
@@ -38,9 +37,9 @@ class Monitor:
             'today': formatted_today,
             'next_trading_day': TradingCalendar().get_n_trading_day(formatted_today, 1).strftime('%Y%m%d'),
             'template_path': rf'{self.monitor_dir}/monitor_template.xlsx',
-            'monitor_path': rf'{self.monitor_dir}/monitor_{formatted_today}_formula.xlsx',
+            'monitor_path': rf'{self.monitor_dir}/monitor_{formatted_today}.xlsx',
             'archive_path': rf'{self.monitor_dir}/monitor_{formatted_today}.xlsx',
-            'next_monitor_path': rf'{self.monitor_dir}/monitor_{next_trading_day}_formula.xlsx',
+            'next_monitor_path': rf'{self.monitor_dir}/monitor_{next_trading_day}.xlsx',
             'tag_pos_df': tag_pos_df,
             'stock_shares_df': pd.read_csv(stock_shares_path, index_col=0).reset_index(drop=False),
             # tag_pos_df第一行在monitor表格中的行数
@@ -71,13 +70,8 @@ class Monitor:
             wb.close()
             app.quit()
             app.kill()
-            print('*' * 25, 'Next Monitor Updated, Archive in 2 mins', '*' * 25)
-            Mail().send(
-                subject=f'Archive today monitor',
-                body_content=f'{next_monitor_path} 更新完成',
-                receivers=[R.staff['zhou']]
-            )
-            time.sleep(120)
+            print('*' * 25, 'Next Monitor Updated, Archive today now', '*' * 25)
+
         else:
             print(f'{next_monitor_path} already exists, no need to update')
 
@@ -107,28 +101,9 @@ class Monitor:
         row2 = self.dataset['row2']
         rows_to_delete = range(row2, 180)
         for row in rows_to_delete:
-            sheet.api.Rows(row).Delete()
+            if sheet.api.Rows(row).Value is not None:
+                sheet.api.Rows(row).Delete()
 
-    def archive_today(self):
-        print(f'{self.seq} Archive Today Monitor {self.seq}')
-        archive_path = self.dataset['archive_path']
-        if not os.path.exists(archive_path):
-            monitor_values_df = self.get_monitor_values_df(self.dataset['monitor_path'])
-
-            app = xw.App(visible=False, add_book=False)
-            wb = xw.books.open(self.dataset['monitor_path'])
-            sheet = wb.sheets['monitor目标持仓']
-
-            for index in monitor_values_df.index:
-                for col in monitor_values_df.columns:
-                    sheet.range(f'{col}{index}').value = monitor_values_df.loc[index, col]
-
-            retry_save_excel(wb=wb, file_path=archive_path)
-            wb.close()
-            app.quit()
-            app.kill()
-        else:
-            print(f'{archive_path} already exists, no need to archive')
 
     def get_monitor_values_df(self, monitor_path):
         df = pd.read_excel(monitor_path, sheet_name=0, index_col=None, header=None)

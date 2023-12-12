@@ -16,7 +16,7 @@ from util.send_email import Mail, R
 from util.utils import c_get_trade_dates
 
 
-class RawDailyBarUpdater:
+class RawdailyBarUpdater:
     def __init__(self):
         self.save_dir = FL().raw_daily_dir
 
@@ -78,7 +78,7 @@ class RawDailyBarUpdater:
             content = f"""
             <table width="800" border="0" cellspacing="0" cellpadding="4">
             <tr>
-            <td bgcolor="#CECFAD" height="30" style="font-size:21px"><b>Raw Daily Bar with missing stocks</b></td>
+            <td bgcolor="#CECFAD" height="30" style="font-size:21px"><b>Raw daily Bar with missing stocks</b></td>
             </tr>
             <td bgcolor="#EFEBDE" height="100" style="font-size:13px">
             <p>Missed stocks are {check_raw_daily_bar_info['missed_stock_list']}</p>
@@ -87,7 +87,7 @@ class RawDailyBarUpdater:
             
             """
             Mail().send(
-                subject='[Alert!!Raw Daily Bar] Unsuspended stock missed',
+                subject='[Alert!!Raw daily Bar] Unsuspended stock missed',
                 body_content=content,
                 receivers=[R.department['research'][0]]
             )
@@ -98,11 +98,11 @@ class RawDailyBarUpdater:
             self.notify_with_email(info_dict=check_raw_daily_bar_info)
 
     def notify_with_email(self, info_dict):
-        subject = '[Tushare Daily Bar] Data downloaded successfully'
+        subject = '[Tushare daily Bar] Data downloaded successfully'
         content = f"""
         <table width="800" border="0" cellspacing="0" cellpadding="4">
         <tr>
-        <td bgcolor="#CECFAD" height="30" style="font-size:21px"><b>Raw Daily Bar Info</b></td>
+        <td bgcolor="#CECFAD" height="30" style="font-size:21px"><b>Raw daily Bar Info</b></td>
         </tr>
         <td bgcolor="#EFEBDE" height="100" style="font-size:13px">
         Latest raw daily bar info is as follows:

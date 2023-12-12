@@ -3,7 +3,7 @@
 # @Time    : 2023/11/10 15:58
 # @Author  : Suying
 # @Site    : 
-# @File    : gen_weekly_report.py
+# @File    : gen_daily_report.py
 
 import os
 import shutil
@@ -15,7 +15,7 @@ from datetime import datetime, timedelta
 from weekly_product_report.gen_stats import ProductStats
 
 
-class WeeklyReport:
+class dailyReport:
     def __init__(self, start=None, end=None):
         self.dir = r'C:\Users\Yz02\Desktop\产品每周汇总'
         os.makedirs(self.dir, exist_ok=True)
@@ -118,4 +118,4 @@ class WeeklyReport:
 
 
 if __name__ == '__main__':
-    WeeklyReport(start='20231124',end='20231201').gen_report()
+    dailyReport(start='20231201',end='20231208').gen_report()

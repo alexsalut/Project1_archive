@@ -42,7 +42,7 @@ def gen_ricequant_virtual_kline(stock_list, execution_min, date=None):
         rf"\\192.168.1.116\kline\virtual\virtual_kline2_{formatted_date}_{execution_min}.pkl")  # for youwei
     rq_vk_df.to_csv(
         rf"\\192.168.1.116\kline\virtual_csv\virtual_kline2_{formatted_date}_{execution_min}.csv")  # for shaohu
-    print(f'Downloaded at {datetime.datetime.now()}')
+    print(f'Downloaded at {datetime.datetime.now()} ')
 
     check_rq_virtual_kline(rq_vk_df)
     print(datetime.datetime.now())

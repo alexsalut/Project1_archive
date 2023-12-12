@@ -21,24 +21,24 @@ class NongchaoRecorder:
         self.adjust = adjust
         self.account_col = {
             '弄潮1号': {
-                '中信普通账户': ['Z', 'AA', 'AB', 'AC'],
-                '华泰普通账户': ['AD', 'AE', 'AF', 'AG'],
-                '中信信用账户': ['N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y'],
+                '中信普通账户': ['AA', 'AB', 'AC', 'AD','AE'],
+                '华泰普通账户': ['AF', 'AG','AH','AI','AJ'],
+                '中信信用账户': ['N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'],
             },
             '弄潮2号': {
-                '华泰普通账户': ['Z', 'AA', 'AB', 'AC'],
-                '华泰信用账户': ['N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y'],
+                '华泰普通账户': ['AA', 'AB', 'AC','AD', 'AE'],
+                '华泰信用账户': ['N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'],
             },
         }
         self.in_out_cash_col = {
             '弄潮1号': {
-                '中信普通账户': 'AH',
-                '华泰普通账户': 'AI',
-                '中信信用账户': 'AJ',
+                '中信普通账户': 'AK',
+                '华泰普通账户': 'AL',
+                '中信信用账户': 'AM',
             },
             '弄潮2号': {
-                '华泰普通账户': 'AE',
-                '华泰信用账户': 'AD',
+                '华泰普通账户': 'AG',
+                '华泰信用账户': 'AF',
             }
         }
 
@@ -50,15 +50,15 @@ class NongchaoRecorder:
 
     def record_account_nongchao(self, sheet_name):
         print('*'*24, '更新',self.date, sheet_name, '*'*24)
-        app = xw.App(visible=False, add_book=False)
-        print('Generate excel pid:', app.pid)
-
-        wb = app.books.open(self.account_path)
-        sheet = wb.sheets[sheet_name]
         if self.adjust == '导出单':
             account_info_dict = read_terminal_info(date=self.date, account=sheet_name)
         else:
             account_info_dict = SettleInfo(date=self.date).get_settle_info(account=sheet_name)
+
+        app = xw.App(visible=False, add_book=False)
+        print('Generate excel pid:', app.pid)
+        wb = app.books.open(self.account_path)
+        sheet = wb.sheets[sheet_name]
 
         row_to_fill = find_index_loc_in_excel(self.account_path, sheet_name, self.date)
         account_col_dict = self.account_col[sheet_name]  # like that {'中信普通账户': ['Z'], '华泰普通账户': ['AD'],'中信信用账户': ['N']}
@@ -82,6 +82,8 @@ class NongchaoRecorder:
             f'{col_list[1]}{last_row}').formula = f'=({col_list[0]}{last_row}-{col_list[0]}{last_row - 1} - {cash_col}{last_row})'
         sheet.range(f'{col_list[2]}{last_row}').value = account_dict['账户证券市值']
         sheet.range(f'{col_list[3]}{last_row}').formula = f'=({col_list[2]}{last_row}/{col_list[0]}{last_row})'
+        last_equity = sheet.range(f'{col_list[0]}{last_row - 1}').value
+        sheet.range(f'{col_list[4]}{last_row}').value = account_dict['成交额']/last_equity
 
     def input_credit_account(self, sheet, col_list, account_dict, cash_col, last_row):
         sheet.range(f'{col_list[0]}{last_row}').value = [
@@ -103,6 +105,8 @@ class NongchaoRecorder:
             account_dict['多头现金类市值(含现金类ETF)'],
         ]
         sheet.range(f'{col_list[11]}{last_row}').formula = f'=1-({col_list[3]}{last_row}/{col_list[9]}{last_row})'
+        last_equity = sheet.range(f'{col_list[0]}{last_row - 1}').value
+        sheet.range(f'{col_list[12]}{last_row}').value = account_dict['成交额']/last_equity
 
 
     def input_total_account(self, sheet, col_list, account_dict, cash_cols, last_row):
@@ -123,11 +127,12 @@ class NongchaoRecorder:
         sheet.range(
             f'{col_list[9]}{last_row}').formula = f'={col_list[8]}{last_row}/MAX({col_list[8]}4:{col_list[8]}{last_row})-1'
 
-        sheet.range(f'{col_list[11]}{last_row}').formula = f'=({col_list[10]}{last_row}/{col_list[0]}{last_row})'
+        sheet.range(f'{col_list[11]}{last_row}').formula = f'=({col_list[10]}{last_row}/{col_list[0]}{last_row-1})'
 
         sheet.range(f'{col_list[0]}{last_row}').value = sum(
             [account['账户净资产'] for account in account_dict.values()])
         sheet.range(f'{col_list[1]}{last_row}').value = sum(
             [account['账户总负债'] for account in account_dict.values() if '账户总负债' in account.keys()])
         sheet.range(f'{col_list[10]}{last_row}').value = sum([account['成交额'] for account in account_dict.values()])
+
 

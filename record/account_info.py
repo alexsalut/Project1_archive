@@ -65,7 +65,7 @@ def get_tinglian2_info(date=None):
     stock_transaction_vol = stock_transaction_df['成交数量'].mul(stock_transaction_df['成交价格']).sum()
 
     option_dir = FL.account_info_dir_dict['听涟2号']
-    option_transaction_df = pd.read_csv(rf'{option_dir}/TransactionsStatisticsDaily_{formatted_date2}.csv',
+    option_transaction_df = pd.read_csv(rf'{option_dir}/TransactionsStatisticsdaily_{formatted_date2}.csv',
                                         index_col=False).set_index('账户')
     option_code = FL.option_account_code['听涟2号']
     option_transaction_df = option_transaction_df.query(f'账户=={option_code}')
@@ -109,7 +109,7 @@ def get_talang1_info(date=None):
     stock_credit = \
         pd.read_csv(rf'{account_dir}/CreditFund_{formatted_date}.csv', index_col=False).set_index('账户').loc[
             account_code]
-    trades = pd.read_csv(rf'{account_dir}/TransactionsStatisticsDaily_{formatted_date}.csv',
+    trades = pd.read_csv(rf'{account_dir}/TransactionsStatisticsdaily_{formatted_date}.csv',
                          index_col=False).set_index('账户').loc[account_code]
     account_info_dict = {
         '股票权益': stock_ordinary['账户资产'] + stock_credit['净资产'],
@@ -136,7 +136,7 @@ def get_panlan1_info(date=None):
     option_s = pd.read_csv(rf'{panlan_dir}/OptionFund_{formatted_date2}.csv', index_col=False).set_index(
         '账户').loc[FL.option_account_code['盼澜1号']]
 
-    transaction_df = pd.read_csv(rf'{panlan_dir}/TransactionsStatisticsDaily_{formatted_date2}.csv',
+    transaction_df = pd.read_csv(rf'{panlan_dir}/TransactionsStatisticsdaily_{formatted_date2}.csv',
                                  index_col=False).set_index('账户').loc[FL.account_code['盼澜1号']]
 
     option_transaction_vol = transaction_df.query('证券代码.str.startswith("1000")', engine='python')['成交额'].sum()
@@ -184,4 +184,5 @@ def get_nongchao2_info(date=None):
     return account_dict
 
 if __name__ == '__main__':
-    read_terminal_info(date='20231130', account='弄潮1号')
+    read_terminal_info('20231208','弄潮1号')
+

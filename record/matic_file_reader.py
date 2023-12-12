@@ -49,16 +49,16 @@ class MaticFileReader:
         credit_asset.update({'成交额': credit['信用成交']['成交金额'].sum()})
         credit['信用持仓']['证券代码'] = credit['信用持仓']['证券代码'].astype(str)
         credit_asset = update_asset(credit_asset, credit['信用持仓'], '证券代码', '证券名称', '市值（CNY）')
-
         return credit_asset
 
     def get_normal_account_info(self):
         normal = self.read_file(['普通资产', '普通持仓', '普通成交'])
         normal_asset = gen_info_dict(
-            key_list=['账户净资产', '账户证券市值', '成交额', '资金余额'],
-            col_list=['总资产', '证券市值', '总成交金额', '可用资金'],
+            key_list=['账户净资产', '账户证券市值','资金余额'],
+            col_list=['总资产', '证券市值', '可用资金'],
             df=normal['普通资产'],
             is_df=True)
+        normal_asset['成交额'] = normal['普通成交'].query('买卖方向 == "普通买入"|买卖方向 == "普通卖出"')['成交金额'].sum()
         normal['普通持仓']['证券代码'] = normal['普通持仓']['证券代码'].astype(str)
         normal_asset = update_asset(normal_asset, normal['普通持仓'], '证券代码', '证券名称', '市值（CNY）')
         return normal_asset

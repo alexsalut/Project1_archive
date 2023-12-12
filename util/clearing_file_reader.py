@@ -137,7 +137,6 @@ def read_cats_credit_account(path):
     account_dict['成交额'] = credit_transaction_df['发生数量'].astype(float).mul(
         credit_transaction_df['成交价格'].astype(float)).sum()
     account_dict['成交额（含费）'] = abs(credit_transaction_df['发生金额'].astype(float)).sum()
-
     return account_dict
 
 
@@ -198,10 +197,9 @@ def update_asset(account_dict, asset_df, ticker_col, name_col, mark_val_col):
     security_df = asset_df[asset_df['security type'] != 'Other']
     account_dict['账户证券市值'] = security_df[mark_val_col].astype(float).sum()
     ## 多头证券市值(不含现金类ETF)
-    account_dict['多头证券市值(不含现金类ETF)'] = security_df[~(security_df[name_col].str.contains('银华日利'))][mark_val_col].astype(float).sum()
+    account_dict['多头证券市值(不含现金类ETF)'] = security_df[security_df[name_col]!='银华日利'][mark_val_col].astype(float).sum()
     ## 多头现金类市值(含现金类ETF,标准券)
-    account_dict['多头现金类市值(含现金类ETF)'] = (security_df[security_df[name_col].str.contains('银华日利')][mark_val_col].astype(float).sum()
-                                                   + account_dict['资金余额']) + asset_df[asset_df[name_col]=='标准券'][mark_val_col].astype(float).sum()
+    account_dict['多头现金类市值(含现金类ETF)'] = security_df[security_df[name_col] =='银华日利'][mark_val_col].astype(float).sum() + account_dict['资金余额'] + asset_df[asset_df[name_col]=='标准券'][mark_val_col].astype(float).sum()
 
     convertible = security_df[security_df['security type'] == 'Convertible'][mark_val_col].astype(
         float).sum()

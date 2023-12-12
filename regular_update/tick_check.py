@@ -42,9 +42,9 @@ class Tick:
     def notify_with_email(self, check_result):
         alert_value = [check_result[key] for key in check_result.keys() if key != 'No Trade Info']
         if any(alert_value):
-            subject = fr'[Alert !!!Daily Tick Check] {self.date} has error'
+            subject = fr'[Alert !!!daily Tick Check] {self.date} has error'
         else:
-            subject = fr'[Daily Tick Check] {self.date}'
+            subject = fr'[daily Tick Check] {self.date}'
         content = f"""
         <table width="800" border="0" cellspacing="0" cellpadding="4">
         <tr>
