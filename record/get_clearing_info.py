@@ -9,11 +9,8 @@ import os
 import time
 
 import pandas as pd
-import numpy as np
 
-from util.txt_data import TxtData
-from util.send_email import Mail, R
-from util.clearing_file_reader import read_clearing_file
+from record.clearing_file_reader import read_clearing_file
 
 
 class SettleInfo:
@@ -161,4 +158,4 @@ class SettleInfo:
         return info_dict
 
 if __name__ == '__main__':
-    SettleInfo('20231208').get_settle_info('弄潮1号')
+    SettleInfo('20231213').get_settle_info('弄潮1号')

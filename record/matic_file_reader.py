@@ -8,11 +8,11 @@
 import os
 import time
 import glob
+import datetime
 import pandas as pd
 
-from util.clearing_file_reader import update_asset
+from record.clearing_file_reader import update_asset
 from record.cats_file_reader import gen_info_dict
-from util.clearing_file_reader import get_instruments_type
 
 
 class MaticFileReader:
@@ -27,7 +27,12 @@ class MaticFileReader:
             '普通持仓': self.get_newest_file(self.file_dir, f'普通交易_持仓报表_{self.date}'),
             '普通资产': self.get_newest_file(self.file_dir, f'普通交易_资产报表_{self.date}'),
         }
+        self.gen_date_check = self.check_file_gen_time(list(self.file_path_dict.values()))
         self.account_code = account_code
+        if self.gen_date_check:
+            print(f'读取{self.date}{file_dir}的MATIC文件, 生成时间检查通过')
+        else:
+            raise ValueError(f'读取{self.date}{file_dir}的MATIC文件, 生成时间检查未通过')
 
     def get_matic_account_info(self):
         matic_account = {
@@ -54,11 +59,10 @@ class MaticFileReader:
     def get_normal_account_info(self):
         normal = self.read_file(['普通资产', '普通持仓', '普通成交'])
         normal_asset = gen_info_dict(
-            key_list=['账户净资产', '账户证券市值','资金余额'],
-            col_list=['总资产', '证券市值', '可用资金'],
+            key_list=['账户净资产', '账户证券市值', '资金余额','成交额'],
+            col_list=['总资产', '证券市值', '可用资金','总成交金额'],
             df=normal['普通资产'],
             is_df=True)
-        normal_asset['成交额'] = normal['普通成交'].query('买卖方向 == "普通买入"|买卖方向 == "普通卖出"')['成交金额'].sum()
         normal['普通持仓']['证券代码'] = normal['普通持仓']['证券代码'].astype(str)
         normal_asset = update_asset(normal_asset, normal['普通持仓'], '证券代码', '证券名称', '市值（CNY）')
         return normal_asset
@@ -77,3 +81,10 @@ class MaticFileReader:
         time_list = [os.path.getmtime(file) for file in file_list]
         newest_file = file_list[time_list.index(max(time_list))]
         return newest_file
+
+    def check_file_gen_time(self, path_list):
+        for path in path_list:
+            gen_time = datetime.datetime.fromtimestamp(os.path.getmtime(path))
+            if gen_time < datetime.datetime.strptime(self.date, '%Y%m%d').replace(hour=15, minute=0, second=0):
+                return False
+        return True

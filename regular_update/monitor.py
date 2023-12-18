@@ -8,22 +8,25 @@ import pandas as pd
 from util.utils import retry_save_excel
 from util.trading_calendar import TradingCalendar
 from util.file_location import FileLocation
-from util.send_email import Mail, R
 
 class Monitor:
     monitor_dir = FileLocation.remote_monitor_dir
     summary_dir = FileLocation.remote_summary_dir
     dataset = {}
     seq = '*' * 25
+    # tag_pos_df第一行在monitor表格中的行数
+    starting_row = 6
 
     def update(self, today=None):
         print(f'\n{self.seq * 2} Update Monitor {self.seq * 2}')
         self.collect_related_data(today)
         self.update_next_trading_day()
+        self.check_next_trading_day()
+
 
         print(f'{self.seq * 2} Monitor daily Update is Done! {self.seq * 2}\n')
 
-    def collect_related_data(self, today, starting_row=6):
+    def collect_related_data(self, today):
         print(f'{self.seq} Collect Related Data {self.seq}')
         formatted_today = time.strftime('%Y%m%d') if today is None else today
         next_trading_day = TradingCalendar().get_n_trading_day(formatted_today, 1).strftime('%Y%m%d')
@@ -42,10 +45,8 @@ class Monitor:
             'next_monitor_path': rf'{self.monitor_dir}/monitor_{next_trading_day}.xlsx',
             'tag_pos_df': tag_pos_df,
             'stock_shares_df': pd.read_csv(stock_shares_path, index_col=0).reset_index(drop=False),
-            # tag_pos_df第一行在monitor表格中的行数
-            'row1': starting_row,
             # stock_shares_df第一行在表格中的行数
-            'row2': starting_row + len(tag_pos_df) + 3,
+            'row2': self.starting_row + len(tag_pos_df) + 3,
         }
         return self.dataset
 
@@ -75,8 +76,26 @@ class Monitor:
         else:
             print(f'{next_monitor_path} already exists, no need to update')
 
+
+    def check_next_trading_day(self):
+        df = pd.read_excel(self.dataset['next_monitor_path'],
+                           sheet_name=0,
+                           index_col=None,
+                           header=self.starting_row-2).iloc[:len(self.dataset['tag_pos_df'])]['证券代码']
+
+        stock_count = df.value_counts()
+
+        cross_count = pd.read_excel(self.dataset['next_monitor_path'],
+                           sheet_name=0,
+                           index_col=0,
+                           header=self.dataset['row2']-2)['股票份额']
+        if all(cross_count == stock_count):
+            print('Next Monitor is correctly updated.')
+        else:
+            raise ValueError('Next Monitor is not correctly updated, please check.')
+
     def update_sheet_value(self, sheet):
-        row1 = self.dataset['row1']
+        row1 = self.starting_row
         row2 = self.dataset['row2']
         tag_pos_df = self.dataset['tag_pos_df']
         stock_shares_df = self.dataset['stock_shares_df']
@@ -118,4 +137,4 @@ class Monitor:
             return df
 
 if __name__ == '__main__':
-    Monitor().update()
+    Monitor().update('20231213')

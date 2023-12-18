@@ -51,8 +51,11 @@ def gen_industry_txt(expo_df):
         subset=[('踏浪1号', 'relative'), ('踏浪2号', 'relative'), ('踏浪3号', 'relative')],
         color='#d65f5f',
     )
+
+
     styled_industry_df = styled_industry_df.format('{:.2f}')
     industry_text = styled_industry_df.to_html(float_format='%.2f')
+    industry_text = industry_text.replace('nan','-')
     return industry_text
 
 
@@ -90,6 +93,8 @@ def get_port_excess_exposure(date, fund):
     expo_df = pd.concat([port_exposure, index_exposure, relative_exposure],
                         axis=1,
                         keys=['port', index_exposure.name, 'relative'])
+
+    expo_df[(expo_df == 0).all(axis=1)] = None
     return expo_df
 
 
@@ -127,8 +132,6 @@ def get_port_exposure(date, port_weight):
         stock_exposure = rq_exposure.reset_index('date', drop=True)
         portfolio_exposure = stock_exposure.mul(port_weight, axis=0).sum()
         return portfolio_exposure
-
-
 
 
 def get_index_exposure(date, fund):
@@ -179,5 +182,6 @@ def rq_get_index_exposure(date, index_ticker):
     index_exposure.name = index_ticker
     return index_exposure
 
+
 if __name__ == '__main__':
-    send_risk_exposure('20231207')
+    send_risk_exposure('20231215')

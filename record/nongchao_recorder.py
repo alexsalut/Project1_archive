@@ -14,6 +14,7 @@ from record.account_info import read_terminal_info
 from record.get_clearing_info import SettleInfo
 from util.utils import find_index_loc_in_excel
 
+
 class NongchaoRecorder:
     def __init__(self, account_path, date=None, adjust='导出单'):
         self.date = pd.to_datetime(date).strftime('%Y%m%d') if date is not None else time.strftime('%Y%m%d')
@@ -21,12 +22,12 @@ class NongchaoRecorder:
         self.adjust = adjust
         self.account_col = {
             '弄潮1号': {
-                '中信普通账户': ['AA', 'AB', 'AC', 'AD','AE'],
-                '华泰普通账户': ['AF', 'AG','AH','AI','AJ'],
+                '中信普通账户': ['AA', 'AB', 'AC', 'AD', 'AE'],
+                '华泰普通账户': ['AF', 'AG', 'AH', 'AI', 'AJ'],
                 '中信信用账户': ['N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'],
             },
             '弄潮2号': {
-                '华泰普通账户': ['AA', 'AB', 'AC','AD', 'AE'],
+                '华泰普通账户': ['AA', 'AB', 'AC', 'AD', 'AE'],
                 '华泰信用账户': ['N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'],
             },
         }
@@ -49,7 +50,7 @@ class NongchaoRecorder:
         self.record_account_nongchao(sheet_name='弄潮2号')
 
     def record_account_nongchao(self, sheet_name):
-        print('*'*24, '更新',self.date, sheet_name, '*'*24)
+        print('*' * 24, '更新', self.date, sheet_name, '*' * 24)
         if self.adjust == '导出单':
             account_info_dict = read_terminal_info(date=self.date, account=sheet_name)
         else:
@@ -66,9 +67,11 @@ class NongchaoRecorder:
         cash_col_list = [col for col in cash_col_dict.values()]
         for account, col_list in account_col_dict.items():
             if '信用' in account:
-                self.input_credit_account(sheet, col_list, account_info_dict[account], cash_col_dict[account], row_to_fill)
+                self.input_credit_account(sheet, col_list, account_info_dict[account], cash_col_dict[account],
+                                          row_to_fill)
             else:
-                self.input_normal_account(sheet, col_list, account_info_dict[account], cash_col_dict[account], row_to_fill)
+                self.input_normal_account(sheet, col_list, account_info_dict[account], cash_col_dict[account],
+                                          row_to_fill)
 
         self.input_total_account(sheet, self.total_account_col, account_info_dict, cash_col_list, row_to_fill)
         wb.save(self.account_path)
@@ -76,16 +79,20 @@ class NongchaoRecorder:
         app.quit()
         app.kill()
 
-    def input_normal_account(self, sheet, col_list, account_dict, cash_col, last_row):
+    @staticmethod
+    def input_normal_account(sheet, col_list, account_dict, cash_col, last_row):
         sheet.range(f'{col_list[0]}{last_row}').value = account_dict['账户净资产']
         sheet.range(
-            f'{col_list[1]}{last_row}').formula = f'=({col_list[0]}{last_row}-{col_list[0]}{last_row - 1} - {cash_col}{last_row})'
+            f'{col_list[1]}{last_row}').formula = (f'=({col_list[0]}{last_row}-'
+                                                   f'{col_list[0]}{last_row - 1}-'
+                                                   f'{cash_col}{last_row})')
         sheet.range(f'{col_list[2]}{last_row}').value = account_dict['账户证券市值']
         sheet.range(f'{col_list[3]}{last_row}').formula = f'=({col_list[2]}{last_row}/{col_list[0]}{last_row})'
         last_equity = sheet.range(f'{col_list[0]}{last_row - 1}').value
-        sheet.range(f'{col_list[4]}{last_row}').value = account_dict['成交额']/last_equity
+        sheet.range(f'{col_list[4]}{last_row}').value = account_dict['成交额'] / last_equity
 
-    def input_credit_account(self, sheet, col_list, account_dict, cash_col, last_row):
+    @staticmethod
+    def input_credit_account(sheet, col_list, account_dict, cash_col, last_row):
         sheet.range(f'{col_list[0]}{last_row}').value = [
             account_dict['账户净资产'],
             account_dict['账户总负债'],
@@ -95,7 +102,9 @@ class NongchaoRecorder:
         ]
 
         sheet.range(
-            f'{col_list[5]}{last_row}').formula = f'=({col_list[0]}{last_row}-{col_list[0]}{last_row - 1}-{cash_col}{last_row})'
+            f'{col_list[5]}{last_row}').formula = (f'=({col_list[0]}{last_row}-'
+                                                   f'{col_list[0]}{last_row - 1}-'
+                                                   f'{cash_col}{last_row})')
 
         sheet.range(f'{col_list[6]}{last_row}').value = [
             account_dict['维担比例'],
@@ -106,8 +115,7 @@ class NongchaoRecorder:
         ]
         sheet.range(f'{col_list[11]}{last_row}').formula = f'=1-({col_list[3]}{last_row}/{col_list[9]}{last_row})'
         last_equity = sheet.range(f'{col_list[0]}{last_row - 1}').value
-        sheet.range(f'{col_list[12]}{last_row}').value = account_dict['成交额']/last_equity
-
+        sheet.range(f'{col_list[12]}{last_row}').value = account_dict['成交额'] / last_equity
 
     def input_total_account(self, sheet, col_list, account_dict, cash_cols, last_row):
         sheet.range(f'A{last_row}').value = self.date
@@ -119,20 +127,21 @@ class NongchaoRecorder:
 
         cash_string = ','.join([f'{cash_col}{last_row}' for cash_col in cash_cols])
         sheet.range(
-            f'{col_list[5]}{last_row}').formula = f'={col_list[0]}{last_row}-{col_list[0]}{last_row - 1}-SUM({cash_string})'
+            f'{col_list[5]}{last_row}').formula = (f'={col_list[0]}{last_row}-'
+                                                   f'{col_list[0]}{last_row - 1}-'
+                                                   f'SUM({cash_string})')
         sheet.range(f'{col_list[6]}{last_row}').formula = f'={col_list[5]}{last_row}/{col_list[0]}{last_row - 1}'
         sheet.range(
             f'{col_list[7]}{last_row}').formula = f'=({col_list[7]}{last_row - 1}+1)*({col_list[6]}{last_row}+1)-1'
         sheet.range(f'{col_list[8]}{last_row}').formula = f'={col_list[7]}{last_row}+1'
         sheet.range(
-            f'{col_list[9]}{last_row}').formula = f'={col_list[8]}{last_row}/MAX({col_list[8]}4:{col_list[8]}{last_row})-1'
+            f'{col_list[9]}{last_row}').formula = (f'={col_list[8]}{last_row}/'
+                                                   f'MAX({col_list[8]}4:{col_list[8]}{last_row})-1')
 
-        sheet.range(f'{col_list[11]}{last_row}').formula = f'=({col_list[10]}{last_row}/{col_list[0]}{last_row-1})'
+        sheet.range(f'{col_list[11]}{last_row}').formula = f'=({col_list[10]}{last_row}/{col_list[0]}{last_row - 1})'
 
         sheet.range(f'{col_list[0]}{last_row}').value = sum(
             [account['账户净资产'] for account in account_dict.values()])
         sheet.range(f'{col_list[1]}{last_row}').value = sum(
             [account['账户总负债'] for account in account_dict.values() if '账户总负债' in account.keys()])
         sheet.range(f'{col_list[10]}{last_row}').value = sum([account['成交额'] for account in account_dict.values()])
-
-

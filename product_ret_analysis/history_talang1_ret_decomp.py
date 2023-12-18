@@ -15,7 +15,7 @@ from util.file_location import FileLocation
 from EmQuantAPI import c
 
 class ProductRetDecomposition:
-    def __init__(self, date=None, stock_list=['踏浪1号', '盼澜1号','听涟2号'], option_list=['盼澜1号','听涟2号']):
+    def __init__(self, date=None, stock_list=['踏浪1号', '盼澜1号'], option_list=['盼澜1号']):
         self.date = time.strftime('%Y%m%d') if date is None else date
         self.last_trading_day = tc().get_n_trading_day(self.date, -1).strftime('%Y%m%d')
         self.stock_list = stock_list
@@ -85,8 +85,7 @@ class ProductRetDecomposition:
 
     def gen_table(self):
         df, s_trade_df = self.gen_df()
-        table_1 = df.loc[['股票收益率1', '股票收益率2', '股票收益误差',],
-                  :]
+        table_1 = df.loc[['股票收益率1', '股票收益率2', '股票收益误差'],:]
         # table_1 = df.loc[['股票收益率1', '股票收益率2', '股票收益误差', '期权收益率1', '期权收益率2', '期权收益误差'],
         #           :]
         table_2_row = [x for x in df.index if x not in table_1.index]
@@ -120,15 +119,18 @@ class ProductRetDecomposition:
     def get_ret_decomposition(self, product):
         product_dict = {}
         stock_asset = get_product_record(product, '股票资产总值', self.last_trading_day)
-        s_trade_pl, s_trade_pl_s = self.get_trade_pl(product, 'Credit')
+        s_trade_pl_1, s_trade_pl_s = self.get_trade_pl(product, 'Stock')
         product_dict['股票收益率1'] = get_product_record(product, '股票盈亏', self.date) / stock_asset
-        product_dict['股票交易收益率'] = s_trade_pl / stock_asset
-        product_dict['股票持有收益率'] = self.get_hold_pl(product, 'Credit') / stock_asset
+        product_dict['股票交易收益率'] = s_trade_pl_1 / stock_asset
+        product_dict['股票持有收益率'] = (self.get_hold_pl(product, 'Stock') + self.get_hold_pl(product, 'Credit')) / stock_asset
         product_dict['股票收益率2'] = product_dict['股票交易收益率'] + product_dict['股票持有收益率']
         product_dict['股票收益误差'] = product_dict['股票收益率1'] - product_dict['股票收益率2']
 
 
-        product_dict['monitor组合涨幅'] = get_monitor_data(product, self.date)
+        monitor_df = pd.read_excel(rf'{FileLocation.remote_monitor_dir}/monitor_{self.date}.xlsx', sheet_name=0, header=None,
+                                   index_col=False)
+        product_dict['monitor组合涨幅'] = monitor_df.iloc[3:53,7].mean()/100
+        # product_dict['monitor组合涨幅'] = get_monitor_data(product, self.date)
 
         product_dict['股票权重配置误差'] = product_dict['股票持有收益率'] - product_dict['monitor组合涨幅']
 
@@ -216,9 +218,12 @@ def get_t_raw_daily_bar(ticker_list, type, col='close', date=None):
 
 
 if __name__ == '__main__':
+
+
+
     import rqdatac as rq
     rq.init()
-    trading_dates = rq.get_trading_dates('2023-11-08','2023-12-15')
+    trading_dates = rq.get_trading_dates('2023-10-18','2023-11-07')
     data = []
 
     for date in trading_dates:
@@ -226,4 +231,8 @@ if __name__ == '__main__':
         _, _, s_trade_pl, df = ProductRetDecomposition(date,['踏浪1号'],[]).gen_table()
         data.append(df.iloc[:,0].rename(date))
     ret_decomp = pd.concat(data, axis=1).T
-    ret_decomp.to_csv(rf'踏浪1号收益率分解_1.csv')
+    df = pd.read_csv(rf'踏浪1号收益率分解_1.csv', index_col=0)
+    df.index = df.index.astype(str)
+    new_df = pd.concat([df, ret_decomp], axis=0)
+
+    new_df.sort_index().to_csv('踏浪1号收益率分解_2.csv', encoding='utf_8_sig')

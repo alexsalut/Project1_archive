@@ -4,9 +4,8 @@
 # @Author  : Suying
 # @Site    : 
 # @File    : account_recorder.py
-import os.path
 import time
-import shutil
+
 
 from util.file_location import FileLocation
 from record.multi_strategy_perf import MultiStrategyPerf
@@ -46,8 +45,8 @@ def update_fund_recorder(account_path, monitor_path, date_to_update, adjust):
     NongchaoRecorder(account_path=account_path, date=date_to_update, adjust=adjust).record_nongchao()
     PanlanTinglianRecorder(account_path=account_path, account='盼澜1号', date=date_to_update,
                            adjust=adjust).record_account()
-    PanlanTinglianRecorder(account_path=account_path, account='听涟2号', date=date_to_update,
-                           adjust=adjust).record_account()
+    # PanlanTinglianRecorder(account_path=account_path, account='听涟2号', date=date_to_update,
+    #                        adjust=adjust).record_account()
 
 
 def send_email(account_path, date_to_update, adjust):
@@ -69,6 +68,7 @@ def send_email(account_path, date_to_update, adjust):
         attachs=[account_path],
         receivers=R.department['research'] + R.department['admin'],
     )
+
 
 if __name__ == '__main__':
     account_recorder(adjust='对账单', if_last_trading_day=True)

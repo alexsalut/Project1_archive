@@ -19,9 +19,9 @@ def get_product_record(product, indicator_name, date=None):
 
 def get_monitor_data(indicator_name, date=None):
     date = time.strftime('%Y%m%d') if date is None else date
-    monitor_df = pd.read_excel(rf'{FileLocation.remote_monitor_dir}/monitor_{date}.xlsx', sheet_name=0, header=0, index_col=False)
+    monitor_df = pd.read_excel(rf'{FileLocation.remote_monitor_dir}/monitor_{date}.xlsx', sheet_name=0, header=None, index_col=False)
     def get_values(df, indicator):
-        loc = np.where(df.values == indicator)
+        loc = np.where(monitor_df.apply(lambda x: x.astype(str).str.contains(indicator)))
         return df.iloc[loc[0][0], loc[1][0]+1]
     return get_values(monitor_df, indicator_name)
 
@@ -47,6 +47,7 @@ def get_transaction_df(account, type, date=None):
             transaction_df = df.query('~代码.str.startswith("100")', engine='python')
     transaction_df['成交方向'] = transaction_df['交易类型'].map(lambda x: 1 if '买入' in x else -1)
     transaction_df['成交金额'] = transaction_df['成交金额'].mul(transaction_df['成交方向'])
+    transaction_df['成交数量'] = transaction_df['成交数量'].mul(transaction_df['成交方向'])
     new_transaction_df = transaction_df.groupby('代码')[['成交金额', '成交数量']].sum()
     return transaction_df, new_transaction_df
 
@@ -76,9 +77,6 @@ def get_position_s(account, type, date=None):
         raise KeyError
     return position_s
 
-
-if __name__ == '__main__':
-    get_transaction_df('盼澜1号', type='Option', date='20231201')
 
 
 

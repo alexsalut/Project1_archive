@@ -21,11 +21,10 @@ from regular_update.live_virtual_kline import gen_live_virtual_kline
 from regular_update.position_check import send_position_check
 from regular_update.risk_exposure import send_risk_exposure
 from regular_update.monitor import Monitor
-from regular_update.tick_check import Tick
+# from regular_update.tick_check import Tick
 from regular_update.rzrq_limit import download_rzrq_limit_file
 from product_ret_analysis.product_ret_decomposition import ProductRetDecomposition
-
-
+from regular_update.position_weight_check import check_pos_weight
 
 def auto_update():
     while True:
@@ -64,6 +63,7 @@ def run_daily_update():
         send_position_check()
         Monitor().update()
         account_recorder()
+        check_pos_weight()
 
     elif current_minute == 1630:
         update_data_after_close()
@@ -87,4 +87,8 @@ def update_data_after_close():
 
 
 if __name__ == '__main__':
-    auto_update()
+    # auto_update()
+    # RawdailyBarUpdater().update_and_confirm_raw_daily_bar()
+    # KlineUpdater().update_confirm_adjusted_kline()
+    send_strategy_review()
+    ProductRetDecomposition().gen_email()

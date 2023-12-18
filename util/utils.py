@@ -96,12 +96,13 @@ class SendEmailInfo:
         'admin': ['chen.zf@yz-fund.com.cn']
     }
 
+
 def find_index_loc_in_excel(file_path, sheet_name, value):
     df = pd.read_excel(file_path, sheet_name=sheet_name, index_col=False, header=None)
     df = df.dropna(axis=1, how='all')
     df[0] = df[0].astype(str).str.split('.').str[0]
     loc = np.where(df[0].values == value)
     if loc[0].size == 0:
-        return len(df)+1
+        return len(df) + 1
     else:
         return loc[0][0] + 1

@@ -18,7 +18,7 @@ fl = FileLocation
 
 def send_position_check(date=None):
     date = date if date is not None else time.strftime('%Y%m%d')
-    account_list = ['踏浪1号', '盼澜1号', '听涟2号']
+    account_list = ['踏浪1号', '盼澜1号','听涟2号']
     account_pos_dict = check_all_account_pos(account_list, date=date)
 
     subject = rf'[Position Check] {date}'

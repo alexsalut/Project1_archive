@@ -23,7 +23,8 @@ def send_equity_check(date=None):
 
 class EquityCheck:
     def __init__(self, account=None, date=None):
-        self.account = [account] if account is not None else ['弄潮1号', '弄潮2号', '踏浪1号', '踏浪2号', '踏浪3号', '盼澜1号', '听涟2号']
+        self.account = [account] if account is not None else ['弄潮1号', '弄潮2号', '踏浪1号', '踏浪2号', '踏浪3号',
+                                                              '盼澜1号']#, '听涟2号']
         last_trading_day = TradingCalendar().get_n_trading_day(time.strftime('%Y%m%d'), -1).strftime('%Y%m%d')
         self.date = date if date is not None else last_trading_day
         self.dir = FileLocation.clearing_dir
@@ -44,7 +45,7 @@ class EquityCheck:
         Mail().send(
             subject=email_info['subject'],
             body_content=email_info['content'],
-            receivers=R.department['research']+[R.department['tech'][0]],
+            receivers=R.department['research'] + [R.department['tech'][0]],
         )
 
     def retry(self, missed_file_list):
@@ -61,7 +62,7 @@ class EquityCheck:
     def check_account_info(self, account):
         clearing_info = SettleInfo(date=self.date).get_settle_info(account=account)
         record_info = read_terminal_info(date=self.date, account=account)
-        if account in ['弄潮1号','弄潮2号']:
+        if account in ['弄潮1号', '弄潮2号']:
             info_df = self.gen_dict_to_df(clearing_info, record_info)
         else:
             clearing_info_s = pd.Series(clearing_info, name='对账单')
@@ -87,7 +88,8 @@ class EquityCheck:
         styled_info_df = styled_info_df.replace('<td', '<td style="border-right: 1px solid black;"')
         return styled_info_df
 
-    def gen_dict_to_df(self, settle_dict, record_dict):
+    @staticmethod
+    def gen_dict_to_df(settle_dict, record_dict):
         data = []
         for key, value in settle_dict.items():
             common_key = value.keys() & record_dict[key].keys()
@@ -100,7 +102,6 @@ class EquityCheck:
             data.append(df)
         df = pd.concat(data, axis=0)
         return df
-
 
     def gen_email_content(self, check_info_dict):
         subject = f'[Equity Check]{self.date}'
@@ -138,4 +139,4 @@ class EquityCheck:
 
 
 if __name__ == '__main__':
-    send_equity_check()
+    send_equity_check('20231215')

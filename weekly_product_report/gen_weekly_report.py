@@ -67,7 +67,7 @@ class dailyReport:
         shutil.copyfile(src=self.template_report_path, dst=self.report_path)
 
         self.gen_separate_report(stats, sheet_name='公开版')
-        self.gen_separate_report(stats, sheet_name='内部版')
+        # self.gen_separate_report(stats, sheet_name='内部版')
 
     def copy_template_file(self):
         app = xw.App(visible=False, add_book=False)
@@ -118,4 +118,4 @@ class dailyReport:
 
 
 if __name__ == '__main__':
-    dailyReport(start='20231201',end='20231208').gen_report()
+    dailyReport(start='20231208',end='20231215').gen_report()
