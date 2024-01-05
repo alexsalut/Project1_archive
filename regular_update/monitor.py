@@ -111,8 +111,8 @@ class Monitor:
             sheet[f'B{row}'].formula = f'=EM_S_INFO_NAME(A{row})'
             sheet[f'C{row}'].value = stock_shares_df.loc[index, '0']
             sheet[f'D{row}'].formula = f'=EM_S_INFO_INDUSTRY_SW2021(A{row},"1")'
-            sheet[f'E{row}'].formula = f'=EM_S_FREELIQCI_VALUE(A{row},B1,100000000)'
-            sheet[f'F{row}'].formula = f'=EM_S_VAL_MV2(A{row},B1,100000000)'
+            sheet[f'E{row}'].formula = f'=EM_S_FREELIQCI_VALUE(A{row},B$1,100000000)'
+            sheet[f'F{row}'].formula = f'=EM_S_VAL_MV2(A{row},B$1,100000000)'
             sheet[f'G{row}'].formula = f'=RTD("em.rtq",,A{row},"Time")'
             sheet[f'H{row}'].formula = f'=RTD("em.rtq",,A{row},"DifferRange")'
 

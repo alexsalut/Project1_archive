@@ -78,8 +78,10 @@ def check_account_pos(actual_pos_df, target_pos_df):
     pos_df.index = pos_df.index + 1
 
     def highlight_diff(s):
-        if s:
-            return f'background-color: lightblue'
+        if abs(s)>=200:
+            return f'background-color: lightred'
+        elif abs(s) >= 100:
+            return f'background-color: lightgreen'
         else:
             return ''
 
@@ -193,7 +195,3 @@ class AccountPosition:
             return account_col_dict[self.account]
         else:
             raise ValueError(f'Error: account {self.account} is not supported')
-
-
-if __name__ == '__main__':
-    send_position_check()

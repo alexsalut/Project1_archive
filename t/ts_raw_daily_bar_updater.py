@@ -167,3 +167,6 @@ class RawdailyBarUpdater:
         else:
             tushare_missed_stock_s = pd.Series()
         return len(ricequant_stock_df), tushare_missed_stock_s
+
+if __name__ == '__main__':
+    RawdailyBarUpdater().update_and_confirm_raw_daily_bar()

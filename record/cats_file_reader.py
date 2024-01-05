@@ -11,7 +11,7 @@ import glob
 import pandas as pd
 import datetime
 from record.clearing_file_reader import update_asset
-
+from util.send_email import Mail, R
 
 class CatsFileReader:
     def __init__(self, file_dir, account_code, date=None):
@@ -30,6 +30,11 @@ class CatsFileReader:
         if self.gen_date_check:
             print(f'读取{self.date}{file_dir}的CATS文件, 生成时间检查通过')
         else:
+            Mail().send(
+                receivers=R.department['research'],
+                subject=f'读取{self.date}{file_dir}的CATS文件, 生成时间检查未通过',
+                body_content=f'读取{self.date}{file_dir}的CATS文件, 生成时间检查未通过'
+            )
             raise ValueError(f'读取{self.date}{file_dir}的CATS文件, 生成时间检查未通过')
 
     def get_cats_account_info(self):

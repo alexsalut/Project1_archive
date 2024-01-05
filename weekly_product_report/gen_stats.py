@@ -13,8 +13,10 @@ from util.trading_calendar import TradingCalendar as tc
 from weekly_product_report.obtain_nav import db_connect, get_db_data
 
 
+
 class ProductStats:
     def __init__(self):
+        rq.init()
         self.index_code_dict = {
             '踏浪1号': '000688.SH',
             '踏浪2号': '000905.SH',
@@ -123,7 +125,6 @@ class ProductStats:
         return statistics
 
     def get_index_ret(self, index_code, start, end):
-        rq.init()
         order_book_ids = rq.id_convert(index_code)
         index_ret = rq.get_price_change_rate(
             order_book_ids,

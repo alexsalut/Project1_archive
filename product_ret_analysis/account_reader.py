@@ -36,7 +36,10 @@ def get_transaction_df(account, type, date=None):
             encoding='gbk'
         ).rename(columns={'证券代码':'代码','信用交易类型': '交易类型'})
     else:
-        account_code = FileLocation.account_code[account]
+        if type == 'Option':
+            account_code = FileLocation.option_account_code[account]
+        else:
+            account_code = FileLocation.account_code[account]
         df = (CatsFileReader(file_dir=FileLocation.cats_dir, account_code=account_code, date=date).get_transaction_df())
         df = df.rename(columns={'证券代码':'代码','交易': '交易类型','成交量':'成交数量','成交均价':'成交价格','成交额': '成交金额'})
         if len(df) > 0:

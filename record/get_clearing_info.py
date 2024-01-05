@@ -158,4 +158,4 @@ class SettleInfo:
         return info_dict
 
 if __name__ == '__main__':
-    SettleInfo('20231213').get_settle_info('弄潮1号')
+    SettleInfo('20231226').get_settle_info('弄潮2号')

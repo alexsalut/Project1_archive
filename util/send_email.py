@@ -30,7 +30,7 @@ class Mail:
             self.account = 'zhou.sy@yz-fund.com.cn'
             self.mail_license = 'FIhxF55WGb84C17V'
 
-    def send(self, subject, body_content, attachs=[], pics=[], pic_disp=[], receivers=[]):
+    def send(self, subject, body_content='<p> </p>', attachs=[], pics=[], pic_disp=[], receivers=[]):
         mm = MIMEMultipart('related')  # 构建MIMEMultipart对象代表邮件本身，可以往里面添加文本、图片、附件等
         # 设置发送者,注意严格遵守格式,里面邮箱为发件人邮箱
         mm["From"] = self.account
@@ -86,7 +86,7 @@ class Mail:
         # 关闭SMTP对象
         stp.quit()
 
-    def receive(self, save_dir, date_range=[3, 1], user=None, pwd=None, file_list=None):
+    def receive(self, save_dir, date_range=[5, 1], user=None, pwd=None, file_list=None):
         import imaplib
         import email
         import os

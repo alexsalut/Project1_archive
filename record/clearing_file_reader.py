@@ -193,6 +193,7 @@ def read_matic_credit_account(path):
     return account_dict
 
 def update_asset(account_dict, asset_df, ticker_col, name_col, mark_val_col):
+    num = len(asset_df)
     asset_df = get_instruments_type(asset_df, ticker_col)
     security_df = asset_df[asset_df['security type'] != 'Other']
     account_dict['账户证券市值'] = security_df[mark_val_col].astype(float).sum()
@@ -204,7 +205,7 @@ def update_asset(account_dict, asset_df, ticker_col, name_col, mark_val_col):
     convertible = security_df[security_df['security type'] == 'Convertible'][mark_val_col].astype(
         float).sum()
     account_dict['可转债ETF市值'] = \
-    security_df[(security_df['security type'] == 'ETF') & (security_df[name_col].str.contains('转债'))][mark_val_col].astype(float).sum()
+    security_df[(security_df['security type'] == 'ETF') & (security_df[name_col].str.contains('转债'))][mark_val_col].astype(float).sum() if num else 0
     ## 可转债市值(含可转债ETF)
     account_dict['可转债市值(含可转债ETF)'] = convertible + account_dict['可转债ETF市值']
     return account_dict

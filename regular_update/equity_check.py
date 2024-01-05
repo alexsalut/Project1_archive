@@ -23,8 +23,8 @@ def send_equity_check(date=None):
 
 class EquityCheck:
     def __init__(self, account=None, date=None):
-        self.account = [account] if account is not None else ['弄潮1号', '弄潮2号', '踏浪1号', '踏浪2号', '踏浪3号',
-                                                              '盼澜1号']#, '听涟2号']
+        self.account = [account] if account is not None else ['踏浪1号', '踏浪2号', '踏浪3号',
+                                                              '盼澜1号', '听涟2号']
         last_trading_day = TradingCalendar().get_n_trading_day(time.strftime('%Y%m%d'), -1).strftime('%Y%m%d')
         self.date = date if date is not None else last_trading_day
         self.dir = FileLocation.clearing_dir
@@ -54,7 +54,7 @@ class EquityCheck:
         Mail().send(
             subject=f'[各账户资产核对]{self.date}对账单文件缺失，10分钟后重试。',
             body_content=f'{missed_string}不存在',
-            receivers=R.department['research'],
+            receivers=R.department['research'][0],
         )
         time.sleep(600)
         self.notify_check_with_email()
@@ -139,4 +139,4 @@ class EquityCheck:
 
 
 if __name__ == '__main__':
-    send_equity_check('20231215')
+    send_equity_check()

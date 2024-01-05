@@ -17,7 +17,7 @@ from weekly_product_report.gen_stats import ProductStats
 
 class dailyReport:
     def __init__(self, start=None, end=None):
-        self.dir = r'C:\Users\Yz02\Desktop\产品每周汇总'
+        self.dir = r'Z:\投研\数据\产品业绩\产品周报'
         os.makedirs(self.dir, exist_ok=True)
 
         self.end = end if end is not None else self.get_last_friday()
@@ -67,7 +67,7 @@ class dailyReport:
         shutil.copyfile(src=self.template_report_path, dst=self.report_path)
 
         self.gen_separate_report(stats, sheet_name='公开版')
-        # self.gen_separate_report(stats, sheet_name='内部版')
+        self.gen_separate_report(stats, sheet_name='内部版')
 
     def copy_template_file(self):
         app = xw.App(visible=False, add_book=False)
@@ -118,4 +118,4 @@ class dailyReport:
 
 
 if __name__ == '__main__':
-    dailyReport(start='20231208',end='20231215').gen_report()
+    dailyReport(start='20231222',end='20231229').gen_report()

@@ -102,7 +102,7 @@ def notify_with_email(error_dict):
     <td bgcolor="#EFEBDE" height="100" style="font-size:13px">
     <p>Virtual Kline has been generated.</p>
     <p>Total number of stock included: {error_dict['stock count']}</p>
-    <p>Total number of stock included in last trading day: {error_dict['last day stock count']}</p>
+    <p>Total number of stock included in choice: {int(error_dict['stock count from choice'])}</p>
     <p>NaN stock: {error_dict['NaN stock']}</p>
     <p>Duplicate stock: {error_dict['duplicate stock']}</p>
     <p>Zero value stock: {error_dict['zero']}</p>
@@ -112,11 +112,15 @@ def notify_with_email(error_dict):
     <p>Open & now out of High & low: {error_dict['Open & now out of High & low']}</p>
     
     """
-    Mail().send(subject=subject, body_content=text, receivers=R.department['research'][0])
+    Mail().send(subject=subject, body_content=text, receivers=R.department['research'])
 
 
-def get_kc_stock_num():
+def get_kc_stock_num(date=None):
+    date = time.strftime('%Y-%m-%d') if date is None else date
     c.start()
-    num = c.cses("B_001057", "SECTORCOUNT", "TradeDate=2023-09-25,IsHistory=0").Data['B_001057'][0]
+    data = c.cses("B_001057", "SECTORCOUNT", f"TradeDate={date},IsHistory=0")
+    print(data)
+    num = data.Data['B_001057'][0]
     c.stop()
     return num
+

@@ -78,3 +78,4 @@ class ST_List_Updater:
         all_st_s.index = pd.to_datetime(all_st_s.index).strftime("%Y%m%d")
         all_st_s.to_csv(self.save_path)
         print(rf"[{index_ticker} list] updated and new .csv file generated ")
+

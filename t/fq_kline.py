@@ -32,6 +32,7 @@ class FqKLine:
     def collect_daily_bar(self):
         data = []
         locs = glob.glob(rf'{self.tushare_dir}\2023\*\*.csv')
+        locs += glob.glob(rf'{self.tushare_dir}\2024\*\*.csv')
         for loc in locs:
             print(loc)
             tushare_df = pd.read_csv(loc, converters={'trade_date': str})

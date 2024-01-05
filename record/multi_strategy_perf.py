@@ -60,12 +60,13 @@ class MultiStrategyPerf:
 
         print(f'[{sheet_name}] 科创50收益率', monitor_data['kc50_ret'])
         sheet.range(f'D{row_to_fill}').formula = f'=B{row_to_fill}-C{row_to_fill}'  # 指增超额
-        sheet.range(f'E{row_to_fill}').formula = f'=SUM(D2:D{row_to_fill})'  # 累计指增超额算术
-        sheet.range(f'F{row_to_fill}').formula = f'=F{row_to_fill - 1}*(1+B{row_to_fill})'  # 多头净值
-        sheet.range(f'G{row_to_fill}').formula = f'=G{row_to_fill - 1}*(1+C{row_to_fill})'  # 指数净值
-        sheet.range(f'H{row_to_fill}').formula = f'=F{row_to_fill}/G{row_to_fill}'  # 累计超额净值
-        sheet.range(f'I{row_to_fill}').formula = f'=H{row_to_fill}-1'  # 累计超额-几何
-        sheet.range(f'J{row_to_fill}').formula = f'=H{row_to_fill}/MAX(H2:H{row_to_fill})-1'  # 超额回撤
+        sheet.range(f'E{row_to_fill}').formula = f'=E{row_to_fill - 1}*(1+B{row_to_fill})'  # 多头净值
+        sheet.range(f'F{row_to_fill}').formula = f'=F{row_to_fill - 1}*(1+C{row_to_fill})'  # 指数净值
+        sheet.range(f'G{row_to_fill}').formula = f'=E{row_to_fill}/F{row_to_fill}'  # 累计超额净值
+        sheet.range(f'H{row_to_fill}').formula = f'=G{row_to_fill}-1'  # 累计超额-几何
+        sheet.range(f'I{row_to_fill}').formula = f'=G{row_to_fill}/MAX($G$2:G{row_to_fill})-1'  # 超额回撤
+
+
         wb.save(self.account_path)
         wb.close()
         app.quit()

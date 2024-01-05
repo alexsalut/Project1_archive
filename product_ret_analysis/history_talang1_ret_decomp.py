@@ -122,7 +122,7 @@ class ProductRetDecomposition:
         s_trade_pl_1, s_trade_pl_s = self.get_trade_pl(product, 'Stock')
         product_dict['股票收益率1'] = get_product_record(product, '股票盈亏', self.date) / stock_asset
         product_dict['股票交易收益率'] = s_trade_pl_1 / stock_asset
-        product_dict['股票持有收益率'] = (self.get_hold_pl(product, 'Stock') + self.get_hold_pl(product, 'Credit')) / stock_asset
+        product_dict['股票持有收益率'] = (self.get_hold_pl(product, 'Stock') + self.get_hold_pl(product, 'Credit'))
         product_dict['股票收益率2'] = product_dict['股票交易收益率'] + product_dict['股票持有收益率']
         product_dict['股票收益误差'] = product_dict['股票收益率1'] - product_dict['股票收益率2']
 
@@ -138,7 +138,7 @@ class ProductRetDecomposition:
             op_trade_pl, _ = self.get_trade_pl(product, 'Option')
             product_dict['期权收益率1'] = get_product_record(product, '期权盈亏', self.date) / stock_asset
             product_dict['期权交易收益率'] = op_trade_pl / stock_asset
-            product_dict['期权持有收益率'] = self.get_hold_pl(product, 'Option') / stock_asset
+            product_dict['期权持有收益率'] = self.get_hold_pl(product, 'Option')
             product_dict['期权收益率2'] = product_dict['期权交易收益率'] + product_dict['期权持有收益率']
             product_dict['期权收益误差'] = product_dict['期权收益率1'] - product_dict['期权收益率2']
             product_dict['指数收益率'] = get_monitor_data('000688.SH', self.date)
@@ -158,7 +158,7 @@ class ProductRetDecomposition:
         ticker_list = trade_df.index.astype(str).tolist()
         if ticker_list:
             new_trade_df = pd.concat(
-                [trade_df, get_t_raw_daily_bar(ticker_list=ticker_list, type=type, date=self.date)], axis=1)
+                [trade_df, get_t_raw_daily_bar(ticker_list=ticker_list, type=type, col='close', date=self.date)], axis=1)
             trade_pl_s = new_trade_df.apply(
                 lambda x: x['成交数量'] * x['close'] - x['成交金额'], axis=1).rename(product)
             trade_pl = trade_pl_s.sum()
@@ -174,12 +174,14 @@ class ProductRetDecomposition:
         position_s = get_position_s(account=product, type=type, date=self.last_trading_day)
         ticker_list = position_s.index.astype(str).tolist()
 
-        last_close = get_t_raw_daily_bar(ticker_list=ticker_list, type=type, date=self.last_trading_day)
-        today_close = get_t_raw_daily_bar(ticker_list=ticker_list, type=type, date=self.date)
-        position_s = get_position_s(account=product, type=type, date=self.last_trading_day)
+        pct_chg = get_t_raw_daily_bar(ticker_list=ticker_list, type=type, col='pct_chg', date=self.date)/100
+
         position_s.index = position_s.index.astype(str)
-        hold_pl = ((today_close - last_close).mul(position_s)).sum()
-        print(f'{product} {type} Holding P&L is {hold_pl}')
+
+        if position_s.sum() == 0:
+            return 0
+        hold_pl = (pct_chg.mul(position_s)).sum()/position_s.sum()
+        print(f'{product} {type} Holding P&L(%) is {hold_pl}')
         return hold_pl
 
     def get_base_diff(self):
@@ -187,12 +189,12 @@ class ProductRetDecomposition:
         df = get_t_raw_daily_bar(
             ticker_list=l,
             type='Option',
-            col=['close', 'prev_close'],
+            col=['close', 'pre_close'],
             date=self.date
         )
-        s = df['close'] - df['prev_close']
-        base_diff = (s[l[0]] - s[l[1]] + s[l[2]]) / df.loc[l[2], 'prev_close']
-        return base_diff, s[l[2]] / df.loc[l[2], 'prev_close']
+        s = df['close'] - df['pre_close']
+        base_diff = (s[l[0]] - s[l[1]] + s[l[2]]) / df.loc[l[2], 'pre_close']
+        return base_diff, s[l[2]] / df.loc[l[2], 'pre_close']
 
 
 def get_t_raw_daily_bar(ticker_list, type, col='close', date=None):
@@ -205,7 +207,9 @@ def get_t_raw_daily_bar(ticker_list, type, col='close', date=None):
             return get_t_raw_daily_bar(ticker_list, type, col, date)
         else:
             raw_daily = raw_daily.droplevel(1)
-            return raw_daily[col] * 10000
+            raw_daily['pct_chg'] = (raw_daily['close'] / raw_daily['prev_close'] - 1)*100
+            raw_daily = raw_daily.rename(columns = {'prev_close':'pre_close'})
+            return raw_daily[col]
 
 
     else:
@@ -236,3 +240,4 @@ if __name__ == '__main__':
     new_df = pd.concat([df, ret_decomp], axis=0)
 
     new_df.sort_index().to_csv('踏浪1号收益率分解_2.csv', encoding='utf_8_sig')
+

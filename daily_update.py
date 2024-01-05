@@ -25,6 +25,8 @@ from regular_update.monitor import Monitor
 from regular_update.rzrq_limit import download_rzrq_limit_file
 from product_ret_analysis.product_ret_decomposition import ProductRetDecomposition
 from regular_update.position_weight_check import check_pos_weight
+from regular_update.med_kc_stock_pred import send_med_stock_list
+
 
 def auto_update():
     while True:
@@ -56,8 +58,10 @@ def run_daily_update():
     elif current_minute == 1444:
         gen_live_virtual_kline(current_minute, execute_min=1445)
 
-    elif current_minute == 1453:
+    elif current_minute == 1457:
         send_position_check()
+        KC50WeightUpdater().kc50_weight_update_and_confirm()
+        send_med_stock_list()
 
     elif current_minute == 1501:
         send_position_check()
@@ -81,14 +85,9 @@ def run_daily_update():
 
 
 def update_data_after_close():
-    KC50WeightUpdater().kc50_weight_update_and_confirm()
     RawdailyBarUpdater().update_and_confirm_raw_daily_bar()
     KlineUpdater().update_confirm_adjusted_kline()
 
 
 if __name__ == '__main__':
-    # auto_update()
-    # RawdailyBarUpdater().update_and_confirm_raw_daily_bar()
-    # KlineUpdater().update_confirm_adjusted_kline()
-    send_strategy_review()
-    ProductRetDecomposition().gen_email()
+    auto_update()
