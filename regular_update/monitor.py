@@ -9,6 +9,7 @@ from util.utils import retry_save_excel
 from util.trading_calendar import TradingCalendar
 from util.file_location import FileLocation
 
+
 class Monitor:
     monitor_dir = FileLocation.remote_monitor_dir
     summary_dir = FileLocation.remote_summary_dir
@@ -22,7 +23,6 @@ class Monitor:
         self.collect_related_data(today)
         self.update_next_trading_day()
         self.check_next_trading_day()
-
 
         print(f'{self.seq * 2} Monitor daily Update is Done! {self.seq * 2}\n')
 
@@ -66,7 +66,6 @@ class Monitor:
             self.clear_previous_rows(sheet)
             self.update_sheet_value(sheet)
 
-
             retry_save_excel(wb=wb, file_path=next_monitor_path)
             wb.close()
             app.quit()
@@ -76,19 +75,18 @@ class Monitor:
         else:
             print(f'{next_monitor_path} already exists, no need to update')
 
-
     def check_next_trading_day(self):
         df = pd.read_excel(self.dataset['next_monitor_path'],
                            sheet_name=0,
                            index_col=None,
-                           header=self.starting_row-2).iloc[:len(self.dataset['tag_pos_df'])]['证券代码']
+                           header=self.starting_row - 2).iloc[:len(self.dataset['tag_pos_df'])]['证券代码']
 
         stock_count = df.value_counts()
 
         cross_count = pd.read_excel(self.dataset['next_monitor_path'],
-                           sheet_name=0,
-                           index_col=0,
-                           header=self.dataset['row2']-2)['股票份额']
+                                    sheet_name=0,
+                                    index_col=0,
+                                    header=self.dataset['row2'] - 2)['股票份额']
         if all(cross_count == stock_count):
             print('Next Monitor is correctly updated.')
         else:
@@ -123,7 +121,6 @@ class Monitor:
             if sheet.api.Rows(row).Value is not None:
                 sheet.api.Rows(row).Delete()
 
-
     def get_monitor_values_df(self, monitor_path):
         df = pd.read_excel(monitor_path, sheet_name=0, index_col=None, header=None)
         if (df == 'Refreshing').any().any():
@@ -135,6 +132,3 @@ class Monitor:
             df = df.applymap(lambda x: str(x) if isinstance(x, datetime.time) else x)
             df.columns = [chr(ord('A') + i) for i in range(len(df.columns))]
             return df
-
-if __name__ == '__main__':
-    Monitor().update('20231213')

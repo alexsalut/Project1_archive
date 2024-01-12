@@ -131,5 +131,3 @@ def format_number(value):
         return f'{value:.2%}'
 
 
-if __name__ == '__main__':
-    send_strategy_review()

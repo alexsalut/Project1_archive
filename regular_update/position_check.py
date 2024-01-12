@@ -18,7 +18,7 @@ fl = FileLocation
 
 def send_position_check(date=None):
     date = date if date is not None else time.strftime('%Y%m%d')
-    account_list = ['踏浪1号', '盼澜1号','听涟2号']
+    account_list = ['踏浪1号', '盼澜1号', '听涟2号']
     account_pos_dict = check_all_account_pos(account_list, date=date)
 
     subject = rf'[Position Check] {date}'
@@ -78,8 +78,8 @@ def check_account_pos(actual_pos_df, target_pos_df):
     pos_df.index = pos_df.index + 1
 
     def highlight_diff(s):
-        if abs(s)>=200:
-            return f'background-color: lightred'
+        if abs(s) >= 200:
+            return f'background-color: red'
         elif abs(s) >= 100:
             return f'background-color: lightgreen'
         else:
@@ -144,7 +144,6 @@ class AccountPosition:
         else:
             print(f'Error: {self.location_dict["target"]} does not exist')
             raise FileNotFoundError
-
 
     def get_actual_position(self):
         encoding = 'gbk' if self.account == '听涟2号' else None

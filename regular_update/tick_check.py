@@ -63,8 +63,8 @@ class Tick:
         <p><b>0值股票列表：{check_result['Zero']}</b></p>
         <p><b>负值股票列表：{check_result['Negative']}</b></p>
         <p><b>缺失值股票列表：{check_result['NA']}</b></p>
-        <p><b>高价低价不合理股票列表：{check_result['High']+check_result['Low']}</b></p>
-        <p><b>成交量不合理股票列表：{check_result['Volume']+check_result['Amount']}</b></p>
+        <p><b>高价低价不合理股票列表：{check_result['High'] + check_result['Low']}</b></p>
+        <p><b>成交量不合理股票列表：{check_result['Volume'] + check_result['Amount']}</b></p>
         <p><b>买卖盘不合理股票列表：{check_result['Ask&Bid']}</b></p>
         <p><b>时间间隔不合理股票列表：{check_result['Time interval']}</b></p>
         """
@@ -206,6 +206,3 @@ class CheckMethod:
         time_interval_s = self.new_df.index.to_series().diff() / 3000000
         time_interval_s = time_interval_s[(time_interval_s.index < 130000000) | (time_interval_s.index > 130020000)]
         return any(time_interval_s > 50)
-
-if __name__ == '__main__':
-    Tick('20231120').check_daily()

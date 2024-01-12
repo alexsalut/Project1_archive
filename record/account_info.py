@@ -182,7 +182,3 @@ def get_nongchao2_info(date=None):
         date=date
     ).get_matic_account_info()
     return account_dict
-
-
-if __name__ == '__main__':
-    read_terminal_info('20231213', '弄潮1号')

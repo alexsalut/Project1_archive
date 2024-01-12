@@ -60,9 +60,9 @@ class dailyReport:
         }
 
     def gen_report(self):
-        print('*'*32,f'Obtaining nav and generating stats...', '*'*32)
+        print('*' * 32, f'Obtaining nav and generating stats...', '*' * 32)
         stats = ProductStats().get_all_stats(self.start, self.end)
-        print('*'*32,f'Generating {self.report_path}...', '*'*32)
+        print('*' * 32, f'Generating {self.report_path}...', '*' * 32)
         self.copy_template_file()
         shutil.copyfile(src=self.template_report_path, dst=self.report_path)
 
@@ -114,8 +114,3 @@ class dailyReport:
         today = datetime.today()
         last_friday = today - timedelta(days=today.weekday() + 3)
         return last_friday.strftime('%Y%m%d')
-
-
-
-if __name__ == '__main__':
-    dailyReport(start='20231222',end='20231229').gen_report()

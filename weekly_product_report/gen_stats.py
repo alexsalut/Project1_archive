@@ -13,7 +13,6 @@ from util.trading_calendar import TradingCalendar as tc
 from weekly_product_report.obtain_nav import db_connect, get_db_data
 
 
-
 class ProductStats:
     def __init__(self):
         rq.init()
@@ -137,7 +136,3 @@ class ProductStats:
     def get_mdd(self, nav):
         mdd = (nav / nav.cummax() - 1).min()
         return mdd
-
-
-if __name__ == '__main__':
-    ProductStats().get_nav_history()

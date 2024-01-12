@@ -9,14 +9,14 @@ import time
 
 import pandas as pd
 
-from util.send_email import Mail,R
+from util.send_email import Mail, R
 
 
 def download_rzrq_limit_file(date=None):
     date = time.strftime('%Y%m%d') if date is None else date
     dir = r'\\192.168.1.116\trade\broker\rzrq'
     file_name = rf'融资融券标的 {date}.csv'
-    Mail().receive(save_dir=dir, date_range=[2,2], file_list=[file_name])
+    Mail().receive(save_dir=dir, date_range=[2, 2], file_list=[file_name])
 
     if os.path.exists(rf'{dir}\{file_name}'):
         print(f'[融资融券标的文件]{file_name}下载成功')
@@ -34,6 +34,3 @@ def download_rzrq_limit_file(date=None):
         )
         time.sleep(600)
         download_rzrq_limit_file(date=date)
-
-if __name__ == '__main__':
-    download_rzrq_limit_file()

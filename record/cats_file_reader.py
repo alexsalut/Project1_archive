@@ -13,17 +13,18 @@ import datetime
 from record.clearing_file_reader import update_asset
 from util.send_email import Mail, R
 
+
 class CatsFileReader:
     def __init__(self, file_dir, account_code, date=None):
         self.date = time.strftime('%Y-%m-%d') if date is None else pd.to_datetime(date).strftime('%Y-%m-%d')
         self.file_path_dict = {
-            'CreditFund': self.get_newest_file(file_dir, f'CreditFund_{self.date}*.csv'),
-            'CreditPosition': self.get_newest_file(file_dir, f'CreditPosition_{self.date}*.csv'),
-            'StockFund': self.get_newest_file(file_dir, f'StockFund_{self.date}*.csv'),
-            'StockPosition': self.get_newest_file(file_dir, f'StockPosition_{self.date}*.csv'),
-            'Transaction': self.get_newest_file(file_dir, f'TransactionsStatisticsDaily_{self.date}*.csv'),
-            'OptionPosition': self.get_newest_file(file_dir, f'OptionPosition_{self.date}*.csv'),
-            'StockOrder': self.get_newest_file(file_dir, f'StockOrder_{self.date}*.csv'),
+            'CreditFund': self.get_newest_file(file_dir, f'CreditFund_{self.date}.csv'),
+            'CreditPosition': self.get_newest_file(file_dir, f'CreditPosition_{self.date}.csv'),
+            'StockFund': self.get_newest_file(file_dir, f'StockFund_{self.date}.csv'),
+            'StockPosition': self.get_newest_file(file_dir, f'StockPosition_{self.date}.csv'),
+            'Transaction': self.get_newest_file(file_dir, f'TransactionsStatisticsDaily_{self.date}.csv'),
+            'OptionPosition': self.get_newest_file(file_dir, f'OptionPosition_{self.date}.csv'),
+            'StockOrder': self.get_newest_file(file_dir, f'StockOrder_{self.date}.csv'),
         }
         self.gen_date_check = self.check_file_gen_time(list(self.file_path_dict.values()))
         self.account_code = account_code
@@ -33,9 +34,10 @@ class CatsFileReader:
             Mail().send(
                 receivers=R.department['research'],
                 subject=f'读取{self.date}{file_dir}的CATS文件, 生成时间检查未通过',
-                body_content=f'读取{self.date}{file_dir}的CATS文件, 生成时间检查未通过'
+                body_content=f'读取{self.date}{file_dir}的CATS文件, 生成时间检查未通过, 请检查CATS文件是否生成, 2分钟后重试'
             )
-            raise ValueError(f'读取{self.date}{file_dir}的CATS文件, 生成时间检查未通过')
+            time.sleep(120)
+            self.__init__(file_dir, account_code, date)
 
     def get_cats_account_info(self):
         cats_account = {
@@ -53,8 +55,9 @@ class CatsFileReader:
             is_df=True)
 
         cats_normal['成交额'] = self.get_transaction_vol(normal_file_info['StockOrder'], file_type='normal')
+        num = len(normal_file_info['StockPosition'])
         normal_file_info['StockPosition']['SymbolFull'] = \
-            normal_file_info['StockPosition']['SymbolFull'].str.split('.', expand=True)[0]
+        normal_file_info['StockPosition']['SymbolFull'].str.split('.', expand=True)[0] if num >0 else None
         cats_normal = update_asset(cats_normal, normal_file_info['StockPosition'], 'SymbolFull', '名称', '参考市值')
 
         return cats_normal

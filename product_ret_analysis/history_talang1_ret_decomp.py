@@ -221,23 +221,3 @@ def get_t_raw_daily_bar(ticker_list, type, col='close', date=None):
         return raw_daily_df.loc[ticker_list, col]
 
 
-if __name__ == '__main__':
-
-
-
-    import rqdatac as rq
-    rq.init()
-    trading_dates = rq.get_trading_dates('2023-10-18','2023-11-07')
-    data = []
-
-    for date in trading_dates:
-        date = date.strftime('%Y%m%d')
-        _, _, s_trade_pl, df = ProductRetDecomposition(date,['踏浪1号'],[]).gen_table()
-        data.append(df.iloc[:,0].rename(date))
-    ret_decomp = pd.concat(data, axis=1).T
-    df = pd.read_csv(rf'踏浪1号收益率分解_1.csv', index_col=0)
-    df.index = df.index.astype(str)
-    new_df = pd.concat([df, ret_decomp], axis=0)
-
-    new_df.sort_index().to_csv('踏浪1号收益率分解_2.csv', encoding='utf_8_sig')
-

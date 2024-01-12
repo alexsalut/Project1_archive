@@ -12,6 +12,7 @@ import rqdatac as rq
 from util.file_location import FileLocation
 from util.send_email import Mail, R
 
+
 def send_med_stock_list(date=None):
     date = time.strftime('%Y%m%d') if date is None else date
     file_path = get_med_stock_list(date=date)
@@ -30,8 +31,8 @@ def send_med_stock_list(date=None):
             """
 
         attaches = [file_path]
-        Mail().send(subject=subject, body_content=content, attachs=attaches, receivers=R.department['research'] + R.department['admin'])
-
+        Mail().send(subject=subject, body_content=content, attachs=attaches,
+                    receivers=R.department['research'] + R.department['admin'])
 
 
 def get_med_stock_list(date=None):
@@ -73,7 +74,3 @@ def get_med_stock_list(date=None):
 def get_kc_50(date):
     df = pd.read_csv(rf'{FileLocation.kc50_composition_dir}\{date}.csv')
     return df.iloc[:, 0].tolist()
-
-
-if __name__ == '__main__':
-    send_med_stock_list()

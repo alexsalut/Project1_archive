@@ -27,7 +27,3 @@ class TradingCalendar:
         weeks = [date.strftime('%Y%W') for date in selected_trading_calendar]
 
         return len(set(weeks))
-
-
-if __name__ == '__main__':
-    TradingCalendar().get_n_trading_day()

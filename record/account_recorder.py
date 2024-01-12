@@ -6,7 +6,6 @@
 # @File    : account_recorder.py
 import time
 
-
 from util.file_location import FileLocation
 from record.multi_strategy_perf import MultiStrategyPerf
 from record.talang_recorder import TalangRecorder
@@ -69,7 +68,3 @@ def send_email(account_path, date_to_update, adjust):
         attachs=[account_path],
         receivers=R.department['research'] + R.department['admin'],
     )
-
-
-if __name__ == '__main__':
-    account_recorder()

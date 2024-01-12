@@ -136,7 +136,3 @@ class EquityCheck:
                 '股票权益': record_df.loc[self.date, '股票资产总值'],
             })
         return record_info_dict
-
-
-if __name__ == '__main__':
-    send_equity_check()

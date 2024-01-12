@@ -52,10 +52,9 @@ def gen_industry_txt(expo_df):
         color='#d65f5f',
     )
 
-
     styled_industry_df = styled_industry_df.format('{:.2f}')
     industry_text = styled_industry_df.to_html(float_format='%.2f')
-    industry_text = industry_text.replace('nan','-')
+    industry_text = industry_text.replace('nan', '-')
     return industry_text
 
 
@@ -181,7 +180,3 @@ def rq_get_index_exposure(date, index_ticker):
     index_exposure = index_comp_exposure.mul(index_weight, axis=0).sum()
     index_exposure.name = index_ticker
     return index_exposure
-
-
-if __name__ == '__main__':
-    send_risk_exposure()

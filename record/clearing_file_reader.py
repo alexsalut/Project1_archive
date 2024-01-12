@@ -200,7 +200,9 @@ def update_asset(account_dict, asset_df, ticker_col, name_col, mark_val_col):
     ## 多头证券市值(不含现金类ETF)
     account_dict['多头证券市值(不含现金类ETF)'] = security_df[security_df[name_col]!='银华日利'][mark_val_col].astype(float).sum()
     ## 多头现金类市值(含现金类ETF,标准券)
-    account_dict['多头现金类市值(含现金类ETF)'] = security_df[security_df[name_col] =='银华日利'][mark_val_col].astype(float).sum() + account_dict['资金余额'] + asset_df[asset_df[name_col]=='标准券'][mark_val_col].astype(float).sum()
+    account_dict['多头现金类市值(含现金类ETF)'] = (security_df[security_df[name_col] =='银华日利'][mark_val_col].astype(float).sum()
+                                                   + account_dict['资金余额']
+                                                   + asset_df[asset_df[name_col]=='标准券'][mark_val_col].astype(float).sum())
 
     convertible = security_df[security_df['security type'] == 'Convertible'][mark_val_col].astype(
         float).sum()

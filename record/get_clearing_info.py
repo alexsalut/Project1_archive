@@ -48,7 +48,7 @@ class SettleInfo:
 
     def get_settle_info(self, account):
         sep = '*' * 12
-        print(sep,'获取对账单信息：', account,sep)
+        print(sep, '获取对账单信息：', account, sep)
         if account == '盼澜1号':
             info_dict = self.generate_panlan1_settle_info()
         elif account == '听涟2号':
@@ -156,6 +156,3 @@ class SettleInfo:
             '华泰信用账户': matic_credit,
         }
         return info_dict
-
-if __name__ == '__main__':
-    SettleInfo('20231226').get_settle_info('弄潮2号')

@@ -27,7 +27,6 @@ def check_pos_weight(account='踏浪1号', date=None):
     styled_df = check_df.format('{:.2f}')
     df_text = styled_df.to_html(float_format='%.2f')
 
-
     subject = rf'[踏浪1号持仓偏移检查{date}]'
     content = fr"""
             <table width="800" border="0" cellspacing="0" cellpadding="4">
@@ -74,7 +73,3 @@ def get_ticker_name(ticker_list):
     ticker_name = rq.instruments(new_ticker_list)
     name_dict = {ticker.order_book_id[:6]: ticker.symbol for ticker in ticker_name}
     return name_dict
-
-
-if __name__ == '__main__':
-    check_pos_weight()

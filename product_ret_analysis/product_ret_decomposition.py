@@ -14,8 +14,9 @@ from product_ret_analysis.account_reader import get_position_s, get_transaction_
 from util.file_location import FileLocation
 from EmQuantAPI import c
 
+
 class ProductRetDecomposition:
-    def __init__(self, date=None, stock_list=['踏浪1号', '盼澜1号','听涟2号'], option_list=['盼澜1号','听涟2号']):
+    def __init__(self, date=None, stock_list=['踏浪1号', '盼澜1号', '听涟2号'], option_list=['盼澜1号', '听涟2号']):
         self.date = time.strftime('%Y%m%d') if date is None else date
         self.last_trading_day = tc().get_n_trading_day(self.date, -1).strftime('%Y%m%d')
         self.stock_list = stock_list
@@ -23,10 +24,10 @@ class ProductRetDecomposition:
         self.option_tickers = ['10005831', '10005822', '588000.XSHG']  # d（沽-购 + ETF）/ETF
 
     def gen_email(self):
-        table_1, table_2, s_trade_pl_df,_ = self.gen_table()
+        table_1, table_2, s_trade_pl_df, _ = self.gen_table()
         styled_1, styled_2, styled_3 = (self.format_table(table_1),
                                         self.format_table(table_2),
-                                        self.format_table(s_trade_pl_df,if_percent=False))
+                                        self.format_table(s_trade_pl_df, if_percent=False))
         content = f"""
     <table width="800" border="0" cellspacing="0" cellpadding="4">
     <tr>
@@ -86,7 +87,6 @@ class ProductRetDecomposition:
     def gen_table(self):
         df, s_trade_df = self.gen_df()
 
-
         table_1 = df.loc[['股票收益率1', '股票收益率2', '股票收益误差', '期权收益率1', '期权收益率2', '期权收益误差'],
                   :]
         table_2_row = [x for x in df.index if x not in table_1.index]
@@ -123,10 +123,9 @@ class ProductRetDecomposition:
         s_trade_pl, s_trade_pl_s = self.get_trade_pl(product, 'Credit')
         product_dict['股票收益率1'] = get_product_record(product, '股票盈亏', self.date) / stock_asset
         product_dict['股票交易收益率'] = s_trade_pl / stock_asset
-        product_dict['股票持有收益率'] = self.get_hold_pl(product, 'Credit')/ stock_asset
+        product_dict['股票持有收益率'] = self.get_hold_pl(product, 'Credit') / stock_asset
         product_dict['股票收益率2'] = product_dict['股票交易收益率'] + product_dict['股票持有收益率']
         product_dict['股票收益误差'] = product_dict['股票收益率1'] - product_dict['股票收益率2']
-
 
         product_dict['monitor组合涨幅'] = get_monitor_data(product, self.date)
 
@@ -136,7 +135,7 @@ class ProductRetDecomposition:
             op_trade_pl, _ = self.get_trade_pl(product, 'Option')
             product_dict['期权收益率1'] = get_product_record(product, '期权盈亏', self.date) / stock_asset
             product_dict['期权交易收益率'] = op_trade_pl / stock_asset
-            product_dict['期权持有收益率'] = self.get_hold_pl(product, 'Option')/stock_asset
+            product_dict['期权持有收益率'] = self.get_hold_pl(product, 'Option') / stock_asset
             product_dict['期权收益率2'] = product_dict['期权交易收益率'] + product_dict['期权持有收益率']
             product_dict['期权收益误差'] = product_dict['期权收益率1'] - product_dict['期权收益率2']
             product_dict['指数收益率'] = get_monitor_data('000688.SH', self.date)
@@ -147,7 +146,6 @@ class ProductRetDecomposition:
 
         return product_dict, s_trade_pl_s
 
-
     def get_trade_pl(self, product, type):
         sep = '*' * 32
         print(fr'{sep}Generating {product} {type} Trading P&L {sep}')
@@ -156,7 +154,8 @@ class ProductRetDecomposition:
         ticker_list = trade_df.index.astype(str).tolist()
         if ticker_list:
             new_trade_df = pd.concat(
-                [trade_df, get_t_raw_daily_bar(ticker_list=ticker_list, type=type,col='close', date=self.date)], axis=1)
+                [trade_df, get_t_raw_daily_bar(ticker_list=ticker_list, type=type, col='close', date=self.date)],
+                axis=1)
             trade_pl_s = new_trade_df.apply(
                 lambda x: x['成交数量'] * x['close'] - x['成交金额'], axis=1).rename(product)
             trade_pl = trade_pl_s.sum()
@@ -207,9 +206,9 @@ def get_t_raw_daily_bar(ticker_list, type, col='close', date=None):
             return get_t_raw_daily_bar(ticker_list, type, col, date)
         else:
             raw_daily = raw_daily.droplevel(1)
-            raw_daily['pct_chg'] = (raw_daily['close'] / raw_daily['prev_close'] - 1)*100
-            raw_daily = raw_daily.rename(columns = {'prev_close':'pre_close'})
-            return raw_daily[col]*10000
+            raw_daily['pct_chg'] = (raw_daily['close'] / raw_daily['prev_close'] - 1) * 100
+            raw_daily = raw_daily.rename(columns={'prev_close': 'pre_close'})
+            return raw_daily[col] * 10000
 
 
     else:
@@ -219,21 +218,3 @@ def get_t_raw_daily_bar(ticker_list, type, col='close', date=None):
         raw_daily_df = pd.read_csv(file_path, index_col=0)
         raw_daily_df.index = raw_daily_df.index.str.split('.', expand=True).get_level_values(0)
         return raw_daily_df.loc[ticker_list, col]
-
-
-if __name__ == '__main__':
-    # import rqdatac as rq
-    # rq.init()
-    # trading_dates = rq.get_trading_dates('2023-11-08','2023-12-15')
-    # data = []
-    #
-    # for date in trading_dates:
-    #     date = date.strftime('%Y%m%d')
-    #     _, _, s_trade_pl, df = ProductRetDecomposition(date,['踏浪1号'],[]).gen_table()
-    #     data.append(df.iloc[:,0].rename(date))
-    # ret_decomp = pd.concat(data, axis=1).T
-    # ret_decomp.to_csv(rf'踏浪1号收益率分解_1.csv')
-
-
-
-    ProductRetDecomposition().gen_email()

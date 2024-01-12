@@ -35,8 +35,8 @@ def auto_update():
             run_daily_update()
         else:
             print(time.strftime('%X'),
-                  f'Today {today} is not trading day, sleep 12 hours.')
-            time.sleep(12 * 60 * 60)
+                  f'Today {today} is not trading day, sleep 6 hours.')
+            time.sleep(6 * 60 * 60)
 
 
 def run_daily_update():
