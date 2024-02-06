@@ -63,13 +63,13 @@ def run_daily_update():
         KC50WeightUpdater().kc50_weight_update_and_confirm()
         send_med_stock_list()
 
-    elif current_minute == 1501:
+    elif current_minute == 1502:
         send_position_check()
         Monitor().update()
         account_recorder()
-        check_pos_weight()
+        # check_pos_weight()
 
-    elif current_minute == 1630:
+    elif current_minute == 1619:
         update_data_after_close()
         send_strategy_review()
         ProductRetDecomposition().gen_email()
@@ -90,4 +90,9 @@ def update_data_after_close():
 
 
 if __name__ == '__main__':
+    current_minute = int(time.strftime('%H%M'))
+    ST_List_Updater().st_list_update_and_confirm()
+    download_check_kc50_composition()
+    # Monitor().update()
+    account_recorder()
     auto_update()

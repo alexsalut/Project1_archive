@@ -60,7 +60,9 @@ class Monitor:
             print('Generate excel pid:', app.pid)
             app.display_alerts = False
             app.screen_updating = False
+            print('open template')
             wb = app.books.open(template_path)
+            print('template opened')
 
             sheet = wb.sheets[0]
             self.clear_previous_rows(sheet)
@@ -101,9 +103,11 @@ class Monitor:
 
         sheet['B1'].value = next_trading_day
         for index in tag_pos_df.index:
+            print(index)
             sheet[f'B{row1 + index}'].value = tag_pos_df.loc[index, 'index']
 
         for index in stock_shares_df.index:
+            print(index)
             row = row2 + index
             sheet[f'A{row}'].value = stock_shares_df.loc[index, 'index']
             sheet[f'B{row}'].formula = f'=EM_S_INFO_NAME(A{row})'
@@ -118,6 +122,7 @@ class Monitor:
         row2 = self.dataset['row2']
         rows_to_delete = range(row2, 180)
         for row in rows_to_delete:
+            print('delete row', row)
             if sheet.api.Rows(row).Value is not None:
                 sheet.api.Rows(row).Delete()
 
