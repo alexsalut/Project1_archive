@@ -27,6 +27,19 @@ def read_clearing_file(path, account):
         return read_qmt_normal_account(path)
     elif account == '国信普通账户':
         return read_iquant_normal_account(path)
+    elif account == '华安普通账户':
+        return read_ha_normal_account(path)
+
+
+def read_ha_normal_account(path):
+    df = pd.read_excel(path, index_col=False, header=None)
+    account_dict = {
+    '账户净资产': get_value(df, '资产总值')}
+    security_df = sep_df('证券明细', '流水明细', df)
+    transaction_df = sep_df('流水明细', '未回业务流水明细', df)
+    account_dict['账户证券市值'] = security_df['市值'].astype(float).sum()
+    account_dict['成交额'] = abs(transaction_df['收付金额'].astype(float)).sum()
+    return account_dict
 
 
 def read_iquant_normal_account(path):

@@ -24,7 +24,7 @@ class SettleInfo:
         self.normal_account_path = {
             '盼澜1号': rf'{self.dir}/衍舟盼澜1号-客户对账单-5600010056_{self.date}.xlsx',
             '踏浪1号': rf'{self.dir}/衍舟踏浪1号-客户对账单-887062000125_{self.date}.xlsx',
-            '踏浪2号': rf'{self.dir}/060100078888-衍舟（海南）私募基金管理有限公司－衍舟踏浪2号中证500指增私募证券投资基金-普通客户-{formatted_date}.xls',
+            '踏浪2号': rf'{self.dir}/华安证券账户对账单+衍舟踏浪2号+6030001882+{self.date}.xls',
             '踏浪3号': rf'{self.dir}/190000612973普通对账单_{self.date}.txt',
             '弄潮1号cats': rf'{self.dir}/衍舟弄潮1号-客户对账单-7200001295_{self.date}.xlsx',
             '弄潮1号matic': rf'{self.dir}/666810075512_衍舟弄潮1号_普通账单_HT1_{self.date}.xlsx',
@@ -106,7 +106,7 @@ class SettleInfo:
         return info_dict
 
     def generate_talang2_settle_info(self):
-        qmt_dict = read_clearing_file(self.normal_account_path['踏浪2号'], '广发普通账户')
+        qmt_dict = read_clearing_file(self.normal_account_path['踏浪2号'], '华安普通账户')
         info_dict = {
             '股票权益': qmt_dict['账户净资产'],
             '股票市值': qmt_dict['账户证券市值'],

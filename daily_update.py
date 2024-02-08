@@ -43,6 +43,7 @@ def run_daily_update():
     current_minute = int(time.strftime('%H%M'))
     if current_minute == 730:
         send_equity_check()
+
         account_recorder(adjust='对账单', if_last_trading_day=True)
 
     elif current_minute == 830:

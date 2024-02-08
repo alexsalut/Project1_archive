@@ -5,6 +5,7 @@
 # @Site    : 
 # @File    : account_recorder.py
 import time
+import os
 
 from util.file_location import FileLocation
 from record.multi_strategy_perf import MultiStrategyPerf
@@ -34,6 +35,9 @@ def account_recorder(date=None, adjust='导出单', if_last_trading_day=False):
             monitor_path=monitor_path,
             date=date_to_update,
         ).update()
+
+    if adjust == '对账单':
+        Mail().receive(save_dir=rf'{os.path.expanduser("~")}\Desktop\Data\Save\账户对账单')
 
     print(f'{sep} Update Fund Record {sep}')
     update_fund_recorder(account_path, monitor_path, date_to_update, adjust)
@@ -69,6 +73,7 @@ def send_email(account_path, date_to_update, adjust):
         attachs=[account_path],
         receivers=R.department['research'] + R.department['admin'],
     )
+
 
 
 
