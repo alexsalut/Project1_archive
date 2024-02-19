@@ -89,7 +89,8 @@ class NongchaoRecorder:
         sheet.range(f'{col_list[2]}{last_row}').value = account_dict['账户证券市值']
         sheet.range(f'{col_list[3]}{last_row}').formula = f'=({col_list[2]}{last_row}/{col_list[0]}{last_row})'
         last_equity = sheet.range(f'{col_list[0]}{last_row - 1}').value
-        sheet.range(f'{col_list[4]}{last_row}').value = account_dict['成交额'] / last_equity
+        if last_equity != 0:
+            sheet.range(f'{col_list[4]}{last_row}').value = account_dict['成交额'] / last_equity
 
     @staticmethod
     def input_credit_account(sheet, col_list, account_dict, cash_col, last_row):
