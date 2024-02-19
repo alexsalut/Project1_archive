@@ -4,6 +4,7 @@
 # @Author  : Suying
 # @Site    : 
 # @File    : clearing_file_reader.py
+import zipfile
 import pandas as pd
 import numpy as np
 import rqdatac as rq
@@ -29,7 +30,17 @@ def read_clearing_file(path, account):
         return read_iquant_normal_account(path)
     elif account == '华安普通账户':
         return read_ha_normal_account(path)
+    elif account == '华泰期货账户':
+        return read_matic_future_account(path)
 
+def read_matic_future_account(path):
+    z = zipfile.ZipFile(path, 'r')
+    account_code = path.split('/')[-1].split('-')[0]
+    content = z.read(account_code + '.txt').decode('gbk')
+    account_dict = {'账户净资产': float(content.split('Client Equity：')[1].split()[0]),
+                    '风险度': content.split(' Risk Degree：')[1].split()[0],
+                    '出入金': float(content.split('Deposit/Withdrawal：')[1].split()[0]),}
+    return account_dict
 
 def read_ha_normal_account(path):
     df = pd.read_excel(path, index_col=False, header=None)
@@ -252,5 +263,4 @@ def get_instruments_type(df, col_name):
     df['security type'] = df[col_name].apply(
         lambda x: 'CS' if x in stock else 'ETF' if x in etf else 'Convertible' if x in convertible else 'Other')
     return df
-
 

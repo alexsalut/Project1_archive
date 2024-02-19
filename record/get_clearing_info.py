@@ -35,6 +35,13 @@ class SettleInfo:
             '盼澜1号': rf'{self.dir}/衍舟盼澜1号-个股期权对账单-9008023342_{self.date}.xlsx',
             '听涟2号': rf'{self.dir}/衍舟听涟2号-个股期权对账单-9008023665_{self.date}.xlsx',
         }
+
+
+        self.future_account_path = {
+            '弄潮1号matic': rf'{self.dir}/80012902-{self.date}.zip',
+            '弄潮2号matic': rf'{self.dir}/80012903-{self.date}.zip'
+        }
+
         # 信用账户
         self.credit_account_path = {
             '踏浪1号': rf'{self.dir}/衍舟踏浪1号-融资融券账户对账单-8009302636_{self.date}.xlsx',
@@ -141,18 +148,23 @@ class SettleInfo:
         cats_normal = read_clearing_file(self.normal_account_path['弄潮1号cats'], '中信普通账户')
         cats_credit = read_clearing_file(self.credit_account_path['弄潮1号'], '中信信用账户')
         matic_normal = read_clearing_file(self.normal_account_path['弄潮1号matic'], '华泰普通账户')
+        matic_future = read_clearing_file(self.future_account_path['弄潮1号matic'], '华泰期货账户')
         info_dict = {
             '华泰普通账户': matic_normal,
             '中信普通账户': cats_normal,
             '中信信用账户': cats_credit,
+            '华泰期货账户': matic_future
         }
         return info_dict
 
     def generate_nongchao2_settle_info(self):
         matic_normal = read_clearing_file(self.normal_account_path['弄潮2号'], '华泰普通账户')
         matic_credit = read_clearing_file(self.credit_account_path['弄潮2号'], '华泰信用账户')
+        matic_future = read_clearing_file(self.future_account_path['弄潮2号matic'], '华泰期货账户')
         info_dict = {
             '华泰普通账户': matic_normal,
             '华泰信用账户': matic_credit,
+            '华泰期货账户': matic_future
         }
         return info_dict
+

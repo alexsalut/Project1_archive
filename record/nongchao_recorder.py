@@ -24,22 +24,27 @@ class NongchaoRecorder:
             '弄潮1号': {
                 '中信普通账户': ['AA', 'AB', 'AC', 'AD', 'AE'],
                 '华泰普通账户': ['AF', 'AG', 'AH', 'AI', 'AJ'],
+                '华泰期货账户': ['AK', 'AL', 'AM'],
                 '中信信用账户': ['N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'],
             },
             '弄潮2号': {
                 '华泰普通账户': ['AA', 'AB', 'AC', 'AD', 'AE'],
                 '华泰信用账户': ['N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'],
+                '华泰期货账户': ['AF', 'AG', 'AH'],
             },
         }
         self.in_out_cash_col = {
             '弄潮1号': {
-                '中信普通账户': 'AK',
-                '华泰普通账户': 'AL',
-                '中信信用账户': 'AM',
+                '中信普通账户': 'AN',
+                '华泰普通账户': 'AO',
+                '中信信用账户': 'AP',
+                '华泰期货账户': 'AQ',
+
             },
             '弄潮2号': {
-                '华泰普通账户': 'AG',
-                '华泰信用账户': 'AF',
+                '华泰信用账户': 'AI',
+                '华泰普通账户': 'AJ',
+                '华泰期货账户': 'AK',
             }
         }
 
@@ -69,15 +74,29 @@ class NongchaoRecorder:
             if '信用' in account:
                 self.input_credit_account(sheet, col_list, account_info_dict[account], cash_col_dict[account],
                                           row_to_fill)
+            elif '期货' in account:
+                self.input_future_account(sheet, col_list, account_info_dict[account], cash_col_dict[account],
+                                          row_to_fill)
             else:
                 self.input_normal_account(sheet, col_list, account_info_dict[account], cash_col_dict[account],
                                           row_to_fill)
 
         self.input_total_account(sheet, self.total_account_col, account_info_dict, cash_col_list, row_to_fill)
+
         wb.save(self.account_path)
         wb.close()
         app.quit()
         app.kill()
+
+    @staticmethod
+    def input_future_account(sheet, col_list, account_dict, cash_col, last_row):
+        sheet.range(f'{col_list[0]}{last_row}').value = account_dict['账户净资产']
+        sheet.range(
+            f'{col_list[1]}{last_row}').formula = (f'=({col_list[0]}{last_row}-'
+                                                   f'{col_list[0]}{last_row - 1}-'
+                                                   f'{cash_col}{last_row})')
+        sheet.range(f'{col_list[2]}{last_row}').value = account_dict['风险度']
+        sheet.range(f'{cash_col}{last_row}').value = account_dict['出入金']
 
     @staticmethod
     def input_normal_account(sheet, col_list, account_dict, cash_col, last_row):

@@ -44,7 +44,6 @@ def account_recorder(date=None, adjust='导出单', if_last_trading_day=False):
     send_email(account_path, date_to_update, adjust)
 
 
-
 def update_fund_recorder(account_path, monitor_path, date_to_update, adjust):
     TalangRecorder(account_path=account_path, monitor_path=monitor_path, date=date_to_update, adjust=adjust).update()
     NongchaoRecorder(account_path=account_path, date=date_to_update, adjust=adjust).record_nongchao()
@@ -73,9 +72,3 @@ def send_email(account_path, date_to_update, adjust):
         attachs=[account_path],
         receivers=R.department['research'] + R.department['admin'],
     )
-
-if __name__ == '__main__':
-
-    account_recorder()
-
-
