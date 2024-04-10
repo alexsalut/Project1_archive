@@ -14,6 +14,7 @@ from record.panlan1_tinglian2_recorder import PanlanTinglianRecorder
 from record.nongchao_recorder import NongchaoRecorder
 from util.send_email import Mail, R
 from util.trading_calendar import TradingCalendar
+from record.get_clearing_info import SettleInfo
 
 
 def account_recorder(date=None, adjust='导出单', if_last_trading_day=False):
@@ -37,7 +38,11 @@ def account_recorder(date=None, adjust='导出单', if_last_trading_day=False):
         ).update()
 
     if adjust == '对账单':
-        Mail().receive(save_dir=rf'{os.path.expanduser("~")}\Desktop\Data\Save\账户对账单')
+        file_list = SettleInfo(date=date_to_update).file_path_list
+        file_names = [os.path.basename(file) for file in file_list]
+        Mail().receive(save_dir=rf'{os.path.expanduser("~")}\Desktop\Data\Save\账户对账单',
+                       date_range=[6, 1],
+                       file_list=file_names)
 
     print(f'{sep} Update Fund Record {sep}')
     update_fund_recorder(account_path, monitor_path, date_to_update, adjust)
@@ -49,8 +54,8 @@ def update_fund_recorder(account_path, monitor_path, date_to_update, adjust):
     NongchaoRecorder(account_path=account_path, date=date_to_update, adjust=adjust).record_nongchao()
     PanlanTinglianRecorder(account_path=account_path, account='盼澜1号', date=date_to_update,
                            adjust=adjust).record_account()
-    # PanlanTinglianRecorder(account_path=account_path, account='听涟2号', date=date_to_update,
-    #                        adjust=adjust).record_account()
+    PanlanTinglianRecorder(account_path=account_path, account='听涟2号', date=date_to_update,
+                           adjust=adjust).record_account()
 
 
 def send_email(account_path, date_to_update, adjust):
@@ -72,3 +77,5 @@ def send_email(account_path, date_to_update, adjust):
         attachs=[account_path],
         receivers=R.department['research'] + R.department['admin'],
     )
+
+

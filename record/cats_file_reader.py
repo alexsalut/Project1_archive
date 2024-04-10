@@ -25,6 +25,7 @@ class CatsFileReader:
             'Transaction': self.get_newest_file(file_dir, f'TransactionsStatisticsDaily_{self.date}.csv'),
             'OptionPosition': self.get_newest_file(file_dir, f'OptionPosition_{self.date}.csv'),
             'StockOrder': self.get_newest_file(file_dir, f'StockOrder_{self.date}.csv'),
+            'OptionFund': self.get_newest_file(file_dir, f'OptionFund_{self.date}.csv'),
         }
         self.gen_date_check = self.check_file_gen_time(list(self.file_path_dict.values()))
         self.account_code = account_code
@@ -39,12 +40,30 @@ class CatsFileReader:
             time.sleep(120)
             self.__init__(file_dir, account_code, date)
 
-    def get_cats_account_info(self):
-        cats_account = {
-            '中信普通账户': self.get_normal_account_info(),
-            '中信信用账户': self.get_credit_account_info(),
-        }
+    def get_cats_account_info(self, account_lst):
+        cats_account = {}
+        for acc in account_lst:
+            if acc == '中信普通账户':
+                cats_account[acc] = self.get_normal_account_info()
+            elif acc == '中信信用账户':
+                cats_account[acc] = self.get_credit_account_info()
+            elif acc == '中信期权账户':
+                cats_account[acc] = self.get_option_account_info()
+            else:
+                raise ValueError('Account name is not correct, please input right account name.')
+
         return cats_account
+
+
+    def get_option_account_info(self):
+        option_file_info = self.read_file(['OptionFund'])
+        cats_option = gen_info_dict(
+            key_list=['账户净资产', '保证金风险度'],
+            col_list=['客户总权益', '保证金风险度'],
+            df=option_file_info['OptionFund'],
+            is_df=True)
+        return cats_option
+
 
     def get_normal_account_info(self):
         normal_file_info = self.read_file(['StockFund', 'StockPosition', 'StockOrder'])
@@ -90,14 +109,17 @@ class CatsFileReader:
         transaction_df = self.read_file(['Transaction'])['Transaction'].query(f'账户=={self.account_code}')
         return transaction_df
 
-    @staticmethod
-    def get_transaction_vol(df, file_type='normal'):
-        if file_type == 'normal':
-            order_df = df.query('订单号.str.startswith("SZHTS0")')
-        elif file_type == 'credit':
-            order_df = df.query('订单号.str.startswith("SZHTSC")')
+
+    def get_transaction_vol(self, df, file_type='normal'):
+        if self.account_code == 4069336:
+            if file_type == 'normal':
+                order_df = df.query('订单号.str.startswith("SZHTS0")')
+            elif file_type == 'credit':
+                order_df = df.query('订单号.str.startswith("SZHTSC")')
+            else:
+                raise ValueError('File type is not correct, please input right file type.')
         else:
-            raise ValueError('成交额计算错误, 交易价格为NaN，请检查持仓文件')
+            order_df = df
 
         transaction_vol = order_df['成交额'].sum()
         return transaction_vol
@@ -105,8 +127,8 @@ class CatsFileReader:
     def read_file(self, filetype_list):
         data_dict = {}
         for filetype in filetype_list:
-            data_dict[filetype] = pd.read_csv(self.file_path_dict[filetype]).query(f'账户=={self.account_code}')
-
+            df = pd.read_csv(self.file_path_dict[filetype], index_col=False)
+            data_dict[filetype] = df.query(f'账户=={self.account_code}')
         return data_dict
 
     def check_file_gen_time(self, path_list):
@@ -141,3 +163,4 @@ def gen_info_dict(df, key_list, col_list, is_df=False):
         key: add_df_cell(df, col, is_df=is_df) for key, col in list(zip(key_list, col_list))
     }
     return info_dict
+

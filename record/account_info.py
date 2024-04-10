@@ -5,7 +5,7 @@
 # @Software: PyCharm
 
 import time
-
+import os
 import pandas as pd
 
 from util.file_location import FileLocation
@@ -50,19 +50,23 @@ def get_tinglian2_info(date=None):
 
     cats_option_df = pd.read_csv(
         rf'{cats_tinglian_dir}/OptionFund_{formatted_date2}.csv',
-        index_col=False,
+        index_col=False
     ).set_index('账户')  # cats 账户
     cats_option_equity = cats_option_df.loc[FileLocation.option_account_code['听涟2号'], '客户总权益']
 
-    transaction_df = pd.read_csv(
-        rf'{emc_tinglian_dir}/310310300343_RZRQ_MATCH.{formatted_date1}.csv',
-        index_col=False,
-        encoding='gbk'
-    )
+    trade_path = rf'{emc_tinglian_dir}/310310300343_RZRQ_MATCH.{formatted_date1}.csv'
+    if not os.path.exists(trade_path):
+        stock_transaction_vol = 0
+    else:
+        transaction_df = pd.read_csv(
+            trade_path,
+            index_col=False,
+            encoding='gbk'
+        )
 
-    stock_transaction_df = transaction_df.query(
-        f'资金账号=={FileLocation.account_code["听涟2号"]}|业务类型.isin(["证券买入", "证券卖出"])')
-    stock_transaction_vol = stock_transaction_df['成交数量'].mul(stock_transaction_df['成交价格']).sum()
+        stock_transaction_df = transaction_df.query(
+            f'资金账号=={FileLocation.account_code["听涟2号"]}|业务类型.isin(["证券买入", "证券卖出"])')
+        stock_transaction_vol = stock_transaction_df['成交数量'].mul(stock_transaction_df['成交价格']).sum()
 
     option_dir = FileLocation.account_info_dir_dict['听涟2号']
     option_transaction_df = pd.read_csv(rf'{option_dir}/TransactionsStatisticsdaily_{formatted_date2}.csv',
@@ -92,35 +96,51 @@ def get_talang23_info(account, date=None):
     trades = pd.read_csv(f'{account_dir}/Deal-{date}.csv', encoding='gbk')
     account_info_dict = {
         '股票权益': float(info['总资产']),
-        '股票市值': info['股票总市值'],
+        '股票市值': info['总市值'],
         '成交额': trades['成交金额'].sum()
     }
     return account_info_dict
 
 
 def get_talang1_info(date=None):
-    account_dir = FileLocation.account_info_dir_dict['踏浪1号']
-    account_code = FileLocation.account_code['踏浪1号']
+    panlan_dir = FileLocation.account_info_dir_dict['踏浪1号']
+    formatted_date2 = pd.to_datetime(date).strftime("%Y-%m-%d") if date is not None else time.strftime(
+        '%Y-%m-%d')
+    stock_normal_s = pd.read_csv(rf'{panlan_dir}/StockFund_{formatted_date2}.csv', index_col=False).set_index(
+        '账户').loc[FileLocation.account_code['踏浪1号']]
 
-    formatted_date = pd.to_datetime(date).strftime("%Y-%m-%d") if date is not None else time.strftime('%Y-%m-%d')
-    stock_ordinary = \
-        pd.read_csv(rf'{account_dir}/StockFund_{formatted_date}.csv', index_col=False).set_index('账户').loc[
-            account_code]
-    stock_credit = \
-        pd.read_csv(rf'{account_dir}/CreditFund_{formatted_date}.csv', index_col=False).set_index('账户').loc[
-            account_code]
-    trades = pd.read_csv(rf'{account_dir}/TransactionsStatisticsdaily_{formatted_date}.csv',
-                         index_col=False).set_index('账户').loc[account_code]
-    account_info_dict = {
-        '股票权益': stock_ordinary['账户资产'] + stock_credit['净资产'],
-        '股票市值': stock_ordinary['证券市值'] + stock_credit['证券市值'],
-        '普通账户股票权益': stock_ordinary['账户资产'],
-        '普通账户股票市值': stock_ordinary['证券市值'],
-        '信用账户股票权益': stock_credit['净资产'],
-        '信用账户股票市值': stock_credit['证券市值'],
-        '成交额': trades['成交额'].sum()
+    stock_credit_s = pd.read_csv(rf'{panlan_dir}/CreditFund_{formatted_date2}.csv', index_col=False).set_index(
+        '账户').loc[FileLocation.account_code['踏浪1号']]
+
+    option_s = pd.read_csv(rf'{panlan_dir}/OptionFund_{formatted_date2}.csv',
+                           index_col=False).set_index(
+        '账户').loc[FileLocation.option_account_code['踏浪1号']]
+
+    transaction_df = pd.read_csv(rf'{panlan_dir}/TransactionsStatisticsdaily_{formatted_date2}.csv',
+                                 index_col=False).set_index('账户')
+    if FileLocation.account_code['踏浪1号'] not in transaction_df.index:
+        option_transaction_vol = 0
+        stock_transaction_vol = 0
+    else:
+        transaction_df = transaction_df.loc[FileLocation.account_code['踏浪1号']]
+        option_transaction_vol = transaction_df.query('证券代码.str.startswith("1000")', engine='python')[
+            '成交额'].sum()
+        stock_transaction_vol = transaction_df.query('证券代码.str.len() == 9')['成交额'].sum()
+
+    info_dict = {
+        '期权权益': option_s['客户总权益'],
+        '股票权益': stock_normal_s['账户资产'] + stock_credit_s['净资产'],
+        '股票市值': stock_normal_s['证券市值'] + stock_credit_s['证券市值'],
+        '普通账户股票权益': stock_normal_s['账户资产'],
+        '普通账户股票市值': stock_normal_s['证券市值'],
+        '信用账户股票权益': stock_credit_s['净资产'],
+        '信用账户股票市值': stock_credit_s['证券市值'],
+        '成交额': stock_transaction_vol + option_transaction_vol,
+        '股票成交额': stock_transaction_vol,
+        '期权成交额': option_transaction_vol,
+
     }
-    return account_info_dict
+    return info_dict
 
 
 def get_panlan1_info(date=None):
@@ -133,14 +153,20 @@ def get_panlan1_info(date=None):
     stock_credit_s = pd.read_csv(rf'{panlan_dir}/CreditFund_{formatted_date2}.csv', index_col=False).set_index(
         '账户').loc[FileLocation.account_code['盼澜1号']]
 
-    option_s = pd.read_csv(rf'{panlan_dir}/OptionFund_{formatted_date2}.csv', index_col=False).set_index(
+    option_s = pd.read_csv(rf'{panlan_dir}/OptionFund_{formatted_date2}.csv',
+                           index_col=False).set_index(
         '账户').loc[FileLocation.option_account_code['盼澜1号']]
 
     transaction_df = pd.read_csv(rf'{panlan_dir}/TransactionsStatisticsdaily_{formatted_date2}.csv',
-                                 index_col=False).set_index('账户').loc[FileLocation.account_code['盼澜1号']]
-
-    option_transaction_vol = transaction_df.query('证券代码.str.startswith("1000")', engine='python')['成交额'].sum()
-    stock_transaction_vol = transaction_df.query('证券代码.str.len() == 9')['成交额'].sum()
+                                 index_col=False).set_index('账户')
+    if FileLocation.account_code['盼澜1号'] not in transaction_df.index:
+        option_transaction_vol = 0
+        stock_transaction_vol = 0
+    else:
+        transaction_df = transaction_df.loc[FileLocation.account_code['盼澜1号']]
+        option_transaction_vol = transaction_df.query('证券代码.str.startswith("1000")', engine='python')[
+            '成交额'].sum()
+        stock_transaction_vol = transaction_df.query('证券代码.str.len() == 9')['成交额'].sum()
 
     info_dict = {
         '期权权益': option_s['客户总权益'],
@@ -163,15 +189,15 @@ def get_nongchao1_info(date=None):
         file_dir=FileLocation.account_info_dir_dict['弄潮1号 cats'],
         account_code=FileLocation.account_code['弄潮1号 cats'],
         date=date
-    ).get_cats_account_info()
+    ).get_cats_account_info(account_lst=['中信普通账户', '中信信用账户', '中信期权账户'])
 
-    matic_normal_dict = MaticFileReader(
+    matic_account_dict = MaticFileReader(
         file_dir=FileLocation.account_info_dir_dict['弄潮1号 matic'],
         account_code='衍舟弄潮1号',
         date=date
-    ).get_normal_account_info()
+    ).get_matic_account_info()
 
-    account_dict.update({'华泰普通账户': matic_normal_dict})
+    account_dict.update(matic_account_dict)
     return account_dict
 
 
@@ -182,3 +208,7 @@ def get_nongchao2_info(date=None):
         date=date
     ).get_matic_account_info()
     return account_dict
+
+
+if __name__ == '__main__':
+    get_talang1_info('20240409')

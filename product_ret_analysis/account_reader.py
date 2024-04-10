@@ -27,7 +27,7 @@ def get_monitor_data(indicator_name, date=None):
 
 
 
-def get_transaction_df(account, type, date=None):
+def get_transaction_df(account, type, date=None, fee_dict=None):
     date = time.strftime('%Y%m%d') if date is None else date
     if type != 'Option' and account == '听涟2号':
         transaction_df = pd.read_csv(
@@ -48,10 +48,28 @@ def get_transaction_df(account, type, date=None):
             transaction_df = df.query('代码.str.startswith("100")', engine='python')
         else:
             transaction_df = df.query('~代码.str.startswith("100")', engine='python')
-    transaction_df['成交方向'] = transaction_df['交易类型'].map(lambda x: 1 if '买入' in x else -1)
-    transaction_df['成交金额'] = transaction_df['成交金额'].mul(transaction_df['成交方向'])
-    transaction_df['成交数量'] = transaction_df['成交数量'].mul(transaction_df['成交方向'])
-    new_transaction_df = transaction_df.groupby('代码')[['成交金额', '成交数量']].sum()
+
+    if len(transaction_df) == 0:
+        return transaction_df, transaction_df
+    else:
+        transaction_df['成交金额'] = transaction_df.apply(lambda x: -x['成交金额'] if '买' in x['交易类型'] else x['成交金额'], axis=1)
+        transaction_df['成交数量'] = transaction_df.apply(lambda x: x['成交数量'] if '买' in x['交易类型'] else -x['成交数量'], axis=1)
+
+
+
+    if fee_dict is not None:
+        transaction_df['交易费'] = transaction_df.apply(
+            lambda x: abs(x['成交金额']*fee_dict['卖']) if '卖' in x['交易类型'] else abs(x['成交金额']*fee_dict['买']) , axis=1)
+        transaction_df['发生金额'] = transaction_df['成交金额'] - transaction_df['交易费']
+    else:
+        transaction_df['交易费'] = 0
+        transaction_df['发生金额'] = transaction_df['成交金额']
+
+
+
+    new_transaction_df = transaction_df.groupby('代码').agg({'证券名称':'first','成交金额': 'sum', '成交数量':'sum', '发生金额':'sum','交易费':'sum'})
+    new_transaction_df = new_transaction_df
+
     return transaction_df, new_transaction_df
 
 

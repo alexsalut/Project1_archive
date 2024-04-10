@@ -38,7 +38,9 @@ def read_matic_future_account(path):
     account_code = path.split('/')[-1].split('-')[0]
     content = z.read(account_code + '.txt').decode('gbk')
     account_dict = {'账户净资产': float(content.split('Client Equity：')[1].split()[0]),
-                    '风险度': content.split(' Risk Degree：')[1].split()[0],
+                    '多头期权市值': float(content.split('Market value(long)：')[1].split()[0]),
+                    '空头期权市值': float(content.split('Market value(short)：')[1].split()[0]),
+                    '保证金风险度': content.split(' Risk Degree：')[1].split()[0],
                     '出入金': float(content.split('Deposit/Withdrawal：')[1].split()[0]),}
     return account_dict
 
@@ -103,6 +105,9 @@ def read_cats_option_acccount(path):
     cats_option_df = pd.read_excel(path, sheet_name='Sheet1', index_col=False)
     account_dict['账户净资产'] = float(get_value(cats_option_df, '总权益：', vertical=False))
     account_dict['账户证券市值'] = float(get_value(cats_option_df, '期权市值：', vertical=False))
+    deposit_used = float(get_value(cats_option_df, '已用保证金：', vertical=False))
+    deposit_available = float(get_value(cats_option_df, '可用保证金：', vertical=False))
+    account_dict['保证金风险度'] = 0 if deposit_used == 0 else deposit_used / (deposit_used + deposit_available)
 
     transaction_loc = np.where(cats_option_df.values == '对账单')
     cats_option_transaction_df = cats_option_df.iloc[transaction_loc[0][0]:]
@@ -146,10 +151,16 @@ def read_cats_credit_account(path):
     account_dict['资金余额'] = get_value(credit_df, '资金余额')
 
     # 负债信息
-    debt_df = sep_df(start='2、负债情况', end='3、融资融券负债明细(合并对账单)', df=credit_df).iloc[0]
-    account_dict['融资负债'] = debt_df['融资余额']
-    account_dict['融券负债'] = debt_df['融券市值']
-    account_dict['融资融券费用'] = debt_df['融资费用'] + debt_df['融券费用']
+    debt_df = sep_df(start='2、负债情况', end='3、融资融券负债明细(合并对账单)', df=credit_df)
+    if len(debt_df) == 0:
+        account_dict['融资负债'] = 0
+        account_dict['融券负债'] = 0
+        account_dict['融资融券费用'] = 0
+    else:
+        debt_df = debt_df.iloc[0]
+        account_dict['融资负债'] = debt_df['融资余额']
+        account_dict['融券负债'] = debt_df['融券市值']
+        account_dict['融资融券费用'] = debt_df['融资费用'] + debt_df['融券费用']
 
     # 读取资产持仓信息
     asset_df = sep_df(start='1.2证券余额', end='2、负债情况', df=credit_df)
