@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2023/7/10 9:03
 # @Author  : Youwei Wu, Suying Zhou
-# @File    : daily_update.py
+# @File    : product_update.py
 # @Software: PyCharm
 
 import os
@@ -14,9 +14,10 @@ from util.send_email import Mail, R
 
 
 class ST_List_Updater:
-    def __init__(self, today=None):
-        self.save_path = FL().st_list_path
+    def __init__(self, today=None, year='2024'):
         self.today = time.strftime('%Y%m%d') if today is None else today
+        self.year = year
+        self.save_path = rf'D:\data\st_list\st_list{year}.pkl'
         self.stock_default_count = 0
 
     def st_list_update_and_confirm(self):
@@ -26,9 +27,9 @@ class ST_List_Updater:
     def check_st_list(self):
         data_name = 'ST_list'
         if os.path.exists(self.save_path):
-            df = pd.read_csv(self.save_path, index_col=0)
+            df = pd.read_pickle(self.save_path)
             print('[ST list] file exists')
-            today_stock_count = len(df[df.index == int(self.today)])
+            today_stock_count = len(df[df.index == self.today])
             if today_stock_count > self.stock_default_count:
                 subject = rf"[{data_name}]   today file is updated"
                 content = rf"""
@@ -43,7 +44,7 @@ class ST_List_Updater:
                 <p><b>Number of st stocks today:</b></p> 
                 {today_stock_count}
                 """
-                Mail().send(subject=subject, body_content=content, receivers=R.department['research'])
+                Mail().send(subject=subject, body_content=content, receivers=R.staff['zhou'])
                 print('[ST list check] data is updated and email sent')
             else:
                 print('[ST list check] today st stock data is not sufficient, retry downloading in 10 seconds')
@@ -58,7 +59,7 @@ class ST_List_Updater:
     def c_download_index_list(self, index_ticker):
         print(rf"Downloading {index_ticker} list until", self.today)
         print("----------------------------------")
-        start_date = "20200101"
+        start_date = f"{self.year}0101"
         c.start("ForceLogin=1")
         trade_dates = c.tradedates(
             startdate=start_date,
@@ -74,8 +75,9 @@ class ST_List_Updater:
         all_st_s = pd.concat(all_st_list)
         c.stop()
 
-        all_st_s = all_st_s.str[-2:].str.lower() + all_st_s.str[:6]
+        # all_st_s = all_st_s.str[-2:].str.lower() + all_st_s.str[:6]
         all_st_s.index = pd.to_datetime(all_st_s.index).strftime("%Y%m%d")
-        all_st_s.to_csv(self.save_path)
-        print(rf"[{index_ticker} list] updated and new .csv file generated ")
+        all_st_s.to_pickle(self.save_path)
+        print(rf"[{index_ticker} list] updated and new .pkl file generated ")
+
 
