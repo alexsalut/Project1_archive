@@ -38,6 +38,7 @@ class MaticFileReader:
         matic_account = {
             '华泰普通账户': self.get_normal_account_info(),
             '华泰信用账户': self.get_credit_account_info(),
+            '华泰期货账户': self.get_future_account_info(),
         }
         return matic_account
 
@@ -66,6 +67,13 @@ class MaticFileReader:
         normal['普通持仓']['证券代码'] = normal['普通持仓']['证券代码'].astype(str)
         normal_asset = update_asset(normal_asset, normal['普通持仓'], '证券代码', '证券名称', '市值（CNY）')
         return normal_asset
+
+    def get_future_account_info(self):
+        # future = self.read_file(['期货资产', '期货持仓', '期货成交'])
+        future_asset = ['账户净资产', '多头期权市值', '空头期权市值', '保证金风险度']
+        future_dict = {key : 0 for key in future_asset}
+        return future_dict
+
 
     def read_file(self, filetype_list):
         data_dict = {}

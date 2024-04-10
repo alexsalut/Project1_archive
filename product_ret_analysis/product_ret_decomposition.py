@@ -21,7 +21,12 @@ class ProductRetDecomposition:
         self.last_trading_day = tc().get_n_trading_day(self.date, -1).strftime('%Y%m%d')
         self.stock_list = stock_list
         self.option_list = option_list
-        self.option_tickers = ['10005831', '10005822', '588000.XSHG']  # d（沽-购 + ETF）/ETF
+        self.option_tickers = ['10006234', '10006225', '588000.XSHG']  # d（沽-购 + ETF）/ETF
+        self.product_fee_dict = {'盼澜1号': {'卖': 0.0616/100,
+                                             '买': 0.0115/100,},
+                                 '踏浪1号': {'卖': 0.063/100,
+                                             '买': 0.013/100,}
+                                 }
 
     def gen_email(self):
         table_1, table_2, s_trade_pl_df, _ = self.gen_table()
@@ -52,7 +57,7 @@ class ProductRetDecomposition:
         """
 
         content += f"""
-        <p>各产品交易终端股票交易盈亏分析</p>
+        <p>各产品交易终端股票交易盈亏分析(考虑交易成本)</p>
         <center>{styled_3}</center>
         """
 
@@ -120,11 +125,18 @@ class ProductRetDecomposition:
     def get_ret_decomposition(self, product):
         product_dict = {}
         stock_asset = get_product_record(product, '股票资产总值', self.last_trading_day)
-        s_trade_pl, s_trade_pl_s = self.get_trade_pl(product, 'Credit')
+        trade_df, net_trade_pl, gross_trade_pl, trade_fee = self.get_trade_pl(product, 'Credit', self.product_fee_dict[product])
+
+        gross_trade_rate = gross_trade_pl / stock_asset
+        trade_fee_rate = trade_fee / stock_asset
+        net_trade_rate = net_trade_pl / stock_asset
+        hold_rate = self.get_hold_pl(product, 'Credit') / stock_asset
+
         product_dict['股票收益率1'] = get_product_record(product, '股票盈亏', self.date) / stock_asset
-        product_dict['股票交易收益率'] = s_trade_pl / stock_asset
-        product_dict['股票持有收益率'] = self.get_hold_pl(product, 'Credit') / stock_asset
-        product_dict['股票收益率2'] = product_dict['股票交易收益率'] + product_dict['股票持有收益率']
+        product_dict['股票交易收益率(毛)'] = gross_trade_rate
+        product_dict['股票交易费率'] = trade_fee_rate
+        product_dict['股票持有收益率'] = hold_rate
+        product_dict['股票收益率2'] = net_trade_rate + hold_rate
         product_dict['股票收益误差'] = product_dict['股票收益率1'] - product_dict['股票收益率2']
 
         product_dict['monitor组合涨幅'] = get_monitor_data(product, self.date)
@@ -132,7 +144,7 @@ class ProductRetDecomposition:
         product_dict['股票权重配置误差'] = product_dict['股票持有收益率'] - product_dict['monitor组合涨幅']
 
         if product in self.option_list:
-            op_trade_pl, _ = self.get_trade_pl(product, 'Option')
+            op_trade_pl = self.get_trade_pl(product, 'Option')[1]
             product_dict['期权收益率1'] = get_product_record(product, '期权盈亏', self.date) / stock_asset
             product_dict['期权交易收益率'] = op_trade_pl / stock_asset
             product_dict['期权持有收益率'] = self.get_hold_pl(product, 'Option') / stock_asset
@@ -144,26 +156,29 @@ class ProductRetDecomposition:
             product_dict['期权权重配置误差'] = product_dict['期权持有收益率'] + product_dict['指数收益率'] + \
                                                product_dict['ETF跟踪误差'] - product_dict['期权基差']
 
-        return product_dict, s_trade_pl_s
+        stock_trade_pl = trade_df['净盈亏'].sort_values(ascending=False)
+        return product_dict, stock_trade_pl.rename(product)
 
-    def get_trade_pl(self, product, type):
+    def get_trade_pl(self, product, type, fee_dict=None):
         sep = '*' * 32
         print(fr'{sep}Generating {product} {type} Trading P&L {sep}')
-        _, trade_df = get_transaction_df(product, type, self.date)
+        _, trade_df = get_transaction_df(product, type, self.date, fee_dict)
         trade_df.index = trade_df.index.astype(str)
         ticker_list = trade_df.index.astype(str).tolist()
         if ticker_list:
             new_trade_df = pd.concat(
                 [trade_df, get_t_raw_daily_bar(ticker_list=ticker_list, type=type, col='close', date=self.date)],
                 axis=1)
-            trade_pl_s = new_trade_df.apply(
-                lambda x: x['成交数量'] * x['close'] - x['成交金额'], axis=1).rename(product)
-            trade_pl = trade_pl_s.sum()
+            new_trade_df['毛盈亏'] = new_trade_df['成交数量'] * new_trade_df['close'] + new_trade_df['成交金额']
+            new_trade_df['净盈亏'] = new_trade_df['成交数量'] * new_trade_df['close'] + new_trade_df['发生金额']
+            net_pl = new_trade_df['净盈亏'].sum()
+            gross_pl = new_trade_df['毛盈亏'].sum()
+            fees = new_trade_df['交易费'].sum()
+            return new_trade_df, net_pl, gross_pl, fees
+
         else:
-            trade_pl = 0
-            trade_pl_s = pd.Series(name=product)
-        print(f'{product} {type} Trading P&L is {trade_pl}')
-        return trade_pl, trade_pl_s
+            return trade_df, 0, 0, 0
+
 
     def get_hold_pl(self, product, type):
         sep = '*' * 32
@@ -218,3 +233,8 @@ def get_t_raw_daily_bar(ticker_list, type, col='close', date=None):
         raw_daily_df = pd.read_csv(file_path, index_col=0)
         raw_daily_df.index = raw_daily_df.index.str.split('.', expand=True).get_level_values(0)
         return raw_daily_df.loc[ticker_list, col]
+
+
+if __name__ == '__main__':
+    # ProductRetDecomposition(date='20240307', stock_list=['踏浪1号'], option_list=[]).gen_email()
+    ProductRetDecomposition(stock_list=['踏浪1号', '盼澜1号'], option_list=['盼澜1号']).gen_email()

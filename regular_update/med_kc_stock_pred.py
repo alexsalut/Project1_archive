@@ -74,3 +74,7 @@ def get_med_stock_list(date=None):
 def get_kc_50(date):
     df = pd.read_csv(rf'{FileLocation.kc50_composition_dir}\{date}.csv')
     return df.iloc[:, 0].tolist()
+
+
+if __name__ == '__main__':
+    send_med_stock_list()

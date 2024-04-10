@@ -3,9 +3,9 @@
 # @Author  : Youwei Wu
 # @File    : risk_exposure.py
 # @Software: PyCharm
-
+import os.path
 import time
-import rqdatac
+import rqdatac as rq
 
 import pandas as pd
 
@@ -13,10 +13,10 @@ from util.send_email import Mail, R
 from util.file_location import FileLocation
 from rice_quant.exposure_plot import plot_all_barra_expo
 
-rqdatac.init()
+
 
 exposure_save_dir = FileLocation.exposure_dir
-
+rq.init()
 
 def send_risk_exposure(date=None):
     formatted_date = time.strftime('%Y%m%d') if date is None else pd.to_datetime(date).strftime('%Y%m%d')
@@ -28,10 +28,19 @@ def send_risk_exposure(date=None):
 
 def gen_expo_df(formatted_date):
     funds = ['踏浪1号', '踏浪2号', '踏浪3号']
-    data = [get_port_excess_exposure(date=formatted_date, fund=x) for x in funds]
-    expo_df = pd.concat(data, axis=1, keys=funds)
-    expo_df.to_csv(fr'{exposure_save_dir}\expo_{formatted_date}.csv', encoding='gbk')
-    return expo_df
+    trading_dates = rq.get_trading_dates('20231001',formatted_date)
+    trading_dates = [x.strftime('%Y%m%d') for x in trading_dates]
+    for date in trading_dates:
+        path = fr'{exposure_save_dir}\expo_{date}.csv'
+        if os.path.exists(path):
+            print(f'Risk exposure file for {date} already exists')
+        else:
+            data = [get_port_excess_exposure(date=date, fund=x) for x in funds]
+            expo_df = pd.concat(data, axis=1, keys=funds)
+            expo_df.to_csv(fr'{exposure_save_dir}\expo_{date}.csv', encoding='gbk')
+            print(f'Risk exposure file for {date} generated')
+            if date == formatted_date:
+                return expo_df
 
 
 def gen_barra_txt(expo_df):
@@ -107,14 +116,19 @@ def get_port_weight(date, fund):
         port_weight.index = stocklist
     else:
         pos_df = get_pos_df(date=date, fund=fund)
-        stocklist = pos_df['证券代码'] + '.' + pos_df['市场代码'].replace('SH', 'XSHG').replace('SZ', 'XSHE')
-        port_weight = pos_df['市值占比'].str[:-1].astype(float) / 100  # 还有个资产占比
+        stock_pos_df = pos_df.query('证券代码.str.startswith("6") | 证券代码.str.startswith("0") | 证券代码.str.startswith("3")')
+        stock_pos_df['市值占比'] = stock_pos_df['市值'] / stock_pos_df['市值'].sum()
+        stocklist = stock_pos_df['证券代码'] + '.' + stock_pos_df['市场代码'].replace('SH', 'XSHG').replace('SZ', 'XSHE')
+        port_weight = stock_pos_df['市值占比']
         port_weight.index = stocklist
     return port_weight
 
 
 def get_port_exposure(date, port_weight):
-    rq_exposure = rqdatac.get_factor_exposure(
+    port_weight = port_weight[~port_weight.index.str.startswith('5')]
+    if len(port_weight) == 0:
+        return pd.Series()
+    rq_exposure = rq.get_factor_exposure(
         order_book_ids=port_weight.index,
         start_date=date,
         end_date=date,
@@ -154,7 +168,7 @@ def get_index_exposure(date, fund):
 
 def get_pos_df(date, fund):
     if fund == '踏浪2号':
-        subdir = 'qmt_gf'
+        subdir = 'qmt_ha'
     elif fund == '踏浪3号':
         subdir = 'iQuant'
     else:
@@ -169,8 +183,8 @@ def get_pos_df(date, fund):
 
 
 def rq_get_index_exposure(date, index_ticker):
-    index_weight = rqdatac.index_weights(index_ticker, date=date)
-    index_comp_exposure = rqdatac.get_factor_exposure(
+    index_weight = rq.index_weights(index_ticker, date=date)
+    index_comp_exposure = rq.get_factor_exposure(
         index_weight.index,
         date,
         date,
@@ -180,3 +194,7 @@ def rq_get_index_exposure(date, index_ticker):
     index_exposure = index_comp_exposure.mul(index_weight, axis=0).sum()
     index_exposure.name = index_ticker
     return index_exposure
+
+if __name__ == '__main__':
+    # get_port_excess_exposure('20240326', '踏浪3号')
+    send_risk_exposure('20240327')

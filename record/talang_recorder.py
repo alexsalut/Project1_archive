@@ -24,8 +24,10 @@ class TalangRecorder:
         self.adjust = adjust
         print('TalangRecorder initialized!')
 
+
+
+
     def update(self):
-        rq.init()
         self.update_account(account='踏浪1号')
         self.update_account(account='踏浪2号')
         self.update_account(account='踏浪3号')
@@ -37,16 +39,57 @@ class TalangRecorder:
         else:
             account_info_dict = SettleInfo(date=self.date).get_settle_info(account=account)
 
+        if account == '踏浪1号':
+            self.input_talang1_account_cell_value(
+                sheet_name='踏浪1号',
+                account_info=account_info_dict,
+                index_ret=index_ret
+            )
+        else:
+            self.input_talang23_account_cell_value(
+                sheet_name=account,
+                account_info_dict=account_info_dict,
+                index_ret=index_ret
+            )
 
-        self.input_talang_account_cell_value(
-            sheet_name=account,
-            account_info_dict=account_info_dict,
-            index_ret=index_ret
-        )
+
+    def input_talang1_account_cell_value(self, sheet_name, account_info, index_ret):
+        app = xw.App(visible=False, add_book=False)
+        print('Generate excel pid:', app.pid)
+
+        wb = app.books.open(self.account_path)
+        sheet = wb.sheets[sheet_name]
+
+        row_to_fill = find_index_loc_in_excel(self.account_path, sheet_name, self.date)
+        sheet.range(f'A{row_to_fill}').value = self.date
+        sheet.range(f'B{row_to_fill}').formula = f'=K{row_to_fill}+P{row_to_fill}'  # 总资产
+        sheet.range(f'C{row_to_fill}').formula = f'=L{row_to_fill}+Q{row_to_fill}'
+        sheet.range(f'D{row_to_fill}').formula = f'=C{row_to_fill}/(B{row_to_fill - 1})'  # 当日收益率
+        sheet.range(f'E{row_to_fill}').value = index_ret  # 指数收益率
+        sheet.range(f'F{row_to_fill}').formula = f'=D{row_to_fill}-E{row_to_fill}'  # 当日超额
+        sheet.range(f'G{row_to_fill}').formula = f'=G{row_to_fill - 1}*(1+D{row_to_fill})'  # 多头净值
+        sheet.range(f'H{row_to_fill}').formula = f'=H{row_to_fill - 1}*(1+E{row_to_fill})'  # 指数净值
+        sheet.range(f'I{row_to_fill}').formula = f'=G{row_to_fill}/H{row_to_fill}-1'  # 累计超额
+        sheet.range(f'J{row_to_fill}').formula = f'=(1+I{row_to_fill})/(1+MAX($I$2:I{row_to_fill}))-1'  # 超额回撤
+
+        sheet.range(f'K{row_to_fill}').value = account_info['股票权益']
+        sheet.range(f'L{row_to_fill}').formula = f'=K{row_to_fill}-K{row_to_fill - 1}-R{row_to_fill}'
+        sheet.range(f'M{row_to_fill}').value = account_info['股票市值']/account_info['股票权益']
+        sheet.range(f'N{row_to_fill}').value = account_info['成交额']
+        sheet.range(f'O{row_to_fill}').formula = f'=N{row_to_fill}/B{row_to_fill - 1}'
+
+        sheet.range(f'P{row_to_fill}').value = account_info['期权权益']
+        sheet.range(f'Q{row_to_fill}').formula = f'=P{row_to_fill}-P{row_to_fill - 1}-S{row_to_fill}'
+
+        wb.save(self.account_path)
+        wb.close()
+        app.quit()
+        app.kill()
+        print(f'Sheet-{sheet_name} has been updated.')
 
 
 
-    def input_talang_account_cell_value(self, sheet_name, account_info_dict, index_ret):
+    def input_talang23_account_cell_value(self, sheet_name, account_info_dict, index_ret):
         app = xw.App(visible=False, add_book=False)
         print('Generate excel pid:', app.pid)
 

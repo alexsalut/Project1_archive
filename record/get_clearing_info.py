@@ -34,6 +34,8 @@ class SettleInfo:
         self.option_account_path = {
             '盼澜1号': rf'{self.dir}/衍舟盼澜1号-个股期权对账单-9008023342_{self.date}.xlsx',
             '听涟2号': rf'{self.dir}/衍舟听涟2号-个股期权对账单-9008023665_{self.date}.xlsx',
+            '弄潮1号': rf'{self.dir}/衍舟弄潮1号-个股期权对账单-9008023990_{self.date}.xlsx',
+            '踏浪1号': rf'{self.dir}/衍舟踏浪1号-个股期权对账单-9008024407_{self.date}.xlsx',
         }
 
 
@@ -132,16 +134,22 @@ class SettleInfo:
 
     def generate_talang1_settle_info(self):
         cats_normal_account = read_clearing_file(self.normal_account_path['踏浪1号'], '中信普通账户')
+        cats_option_account = read_clearing_file(self.option_account_path['踏浪1号'], '中信期权账户')
         cats_credit_account = read_clearing_file(self.credit_account_path['踏浪1号'], '中信信用账户')
+
         info_dict = {
+            '期权权益': cats_option_account['账户净资产'],
             '股票权益': cats_normal_account['账户净资产'] + cats_credit_account['账户净资产'],
             '股票市值': cats_normal_account['账户证券市值'] + cats_credit_account['账户证券市值'],
             '普通账户股票权益': cats_normal_account['账户净资产'],
             '普通账户股票市值': cats_normal_account['账户证券市值'],
             '信用账户股票权益': cats_credit_account['账户净资产'],
             '信用账户股票市值': cats_credit_account['账户证券市值'],
-            '成交额': cats_normal_account['成交额'] + cats_credit_account['成交额'],
+            '成交额': cats_normal_account['成交额'] + cats_credit_account['成交额'] + cats_option_account['成交额'],
+            '股票成交额': cats_normal_account['成交额'] + cats_credit_account['成交额'],
+            '期权成交额': cats_option_account['成交额'],
         }
+
         return info_dict
 
     def generate_nongchao1_settle_info(self):
@@ -149,11 +157,13 @@ class SettleInfo:
         cats_credit = read_clearing_file(self.credit_account_path['弄潮1号'], '中信信用账户')
         matic_normal = read_clearing_file(self.normal_account_path['弄潮1号matic'], '华泰普通账户')
         matic_future = read_clearing_file(self.future_account_path['弄潮1号matic'], '华泰期货账户')
+        cats_option = read_clearing_file(self.option_account_path['弄潮1号'], '中信期权账户')
         info_dict = {
             '华泰普通账户': matic_normal,
             '中信普通账户': cats_normal,
             '中信信用账户': cats_credit,
-            '华泰期货账户': matic_future
+            '华泰期货账户': matic_future,
+            '中信期权账户': cats_option
         }
         return info_dict
 
@@ -168,3 +178,7 @@ class SettleInfo:
         }
         return info_dict
 
+if __name__ == '__main__':
+
+
+    print(SettleInfo('20240409').get_settle_info('踏浪1号'))

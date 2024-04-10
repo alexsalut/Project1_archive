@@ -31,22 +31,22 @@ class EquityCheck:
         self.account_path = rf'{FileLocation.remote_monitor_dir}\衍舟策略观察_{self.date}.xlsx'
 
     def notify_check_with_email(self):
-        Mail().receive(save_dir=self.dir,
-                       user='trading_1@yz-fund.com.cn',
-                       pwd='BO6iJOUXZwDdndz0')
+        # Mail().receive(save_dir=self.dir,
+        #                user='trading_1@yz-fund.com.cn',
+        #                pwd='BO6iJOUXZwDdndz0')
         file_list = SettleInfo(date=self.date).file_path_list
         missed_file_list = [f for f in file_list if not os.path.exists(f)]
 
         if missed_file_list:
             self.retry(missed_file_list)
-
-        check_info_dict = {x: self.check_account_info(x) for x in self.account}
-        email_info = self.gen_email_content(check_info_dict=check_info_dict)
-        Mail().send(
-            subject=email_info['subject'],
-            body_content=email_info['content'],
-            receivers=R.department['research'] + [R.department['tech'][0]],
-        )
+        else:
+            check_info_dict = {x: self.check_account_info(x) for x in self.account}
+            email_info = self.gen_email_content(check_info_dict=check_info_dict)
+            Mail().send(
+                subject=email_info['subject'],
+                body_content=email_info['content'],
+                receivers=R.department['research'] + [R.department['tech'][0]],
+            )
 
     def retry(self, missed_file_list):
         missed_string = '\n\n'.join(missed_file_list)
@@ -68,7 +68,8 @@ class EquityCheck:
             clearing_info_s = pd.Series(clearing_info, name='对账单')
             record_info_s = pd.Series(record_info, name='导出单')
             info_df = pd.concat([clearing_info_s, record_info_s], axis=1)
-
+        info_df['对账单'] = info_df['对账单'].astype(float)
+        info_df['导出单'] = info_df['导出单'].astype(float)
         info_df['差值'] = info_df['对账单'] - info_df['导出单']
 
         def highlight_diff(s):
@@ -93,7 +94,7 @@ class EquityCheck:
         data = []
         for key, value in settle_dict.items():
             common_key = value.keys() & record_dict[key].keys()
-            common_key = [k for k in common_key if k not in ['成交额']]
+            # common_key = [k for k in common_key if k not in ['成交额']]
             key_deduct = key.replace('账户', '')
             new_key = [f'{key_deduct}{k}' for k in common_key]
             settle = pd.Series([value[k] for k in common_key], index=new_key, name='对账单')
@@ -136,3 +137,7 @@ class EquityCheck:
                 '股票权益': record_df.loc[self.date, '股票资产总值'],
             })
         return record_info_dict
+
+
+if __name__ == '__main__':
+    send_equity_check('20240408')

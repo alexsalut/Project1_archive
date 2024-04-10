@@ -138,7 +138,7 @@ class Mail:
 
                     if filename:
                         # Construct the full path to save the attachment
-                        if file_list is None or filename in file_list:
+                        if file_list is None or any([file in filename for file in file_list]):
                             full_path = os.path.join(save_dir, filename)
                             with open(full_path, 'wb') as attachment:
                                 attachment.write(part.get_payload(decode=True))
@@ -162,3 +162,7 @@ class R:
         'admin': ['chen.zf@yz-fund.com.cn']
 
     }
+
+
+if __name__ == '__main__':
+    Mail().receive(r'D:\data\中信券源\raw', date_range=[30, 2], file_list=['CITIC_SBL_Securities_List'])

@@ -123,7 +123,7 @@ class Monitor:
         rows_to_delete = range(row2, 180)
         for row in rows_to_delete:
             print('delete row', row)
-            if sheet.api.Rows(row).Value is not None:
+            if sheet.api.Rows(row) is not None:
                 sheet.api.Rows(row).Delete()
 
     def get_monitor_values_df(self, monitor_path):
@@ -137,3 +137,7 @@ class Monitor:
             df = df.applymap(lambda x: str(x) if isinstance(x, datetime.time) else x)
             df.columns = [chr(ord('A') + i) for i in range(len(df.columns))]
             return df
+
+
+if __name__ == '__main__':
+    Monitor().update()

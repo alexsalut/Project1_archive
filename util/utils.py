@@ -8,6 +8,8 @@ import numpy as np
 import multiprocessing as mul
 from email.mime.text import MIMEText
 from EmQuantAPI import c
+from functools import wraps
+import matplotlib.pyplot as plt
 
 
 def c_get_trade_dates(start, end):
@@ -27,6 +29,18 @@ def transfer_to_jy_ticker(universe, inverse=False):
         return [x[-6:] + '.' + x[:2].upper() for x in universe]
     else:
         return [x.split('.')[-1].lower() + x.split('.')[0] for x in universe]
+
+
+def fill_in_stock_code(stock_list):
+    stock_list = [x + '.SH' if x[:1] == '6' else x + '.SZ' for x in stock_list]
+    return stock_list
+
+
+def add_data_label(period_return):
+    for i, x in enumerate(period_return):
+        drift = .001 if x >= 0 else -.006
+        color = 'red' if x > 0 else 'green'
+        plt.text(i - .5, x + drift, f'{round(x * 100, 1)}%', color=color, fontdict={'family': 'Microsoft YaHei'})
 
 
 def retry_save_excel(wb, file_path):
@@ -77,3 +91,15 @@ def find_index_loc_in_excel(file_path, sheet_name, value):
         return len(df) + 1
     else:
         return loc[0][0] + 1
+
+
+
+def timer(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        start_time = time.perf_counter()
+        result = func(*args, **kwargs)
+        end_time = time.perf_counter()
+        print(f'  {func.__name__} 执行时间：{end_time - start_time:.8f}s')
+        return result
+    return wrapper

@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2023/7/10 9:03
 # @Author  : Youwei Wu, Suying Zhou
-# @File    : daily_update.py
+# @File    : product_update.py
 # @Software: PyCharm
 
 import time

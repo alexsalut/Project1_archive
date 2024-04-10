@@ -18,9 +18,9 @@ class FileLocation:
         '盼澜1号': r'\\192.168.1.116\trade\broker\cats\account',
         '听涟2号 emc': r'\\192.168.1.116\trade\broker\emc\account',
         '听涟2号': r'\\192.168.1.116\trade\broker\cats\account',
-        '弄潮1号 cats': r'Z:\投研\数据\交易记录\nongchao\cats',
-        '弄潮1号 matic': r'Z:\投研\数据\交易记录\nongchao\matic',
-        '弄潮2号 matic': r'Z:\投研\数据\交易记录\nongchao\matic',
+        '弄潮1号 cats': r'\\192.168.1.116\trade\broker\cats\account',
+        '弄潮1号 matic': r'\\192.168.1.116\trade\broker\matic\account',
+        '弄潮2号 matic': r'\\192.168.1.116\trade\broker\matic\account',
     }
 
     # 客户编号
@@ -38,6 +38,7 @@ class FileLocation:
     option_account_code = {
         '盼澜1号': 4082225,  # cats
         '听涟2号': 4088701,  # cats
+        '踏浪1号': 4089106,  # cats
     }
 
 # 衍舟策略观察文件路径， monitor文件路径

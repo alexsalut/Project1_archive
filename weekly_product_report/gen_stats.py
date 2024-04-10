@@ -136,3 +136,4 @@ class ProductStats:
     def get_mdd(self, nav):
         mdd = (nav / nav.cummax() - 1).min()
         return mdd
+

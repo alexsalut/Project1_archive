@@ -19,16 +19,90 @@ from performance_analysis.data_acquisition import \
 
 
 def send_strategy_review(date=None):
-    data_dict = get_data_dict(date)
-    fig_paths = [plot_hist_performance(data_dict, stock_name=x)
-                 for x in ['科创板股票', '科创50成分股']]
+    date = time.strftime('%Y-%m-%d') if date is None else pd.to_datetime(date).strftime('%Y-%m-%d')
+    rq.init()
+    start_day = rq.get_previous_trading_date(date, 21)
+    trading_days = rq.get_trading_dates(start_day, date)
+    trading_days = [date.strftime('%Y-%m-%d') for date in trading_days]
+    data = get_history_data(trading_days)
+    nav_df, ret_df = get_market_performance(data)
 
-    statistics_df = gen_statistics_table(data_dict)
+    fig_paths = [plot_hist_performance(data[trading_days[-1]], stock_name=x)
+                 for x in ['科创板股票', '科创50成分股']]
+    fig_paths.append(plot_market_bar_ret(ret_df))
+    fig_paths.append(plot_market_nav(nav_df))
+    statistics_df = gen_statistics_table(data[date])
     notify_with_email(
         df_html=statistics_df,
-        data_dict=data_dict,
+        data_dict=data[date],
         fig_paths=fig_paths,
+        date = date
     )
+
+
+def get_market_performance(data):
+    kc50_medians = pd.Series([x['科创50中位数'] for x in data.values()], index=data.keys(),name='科创50中位数')
+    kc50_median_nav = kc50_medians.cumsum() + 1
+    kc50_median_nav /= kc50_median_nav.iloc[0]
+    kc_medians = pd.Series([x['科创板中位数'] for x in data.values()], index=data.keys(), name='科创板中位数')
+    kc_median_nav = kc_medians.cumsum() + 1
+    kc_median_nav /= kc_median_nav.iloc[0]
+
+    diff = (kc_medians - kc50_medians).rename('科创板-科创50')
+    diff_nav = diff.cumsum() + 1
+    diff_nav /= diff_nav.iloc[0]
+    return pd.concat([kc50_median_nav, kc_median_nav, diff_nav], axis=1), pd.concat([kc50_medians, kc_medians], axis=1)
+
+def plot_market_nav(nav_df):
+    fig, ax = plt.subplots(figsize=(13, 10))
+    plt.plot(nav_df['科创50中位数'], marker='o', color='blue', linestyle='--')
+    plt.plot(nav_df['科创板中位数'], marker='o', color='red', linestyle='--')
+    plt.plot(nav_df['科创板-科创50'], marker='o', color='orange')
+    plt.title('科创板和科创50中位数净值表现', fontsize=20)
+    plt.xlabel('日期', fontsize=15)
+    plt.xticks(fontsize=10, rotation=45)
+    plt.ylabel('净值', fontsize=15)
+    plt.yticks(fontsize=15)
+    plt.grid()
+    plt.legend(fontsize=15)
+    plt.legend(['科创50中位数', '科创板中位数', '科创板-科创50'], fontsize=20)
+    plt.rcParams['font.sans-serif'] = ['SimHei']
+    plt.rcParams['axes.unicode_minus'] = False
+    plt.tight_layout()
+
+
+    nav_path = rf'Z:\temp\performance_analysis\data\科创中位数净值_{nav_df.index[-1]}.png'
+    plt.savefig(nav_path)
+    plt.show()
+    return nav_path
+
+def plot_market_bar_ret(ret_df):
+    plt.figure(figsize=(16, 12))
+    ret_df.plot(kind='bar', figsize=(16, 12))
+    plt.title('科创板和科创50中位数收益率', fontsize=25)
+    plt.xlabel('日期', fontsize=20)
+    plt.xticks(fontsize=10, rotation=45)
+    plt.ylabel('日收益率', fontsize=20)
+    plt.yticks(fontsize=20)
+    plt.grid()
+
+    plt.legend(fontsize=20)
+    plt.legend(['科创50中位数', '科创板中位数'], fontsize=20)
+    plt.rcParams['font.sans-serif'] = ['SimHei']
+    plt.rcParams['axes.unicode_minus'] = False
+    plt.tight_layout()
+    ret_path = rf'Z:\temp\performance_analysis\data\科创中位数日收益率_{ret_df.index[-1]}.png'
+    plt.savefig(ret_path)
+    plt.show()
+    return ret_path
+
+
+
+def get_history_data(dates):
+    data = {}
+    for date in dates:
+        data[date] = get_data_dict(date)
+    return data
 
 
 def get_data_dict(date):
@@ -37,16 +111,25 @@ def get_data_dict(date):
     else:
         date = pd.to_datetime(date).strftime("%Y-%m-%d")
 
-    rq.init()
     kc50_stock_list = get_kc50_stock_list(date)
+
+    kc_stock_ret = get_kc_stock_pct(date)
+    kc50_stock_ret = kc_stock_ret[kc50_stock_list]
+
+
     ret_dict = {
         'date': date,
         'talang1': get_talang1_ret(date),
         'kc50_index': rq_retry_get_kc50_ret(date),
-        '科创板股票': get_kc_stock_pct(date),
+        '科创板股票': kc_stock_ret,
+        '科创板中位数': np.median(kc_stock_ret.values),
+        '科创50成分股': kc50_stock_ret,
+        '科创50中位数': np.median(kc50_stock_ret.values),
     }
-    ret_dict['科创50成分股'] = ret_dict['科创板股票'][kc50_stock_list]
     return ret_dict
+
+
+
 
 
 def plot_hist_performance(data_dict, stock_name):
@@ -97,7 +180,7 @@ def gen_statistics(data_dict, stock_name):
     return statistics_s
 
 
-def notify_with_email(df_html, data_dict, fig_paths):
+def notify_with_email(df_html, data_dict, fig_paths, date):
     subject = f'[Strategy Review] {data_dict["date"]}'
     content = f"""
     <table width="1200" border="0" cellspacing="0" cellpadding="4">
@@ -112,12 +195,19 @@ def notify_with_email(df_html, data_dict, fig_paths):
     <p>科创50指数当日收益率：{format_number(data_dict["kc50_index"])}</p>
     """
 
+    monitor_dir = r'\\192.168.1.116\target_position\monitor'
+    formatted_date1 = pd.to_datetime(date).strftime('%Y%m%d')
+    formatted_date2 = pd.to_datetime(date).strftime('%Y-%m-%d')
+    path1 = rf'{monitor_dir}\monitor_{formatted_date1}.xlsx'
+    path2 = rf'{monitor_dir}\monitor_zz500_{formatted_date2}.xlsx'
+
+
     Mail().send(
         subject,
         content,
-        attachs=[],
+        attachs=[path1, path2],
         pics=fig_paths,
-        pic_disp=['科创板涨跌幅分布', '科创50涨跌幅分布'],
+        pic_disp=['科创板涨跌幅分布', '科创50涨跌幅分布', '科创板和科创50中位数收益率', '科创板和科创50中位数净值表现'],
         receivers=R.department['research'] + R.department['admin'],
     )
 
@@ -131,3 +221,5 @@ def format_number(value):
         return f'{value:.2%}'
 
 
+if __name__ == '__main__':
+    send_strategy_review('20240409')
