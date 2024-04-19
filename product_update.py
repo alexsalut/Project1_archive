@@ -13,7 +13,7 @@ from util.trading_calendar import TradingCalendar
 from regular_update.get_citic_rq import get_citic_rq
 from regular_update.rzrq_limit import download_rzrq_limit_file, check_rzrq_limit_file
 from rice_quant.conv_raw_daily_bar import download_raw_daily_bar
-
+from prepare_arbitrage_daily_data.concat_all_data import concat_all_data
 
 def product_update():
     while True:
@@ -28,9 +28,12 @@ def product_update():
 
 def run_daily_update():
     current_minute = int(time.strftime('%H%M'))
-    if current_minute == 830:
+    if current_minute == 850:
         download_rzrq_limit_file()
         get_citic_rq()
+
+    elif current_minute == 910:
+        concat_all_data()
 
     elif current_minute == 1300:
         check_rzrq_limit_file()

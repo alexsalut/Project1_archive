@@ -93,16 +93,17 @@ class CatsFileReader:
             df=credit_file_info['CreditFund'],
             is_df=True)
 
-        cats_credit['维担比例'] = float(cats_credit['维担比例'].replace('%', '')) / 100
+        cats_credit['维担比例'] = float(str(cats_credit['维担比例']).replace('%', '')) / 100
         cats_credit['成交额'] = self.get_transaction_vol(credit_file_info['StockOrder'], file_type='credit')
 
-        credit_file_info['CreditPosition']['SymbolFull'] = \
-            credit_file_info['CreditPosition']['SymbolFull'].str.split('.', expand=True)[0]
+        if len(credit_file_info['CreditPosition']) > 0:
+
+            credit_file_info['CreditPosition']['SymbolFull'] = credit_file_info['CreditPosition']['SymbolFull'].str.split('.', expand=True)[0]
         cats_credit = update_asset(cats_credit, credit_file_info['CreditPosition'], 'SymbolFull', '名称', '参考市值')
         return cats_credit
 
     def get_trading_position(self, file_type):
-        position_df = self.read_file([file_type])[file_type].query(f'账户=={self.account_code}')
+        position_df = self.read_file([file_type])[file_type]
         return position_df
 
     def get_transaction_df(self):
@@ -127,7 +128,10 @@ class CatsFileReader:
     def read_file(self, filetype_list):
         data_dict = {}
         for filetype in filetype_list:
-            df = pd.read_csv(self.file_path_dict[filetype], index_col=False)
+            try:
+                df = pd.read_csv(self.file_path_dict[filetype], index_col=False)
+            except:
+                df = pd.read_csv(self.file_path_dict[filetype], index_col=False, encoding='gbk', sep=r'\t')
             data_dict[filetype] = df.query(f'账户=={self.account_code}')
         return data_dict
 

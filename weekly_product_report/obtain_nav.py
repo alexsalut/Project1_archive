@@ -33,6 +33,8 @@ def get_db_data(connection, table_name):
 
 
 if __name__ == '__main__':
+
+
     df = get_db_data(db_connect(), 'nongchao2_daily_value')
     print()
 

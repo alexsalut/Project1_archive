@@ -152,7 +152,10 @@ class NongchaoRecorder:
         ]
         sheet.range(f'{col_list[11]}{last_row}').formula = f'=1-({col_list[3]}{last_row}/{col_list[9]}{last_row})'
         last_equity = sheet.range(f'{col_list[0]}{last_row - 1}').value
-        sheet.range(f'{col_list[12]}{last_row}').value = account_dict['成交额'] / last_equity
+        if last_equity == 0:
+            sheet.range(f'{col_list[12]}{last_row}').value = 0
+        else:
+            sheet.range(f'{col_list[12]}{last_row}').value = account_dict['成交额'] / last_equity
 
     def input_total_account(self, sheet, col_list, account_dict, cash_cols, last_row):
         sheet.range(f'A{last_row}').value = self.date

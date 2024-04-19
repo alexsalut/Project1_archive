@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2023/7/10 9:03
 # @Author  : Youwei Wu, Suying Zhou
-# @File    : daily_update.py
+# @File    : product_update.py
 # @Software: PyCharm
 
 import os
@@ -34,7 +34,7 @@ class KlineUpdater:
     def generate_email(self):
         if os.path.exists(self.kc_path):
             subject = '[Adjusted Kline] Data finish processing'
-            adjusted_kline = pd.read_pickle(self.kc_path)
+            adjusted_kline = pd.read_pickle(self.save_path)
             print(f'{self.kc_path} exists.')
             info_dict = self.data_check(adjusted_kline)
             content = f"""
@@ -44,8 +44,8 @@ class KlineUpdater:
             </tr>
             <td bgcolor="#EFEBDE" height="100" style="font-size:13px">
             <p>File path:</p>
-            &nbsp&nbsp{self.kc_path}
-            <p>Number of KC stocks today:</p>
+            &nbsp&nbsp{self.save_path}
+            <p>Number of A board stocks today:</p>
             &nbsp&nbsp{info_dict['Total Number of Stocks']}
             <p>NaN:</p> 
             &nbsp&nbsp{info_dict['NaN']}
@@ -55,12 +55,12 @@ class KlineUpdater:
             &nbsp&nbsp{info_dict['Zero']}
             <p>Open&Close out of High&Low:</p> 
             &nbsp&nbsp{info_dict['Open&Close out of High&Low']}
-            <p>Extreme High&Low Difference(>30%):</p> 
+            <p>Today Extreme High&Low Difference(>30%):</p> 
             &nbsp&nbsp{info_dict['Extreme High&Low Difference']}
-            <p>Extreme daily Ret(>20.05%):</p> 
+            <p>Today Extreme daily Ret(>20.05%):</p> 
             &nbsp&nbsp{info_dict['Extreme daily Ret']}
-            <p>Missing kc stocks compared with raw daily bar:</p>
-            &nbsp&nbsp{info_dict['Missing kc stocks compared with Tushare']}
+            <p>Missing stocks compared with raw daily bar:</p>
+            &nbsp&nbsp{info_dict['Missing stocks compared with Tushare']}
             """
         else:
             subject = '[Adjusted Kline] File is non-existent. Retry downloading in 5 minutes.'
@@ -77,7 +77,7 @@ class KlineUpdater:
             'Open&Close out of High&Low',
             'Extreme High&Low Difference',
             'Extreme daily Ret',
-            'Missing kc stocks compared with Tushare',
+            'Missing stocks compared with Tushare',
         ]
         info_dict = {key: self.df_check(adjusted_kline, option=key) for key in keys}
         return info_dict
@@ -99,17 +99,20 @@ class KlineUpdater:
                                   (adjusted_kline['close'] < adjusted_kline['low']) |
                                   (adjusted_kline['open'] < adjusted_kline['low'])].dropna(how='all').index.tolist()
         elif option == 'Extreme High&Low Difference':
-            return adjusted_kline[
-                (adjusted_kline['high'] - adjusted_kline['low']) / adjusted_kline['low'] > 0.3].dropna(
+            today_kline = adjusted_kline.loc[self.today]
+
+            return today_kline[
+                (today_kline['high'] - today_kline['low']) / today_kline['low'] > 0.3].dropna(
                 how='all').index.tolist()
         elif option == 'Extreme daily Ret':
-            return adjusted_kline.query('abs(pct_chg)>0.2005')['pct_chg'].apply(lambda x: f'{x:.2%}').index.tolist()
-        elif option == 'Missing kc stocks compared with Tushare':
+            today_kline = adjusted_kline.loc[self.today]
+            return today_kline.query('abs(pct_chg)>0.2005')['pct_chg'].apply(lambda x: f'{x:.2%}').index.tolist()
+        elif option == 'Missing stocks compared with Tushare':
             raw_path = rf'{self.raw_dir}/{self.today[:4]}/{self.today[:6]}/raw_daily_{self.today}.csv'
             if os.path.exists(raw_path):
                 raw_df = pd.read_csv(raw_path)
                 kline = adjusted_kline.loc[self.today]
-                raw_stock = raw_df[raw_df['ts_code'].str.startswith('68')]['ts_code'].str[:6].tolist()
+                raw_stock = raw_df['ts_code'].str[:6].tolist()
                 kline_stock = [stock[2:] for stock in kline.index.tolist()]
                 return list(set(raw_stock) - set(kline_stock))
             else:
@@ -122,3 +125,8 @@ class KlineUpdater:
             tushare_dir=self.raw_dir,
             save_path=self.save_path,
         ).gen_qfq_kline()
+
+
+if __name__ == '__main__':
+    updater = KlineUpdater()
+    updater.update_confirm_adjusted_kline()

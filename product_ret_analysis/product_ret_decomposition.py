@@ -67,6 +67,7 @@ class ProductRetDecomposition:
                     receivers=R.department['research'])
 
     def format_table(self, df, if_percent=True):
+        df = df.dropna(how='all')
 
         def highlight_diff(s):
             if abs(s) > 2000:
@@ -79,15 +80,15 @@ class ProductRetDecomposition:
         else:
             styled_df = df.style.applymap(highlight_diff)
             styled_df = styled_df.format({product: '{:.2f}' for product in self.stock_list})
-        styled_df = styled_df.to_html(classes='table', escape=False)
-        styled_df = styled_df.replace('<table',
+        styled_string = styled_df.to_html(classes='table', escape=False)
+        styled_string = styled_string.replace('<table',
                                       '<table style="border-collapse: collapse; border: 1px solid black;"')
-        styled_df = styled_df.replace('<tr', '<tr style="border-bottom: 1px solid black;"')
-        styled_df = styled_df.replace('<th', '<th style="border-right: 1px solid black;"')
-        styled_df = styled_df.replace('<td', '<td style="border-right: 1px solid black;"')
-        styled_df = styled_df.replace('nan%', '-')
-        styled_df = styled_df.replace('nan', '-')
-        return styled_df
+        styled_string = styled_string.replace('<tr', '<tr style="border-bottom: 1px solid black;"')
+        styled_string = styled_string.replace('<th', '<th style="border-right: 1px solid black;"')
+        styled_string = styled_string.replace('<td', '<td style="border-right: 1px solid black;"')
+        styled_string = styled_string.replace('nan%', '-')
+        styled_string = styled_string.replace('nan', '-')
+        return styled_string
 
     def gen_table(self):
         df, s_trade_df = self.gen_df()
@@ -117,7 +118,8 @@ class ProductRetDecomposition:
     @staticmethod
     def get_stock_name(ticker_list):
         rq.init()
-        new_ticker_list = rq.id_convert(ticker_list.tolist())
+        stock_lst = [ticker for ticker in ticker_list if not ticker.startswith('1')]
+        new_ticker_list = rq.id_convert(stock_lst)
         stock_info = rq.instruments(new_ticker_list)
         stock_name_dict = {stock.order_book_id[:6]: stock.symbol for stock in stock_info}
         return stock_name_dict
@@ -187,11 +189,11 @@ class ProductRetDecomposition:
         position_s.index = position_s.index.astype(str)
         ticker_list = position_s.index.astype(str).tolist()
         if type == 'Option':
-            close = get_t_raw_daily_bar(ticker_list=ticker_list, type=type, col=['close', 'pre_close'], date=self.date)
-            hold_pl = (close['close'] - close['pre_close']).mul(position_s).sum()
+            close = get_t_raw_daily_bar(ticker_list=ticker_list, type=type, col=['close', 'prev_close'], date=self.date)
+            hold_pl = (close['close'] - close['prev_close']).mul(position_s).sum()
         else:
-            close = get_t_raw_daily_bar(ticker_list=ticker_list, type=type, col=['close', 'pre_close'], date=self.date)
-            hold_pl = (close['close'] - close['pre_close']).mul(position_s).sum()
+            close = get_t_raw_daily_bar(ticker_list=ticker_list, type=type, col=['close', 'prev_close'], date=self.date)
+            hold_pl = (close['close'] - close['prev_close']).mul(position_s).sum()
 
             # pct_chg = get_t_raw_daily_bar(ticker_list=ticker_list, type=type, col='pct_chg', date=self.date)/100
             # hold_pl = (pct_chg.mul(position_s)).sum()/position_s.sum()
@@ -203,12 +205,12 @@ class ProductRetDecomposition:
         df = get_t_raw_daily_bar(
             ticker_list=l,
             type='Option',
-            col=['close', 'pre_close'],
+            col=['close', 'prev_close'],
             date=self.date
         )
-        s = df['close'] - df['pre_close']
-        base_diff = (s[l[0]] - s[l[1]] + s[l[2]]) / df.loc[l[2], 'pre_close']
-        return base_diff, s[l[2]] / df.loc[l[2], 'pre_close']
+        s = df['close'] - df['prev_close']
+        base_diff = (s[l[0]] - s[l[1]] + s[l[2]]) / df.loc[l[2], 'prev_close']
+        return base_diff, s[l[2]] / df.loc[l[2], 'prev_close']
 
 
 def get_t_raw_daily_bar(ticker_list, type, col='close', date=None):
@@ -222,7 +224,6 @@ def get_t_raw_daily_bar(ticker_list, type, col='close', date=None):
         else:
             raw_daily = raw_daily.droplevel(1)
             raw_daily['pct_chg'] = (raw_daily['close'] / raw_daily['prev_close'] - 1) * 100
-            raw_daily = raw_daily.rename(columns={'prev_close': 'pre_close'})
             return raw_daily[col] * 10000
 
 
@@ -232,9 +233,25 @@ def get_t_raw_daily_bar(ticker_list, type, col='close', date=None):
         file_path = rf'{t_raw_daily_bar_dir}\{date[:4]}\{date[:6]}\raw_daily_{date}.csv'
         raw_daily_df = pd.read_csv(file_path, index_col=0)
         raw_daily_df.index = raw_daily_df.index.str.split('.', expand=True).get_level_values(0)
-        return raw_daily_df.loc[ticker_list, col]
+        raw_daily_df = raw_daily_df.rename(columns={'pre_close': 'prev_close'})
+        non_stock_tickers = [ticker for ticker in ticker_list if ticker not in raw_daily_df.index and not ticker.startswith('1')]
+        stock_tickers = [ticker for ticker in ticker_list if ticker not in non_stock_tickers and not ticker.startswith('1')]
+        stock_df = raw_daily_df.loc[stock_tickers, col]
+
+        if len(non_stock_tickers) == 0:
+            return stock_df
+        else:
+            tickers = [ticker for ticker in non_stock_tickers if not ticker.startswith('1')]
+            ticker_string = ','.join(tickers)
+            rq.init()
+            ticker_string = rq.id_convert(ticker_string)
+            price = rq.get_price(ticker_string, start_date=date, end_date=date, fields=col)[col].droplevel(1)
+            price.index = price.index.str.split('.', expand=True).get_level_values(0)
+            price_s = pd.concat([stock_df, price], axis=0)
+            return price_s
+
+
 
 
 if __name__ == '__main__':
-    # ProductRetDecomposition(date='20240307', stock_list=['踏浪1号'], option_list=[]).gen_email()
     ProductRetDecomposition(stock_list=['踏浪1号', '盼澜1号'], option_list=['盼澜1号']).gen_email()

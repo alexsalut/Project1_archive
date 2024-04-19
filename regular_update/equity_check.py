@@ -31,9 +31,9 @@ class EquityCheck:
         self.account_path = rf'{FileLocation.remote_monitor_dir}\衍舟策略观察_{self.date}.xlsx'
 
     def notify_check_with_email(self):
-        # Mail().receive(save_dir=self.dir,
-        #                user='trading_1@yz-fund.com.cn',
-        #                pwd='BO6iJOUXZwDdndz0')
+        Mail().receive(save_dir=self.dir,
+                       user='trading_1@yz-fund.com.cn',
+                       pwd='BO6iJOUXZwDdndz0')
         file_list = SettleInfo(date=self.date).file_path_list
         missed_file_list = [f for f in file_list if not os.path.exists(f)]
 

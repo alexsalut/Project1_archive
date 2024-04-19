@@ -80,4 +80,5 @@ class ST_List_Updater:
         all_st_s.to_pickle(self.save_path)
         print(rf"[{index_ticker} list] updated and new .pkl file generated ")
 
-
+if __name__ == '__main__':
+    ST_List_Updater().st_list_update_and_confirm()

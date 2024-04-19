@@ -6,6 +6,7 @@
 # @File    : account_recorder.py
 import time
 import os
+import shutil
 
 from util.file_location import FileLocation
 from record.multi_strategy_perf import MultiStrategyPerf
@@ -46,6 +47,7 @@ def account_recorder(date=None, adjust='导出单', if_last_trading_day=False):
 
     print(f'{sep} Update Fund Record {sep}')
     update_fund_recorder(account_path, monitor_path, date_to_update, adjust)
+    shutil.copy(account_path, account_path.replace('策略观察', '策略观察备份'))
     send_email(account_path, date_to_update, adjust)
 
 
@@ -79,3 +81,6 @@ def send_email(account_path, date_to_update, adjust):
     )
 
 
+if __name__ == '__main__':
+    # account_recorder(adjust='对账单', if_last_trading_day=True)
+    account_recorder()

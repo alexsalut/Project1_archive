@@ -49,4 +49,4 @@ def get_rzrq_list(file):
 
 
 if __name__ == '__main__':
-    get_citic_rq(date='20211231', year='2021')
+    get_citic_rq()

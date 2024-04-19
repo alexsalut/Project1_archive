@@ -87,5 +87,5 @@ def check_rzrq_limit_file(date=None):
 
 
 if __name__ == '__main__':
-    download_citic_rq_file()
-    # download_rzrq_limit_file()
+    # download_citic_rq_file()
+    download_rzrq_limit_file()

@@ -197,4 +197,4 @@ def rq_get_index_exposure(date, index_ticker):
 
 if __name__ == '__main__':
     # get_port_excess_exposure('20240326', '踏浪3号')
-    send_risk_exposure('20240327')
+    send_risk_exposure('20240410')

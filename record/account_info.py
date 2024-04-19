@@ -106,8 +106,8 @@ def get_talang1_info(date=None):
     panlan_dir = FileLocation.account_info_dir_dict['踏浪1号']
     formatted_date2 = pd.to_datetime(date).strftime("%Y-%m-%d") if date is not None else time.strftime(
         '%Y-%m-%d')
-    stock_normal_s = pd.read_csv(rf'{panlan_dir}/StockFund_{formatted_date2}.csv', index_col=False).set_index(
-        '账户').loc[FileLocation.account_code['踏浪1号']]
+    # stock_normal_s = pd.read_csv(rf'{panlan_dir}/StockFund_{formatted_date2}.csv', index_col=False).set_index(
+    #     '账户').loc[FileLocation.account_code['踏浪1号']]
 
     stock_credit_s = pd.read_csv(rf'{panlan_dir}/CreditFund_{formatted_date2}.csv', index_col=False).set_index(
         '账户').loc[FileLocation.account_code['踏浪1号']]
@@ -129,10 +129,8 @@ def get_talang1_info(date=None):
 
     info_dict = {
         '期权权益': option_s['客户总权益'],
-        '股票权益': stock_normal_s['账户资产'] + stock_credit_s['净资产'],
-        '股票市值': stock_normal_s['证券市值'] + stock_credit_s['证券市值'],
-        '普通账户股票权益': stock_normal_s['账户资产'],
-        '普通账户股票市值': stock_normal_s['证券市值'],
+        '股票权益': stock_credit_s['净资产'],
+        '股票市值': stock_credit_s['证券市值'],
         '信用账户股票权益': stock_credit_s['净资产'],
         '信用账户股票市值': stock_credit_s['证券市值'],
         '成交额': stock_transaction_vol + option_transaction_vol,
@@ -147,8 +145,6 @@ def get_panlan1_info(date=None):
     panlan_dir = FileLocation.account_info_dir_dict['盼澜1号']
     formatted_date2 = pd.to_datetime(date).strftime("%Y-%m-%d") if date is not None else time.strftime(
         '%Y-%m-%d')
-    stock_normal_s = pd.read_csv(rf'{panlan_dir}/StockFund_{formatted_date2}.csv', index_col=False).set_index(
-        '账户').loc[FileLocation.account_code['盼澜1号']]
 
     stock_credit_s = pd.read_csv(rf'{panlan_dir}/CreditFund_{formatted_date2}.csv', index_col=False).set_index(
         '账户').loc[FileLocation.account_code['盼澜1号']]
@@ -170,10 +166,8 @@ def get_panlan1_info(date=None):
 
     info_dict = {
         '期权权益': option_s['客户总权益'],
-        '股票权益': stock_normal_s['账户资产'] + stock_credit_s['净资产'],
-        '股票市值': stock_normal_s['证券市值'] + stock_credit_s['证券市值'],
-        '普通账户股票权益': stock_normal_s['账户资产'],
-        '普通账户股票市值': stock_normal_s['证券市值'],
+        '股票权益': stock_credit_s['净资产'],
+        '股票市值': stock_credit_s['证券市值'],
         '信用账户股票权益': stock_credit_s['净资产'],
         '信用账户股票市值': stock_credit_s['证券市值'],
         '成交额': option_transaction_vol + stock_transaction_vol,
@@ -211,4 +205,4 @@ def get_nongchao2_info(date=None):
 
 
 if __name__ == '__main__':
-    get_talang1_info('20240409')
+    get_nongchao1_info('20240416')

@@ -14,6 +14,7 @@ import xlwings as xw
 from util.utils import retry_save_excel, fill_in_stock_code
 
 def update_zz500_next_trading_day_pos(date=None):
+    rq.init()
     date = date if date is not None else pd.Timestamp.now().strftime('%Y%m%d')
     next_trading_day = rq.get_next_trading_date(date, 1).strftime('%Y%m%d')
     next_monitor_path = rf'\\192.168.1.116\target_position\monitor\monitor_zz500_{next_trading_day}.xlsx'

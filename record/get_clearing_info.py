@@ -18,11 +18,8 @@ class SettleInfo:
         self.date = date if date is not None else time.strftime('%Y%m%d')
         self.dir = rf'{os.path.expanduser("~")}\Desktop\Data\Save\账户对账单'
         self.account_path = rf'C:\Users\Yz02\Desktop\strategy_update\cnn策略观察_{self.date}.xlsx'
-
-        formatted_date = pd.to_datetime(self.date).strftime('%Y-%m-%d')
         # 普通股票账户
         self.normal_account_path = {
-            '盼澜1号': rf'{self.dir}/衍舟盼澜1号-客户对账单-5600010056_{self.date}.xlsx',
             '踏浪1号': rf'{self.dir}/衍舟踏浪1号-客户对账单-887062000125_{self.date}.xlsx',
             '踏浪2号': rf'{self.dir}/华安证券账户对账单+衍舟踏浪2号+6030001882+{self.date}.xls',
             '踏浪3号': rf'{self.dir}/190000612973普通对账单_{self.date}.txt',
@@ -96,20 +93,17 @@ class SettleInfo:
         return info_dict
 
     def generate_panlan1_settle_info(self):
-        cats_normal_account = read_clearing_file(self.normal_account_path['盼澜1号'], '中信普通账户')
         cats_option_account = read_clearing_file(self.option_account_path['盼澜1号'], '中信期权账户')
         cats_credit_account = read_clearing_file(self.credit_account_path['盼澜1号'], '中信信用账户')
 
         info_dict = {
             '期权权益': cats_option_account['账户净资产'],
-            '股票权益': cats_normal_account['账户净资产'] + cats_credit_account['账户净资产'],
-            '股票市值': cats_normal_account['账户证券市值'] + cats_credit_account['账户证券市值'],
-            '普通账户股票权益': cats_normal_account['账户净资产'],
-            '普通账户股票市值': cats_normal_account['账户证券市值'],
+            '股票权益': cats_credit_account['账户净资产'],
+            '股票市值': cats_credit_account['账户证券市值'],
             '信用账户股票权益': cats_credit_account['账户净资产'],
             '信用账户股票市值': cats_credit_account['账户证券市值'],
-            '成交额': cats_normal_account['成交额'] + cats_credit_account['成交额'] + cats_option_account['成交额'],
-            '股票成交额': cats_normal_account['成交额'] + cats_credit_account['成交额'],
+            '成交额': cats_credit_account['成交额'] + cats_option_account['成交额'],
+            '股票成交额': cats_credit_account['成交额'],
             '期权成交额': cats_option_account['成交额'],
         }
         return info_dict
@@ -133,20 +127,17 @@ class SettleInfo:
         return info_dict
 
     def generate_talang1_settle_info(self):
-        cats_normal_account = read_clearing_file(self.normal_account_path['踏浪1号'], '中信普通账户')
         cats_option_account = read_clearing_file(self.option_account_path['踏浪1号'], '中信期权账户')
         cats_credit_account = read_clearing_file(self.credit_account_path['踏浪1号'], '中信信用账户')
 
         info_dict = {
             '期权权益': cats_option_account['账户净资产'],
-            '股票权益': cats_normal_account['账户净资产'] + cats_credit_account['账户净资产'],
-            '股票市值': cats_normal_account['账户证券市值'] + cats_credit_account['账户证券市值'],
-            '普通账户股票权益': cats_normal_account['账户净资产'],
-            '普通账户股票市值': cats_normal_account['账户证券市值'],
+            '股票权益': cats_credit_account['账户净资产'],
+            '股票市值': cats_credit_account['账户证券市值'],
             '信用账户股票权益': cats_credit_account['账户净资产'],
             '信用账户股票市值': cats_credit_account['账户证券市值'],
-            '成交额': cats_normal_account['成交额'] + cats_credit_account['成交额'] + cats_option_account['成交额'],
-            '股票成交额': cats_normal_account['成交额'] + cats_credit_account['成交额'],
+            '成交额': cats_credit_account['成交额'] + cats_option_account['成交额'],
+            '股票成交额': cats_credit_account['成交额'],
             '期权成交额': cats_option_account['成交额'],
         }
 
@@ -181,4 +172,4 @@ class SettleInfo:
 if __name__ == '__main__':
 
 
-    print(SettleInfo('20240409').get_settle_info('踏浪1号'))
+    print(SettleInfo('20240415').get_settle_info('踏浪2号'))
