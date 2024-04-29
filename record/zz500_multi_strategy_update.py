@@ -6,6 +6,7 @@
 # @File    : zz500_multi_strategy_update.py
 import os.path
 import time
+import shutil
 import pandas as pd
 import xlwings as xw
 from EmQuantAPI import c
@@ -70,6 +71,10 @@ class ZZ500MultiStrategyPerf:
         sheet.range(f'H{row_to_fill}').formula = f'=E{row_to_fill}/F{row_to_fill}-1'  #累计超额
         sheet.range(f'I{row_to_fill}').formula = f'=G{row_to_fill}/MAX(G$2:G{row_to_fill}) - 1'  # 超额回撤
         wb.save(self.account_path)
+        try:
+            shutil.copy(self.account_path, self.account_path.replace('超额', '超额备份'))
+        except Exception as e:
+            print(e)
         wb.close()
         app.quit()
         app.kill()
@@ -101,6 +106,7 @@ class ZZ500MultiStrategyPerf:
             "DIFFERRANGE",
             f"TradeDate={self.date}").Data['000905.SH'][0]/100
         dict['monitor目标持仓'] = zz500_index_ret
+        c.stop()
         return dict
 
 
@@ -108,4 +114,5 @@ class ZZ500MultiStrategyPerf:
 
 
 if __name__ == '__main__':
-    ZZ500MultiStrategyPerf('20240319').update()
+    ZZ500MultiStrategyPerf('20240423').update()
+    ZZ500MultiStrategyPerf('20240424').update()
