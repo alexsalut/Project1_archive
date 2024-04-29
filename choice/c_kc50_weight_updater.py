@@ -75,6 +75,7 @@ class KC50WeightUpdater:
                 self.c_download_kc50_weight(date, save_path)
             else:
                 print(f'[kc50 weight] {save_path} exists')
+        c.stop()
 
     def c_download_kc50_weight(self, date, save_path):
         os.makedirs(self.save_dir, exist_ok=True)
@@ -88,13 +89,13 @@ class KC50WeightUpdater:
         print("Downloading Index Composition Weight")
         print("-----------------------------------")
 
-        c.start("ForceLogin=1")
         df = c.ctr(
             "INDEXCOMPOSITION",
             "SECUCODE,WEIGHT",
             f"IndexCode={index_ticker},EndDate={date},ispandas=1",
         )
-        c.stop()
-
         df.to_pickle(save_path)
         print(f'[{index_ticker} weight] {date} file has downloaded.')
+
+if __name__ == '__main__':
+    KC50WeightUpdater().kc50_weight_update_and_confirm()
