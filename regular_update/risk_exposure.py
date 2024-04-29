@@ -27,7 +27,8 @@ def send_risk_exposure(date=None):
 
 
 def gen_expo_df(formatted_date):
-    funds = ['踏浪1号', '踏浪2号', '踏浪3号']
+    # funds = ['踏浪1号', '踏浪2号', '踏浪3号']
+    funds = ['踏浪1号', '踏浪2号']
     trading_dates = rq.get_trading_dates('20231001',formatted_date)
     trading_dates = [x.strftime('%Y%m%d') for x in trading_dates]
     for date in trading_dates:
@@ -46,7 +47,8 @@ def gen_expo_df(formatted_date):
 def gen_barra_txt(expo_df):
     barra_df = expo_df.iloc[:11]
     styled_barra_df = barra_df.style.bar(
-        subset=[('踏浪1号', 'relative'), ('踏浪2号', 'relative'), ('踏浪3号', 'relative')],
+        # subset=[('踏浪1号', 'relative'), ('踏浪2号', 'relative'), ('踏浪3号', 'relative')],
+        subset=[('踏浪1号', 'relative'), ('踏浪2号', 'relative')],
         color='#d65f5f',
     )
     styled_barra_df = styled_barra_df.format('{:.2f}')
@@ -57,7 +59,8 @@ def gen_barra_txt(expo_df):
 def gen_industry_txt(expo_df):
     industry_df = expo_df.iloc[11:]
     styled_industry_df = industry_df.style.bar(
-        subset=[('踏浪1号', 'relative'), ('踏浪2号', 'relative'), ('踏浪3号', 'relative')],
+        # subset=[('踏浪1号', 'relative'), ('踏浪2号', 'relative'), ('踏浪3号', 'relative')],
+        subset=[('踏浪1号', 'relative'), ('踏浪2号', 'relative')],
         color='#d65f5f',
     )
 
@@ -197,4 +200,4 @@ def rq_get_index_exposure(date, index_ticker):
 
 if __name__ == '__main__':
     # get_port_excess_exposure('20240326', '踏浪3号')
-    send_risk_exposure('20240410')
+    send_risk_exposure('20240424')

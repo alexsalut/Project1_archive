@@ -19,7 +19,6 @@ fl = FileLocation
 def send_position_check(date=None):
     date = date if date is not None else time.strftime('%Y%m%d')
     account_list = ['踏浪1号', '盼澜1号', '听涟2号', '踏浪3号']
-    # account_list = ['踏浪1号', '盼澜1号', '踏浪3号']
     account_pos_dict = check_all_account_pos(account_list, date=date)
 
     subject = rf'[Position Check] {date}'
@@ -164,13 +163,20 @@ class AccountPosition:
                 self.col_dict['actual']: 'Int64',
                 self.col_dict['actual market val']: 'float64',
             })
+
+            if self.account != '听涟2号':
+                account_col = self.col_dict['actual account']
+                actual_df[account_col] = actual_df[account_col].astype('Int64')
+
+
             actual_df = actual_df.rename(columns={
                 self.col_dict['actual code']: '代码',
                 self.col_dict['actual name']: '名称',
                 self.col_dict['actual']: '实际',
+                self.col_dict['actual account'] : '账户',
                 self.col_dict['actual market val']: '市值'}).set_index('代码')
             actual_df.index = actual_df.index.str.zfill(6)
-            if 'actual account' in self.col_dict.keys():
+            if '账户' in actual_df.columns:
                 actual_df = actual_df.query(f'账户=={fl.account_code[self.account]}')
             actual_df = actual_df[['名称', '实际', '市值']]
             return actual_df[actual_df['实际'] != 0]
@@ -193,6 +199,7 @@ class AccountPosition:
             '听涟2号': {
                 'actual code': '证券代码',
                 'actual name': '证券名称',
+                'actual account': '资金账号',
                 'actual': '持仓数量',
                 'actual market val': '市值',
             },
@@ -200,6 +207,7 @@ class AccountPosition:
                 'actual code': '证券代码',
                 'actual name': '证券名称',
                 'actual': '当前拥股',
+                'actual account': '资金账号',
                 'actual market val': '市值',
 
             }

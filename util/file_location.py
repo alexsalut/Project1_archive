@@ -13,7 +13,7 @@ class FileLocation:
     # 账户信息文件路径
     account_info_dir_dict = {
         '踏浪2号': r'\\192.168.1.116\trade\broker\qmt_ha\account\Stock',
-        '踏浪3号': r'\\192.168.1.116\trade\broker\iQuant\account\Stock',
+        '踏浪3号': r'\\192.168.1.116\trade\broker\qmt_ha\account\Stock',
         '踏浪1号': r'\\192.168.1.116\trade\broker\cats\account',
         '盼澜1号': r'\\192.168.1.116\trade\broker\cats\account',
         '听涟2号 emc': r'\\192.168.1.116\trade\broker\emc\account',
@@ -26,8 +26,8 @@ class FileLocation:
     # 客户编号
     account_code = {
         '踏浪1号': 4089106,  # cats
-        '踏浪2号': 6030001882,  # qmt
-        '踏浪3号': 190000612973,  # iQuant
+        '踏浪2号': 6030001882,  # ha
+        '踏浪3号': 6030002036,  # ha
         '盼澜1号': 4082225,  # cats
         '听涟2号': 310310300343,  # emc
         '弄潮1号 cats': 4069336,  # cats

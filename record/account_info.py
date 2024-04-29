@@ -205,4 +205,4 @@ def get_nongchao2_info(date=None):
 
 
 if __name__ == '__main__':
-    get_nongchao1_info('20240416')
+    get_talang23_info('踏浪3号', date='2024-04-25')

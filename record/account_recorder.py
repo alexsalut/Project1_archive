@@ -47,7 +47,10 @@ def account_recorder(date=None, adjust='导出单', if_last_trading_day=False):
 
     print(f'{sep} Update Fund Record {sep}')
     update_fund_recorder(account_path, monitor_path, date_to_update, adjust)
-    shutil.copy(account_path, account_path.replace('策略观察', '策略观察备份'))
+    try:
+        shutil.copy(account_path, account_path.replace('策略观察', '策略观察备份'))
+    except Exception as e:
+        print(e)
     send_email(account_path, date_to_update, adjust)
 
 

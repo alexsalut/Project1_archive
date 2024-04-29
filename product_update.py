@@ -12,7 +12,7 @@ from t.ts_raw_daily_bar_updater import RawdailyBarUpdater
 from util.trading_calendar import TradingCalendar
 from regular_update.get_citic_rq import get_citic_rq
 from regular_update.rzrq_limit import download_rzrq_limit_file, check_rzrq_limit_file
-from rice_quant.conv_raw_daily_bar import download_raw_daily_bar
+from rice_quant.conv_raw_daily_bar import download_conv_raw_daily_bar
 from prepare_arbitrage_daily_data.concat_all_data import concat_all_data
 
 def product_update():
@@ -41,7 +41,7 @@ def run_daily_update():
     elif current_minute == 1630:
         RawdailyBarUpdater().update_and_confirm_raw_daily_bar()
         KlineUpdater().update_confirm_adjusted_kline()
-        download_raw_daily_bar()
+        download_conv_raw_daily_bar()
 
 
     elif current_minute % 5 == 0:

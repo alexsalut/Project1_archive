@@ -23,8 +23,13 @@ def send_equity_check(date=None):
 
 class EquityCheck:
     def __init__(self, account=None, date=None):
-        self.account = [account] if account is not None else ['踏浪1号', '踏浪2号', '踏浪3号',
+        # self.account = [account] if account is not None else ['踏浪1号', '踏浪2号', '踏浪3号',
+        #                                                       '盼澜1号', '听涟2号']
+
+        self.account = [account] if account is not None else ['踏浪1号', '踏浪2号',
                                                               '盼澜1号', '听涟2号']
+
+
         last_trading_day = TradingCalendar().get_n_trading_day(time.strftime('%Y%m%d'), -1).strftime('%Y%m%d')
         self.date = date if date is not None else last_trading_day
         self.dir = FileLocation.clearing_dir
@@ -105,11 +110,12 @@ class EquityCheck:
         return df
 
     def gen_email_content(self, check_info_dict):
+        string = '|'.join(self.account)
         subject = f'[Equity Check]{self.date}'
         content = f"""
         <table width="800" border="0" cellspacing="0" cellpadding="4">
         <tr>
-        <td bgcolor="#CECFAD" height="30" style="font-size:21px"><b>盼澜1号|听涟2号|踏浪1号|踏浪2号|踏浪3号 资产核对结果</b></td>
+        <td bgcolor="#CECFAD" height="30" style="font-size:21px"><b>{string} 资产核对结果</b></td>
         </tr>
         <td bgcolor="#EFEBDE" height="100" style="font-size:13px">
         """
@@ -140,4 +146,4 @@ class EquityCheck:
 
 
 if __name__ == '__main__':
-    send_equity_check('20240408')
+    send_equity_check()
