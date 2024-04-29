@@ -30,10 +30,9 @@ def get_filtered_convertible_pair(premium_thresh=0.05, date=None):
         Mail().send(
             subject=f'{formatted_date}今日已融券文件不存在，请检查生成',
             body_content=f'{daily_rong_quan_path}不存在，请检查数据路径',
-            receivers=R.staff['liu']
+            receivers=[R.staff['liu']] + [R.staff['zhou']]
         )
         time.sleep(120)
-        return get_filtered_convertible_pair(premium_thresh=premium_thresh, date=date)
 
     rq_volume = pd.read_csv(daily_rong_quan_path, index_col=0).set_index('symbol')['qty'].rename('credit_volume')
     rq_volume.index = rq_volume.index.str.replace('SH', 'XSHG').str.replace('SZ', 'XSHE')
@@ -88,7 +87,7 @@ def get_last_5days_st_stock():
 
 
 def get_citic_rq(date=None):
-    Mail().receive(save_dir=r'D:\data\中信券源\raw', file_list=['CITIC_SBL_Securities_List'])
+    Mail().receive(date_range=[2,1], save_dir=r'D:\data\中信券源\raw', file_list=['CITIC_SBL_Securities_List'])
     formatted_date = date if date is not None else time.strftime('%Y%m%d')
     formatted_date2 = pd.to_datetime(formatted_date).strftime('%Y-%m-%d')
     path_lst = glob.glob(rf'D:\data\中信券源\raw\CITIC_SBL_Securities_List*.xlsx')
@@ -96,6 +95,7 @@ def get_citic_rq(date=None):
 
     time_list = [os.path.getmtime(file) for file in filtered_path_lst]
     path = filtered_path_lst[time_list.index(max(time_list))]
+    print(f'path: {path}')
     # path = rf'D:\data\中信券源\raw\CITIC_SBL_Securities_List{formatted_date2}_am.xlsx'
 
     if not os.path.exists(path):

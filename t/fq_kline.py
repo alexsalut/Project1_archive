@@ -16,9 +16,13 @@ class FqKLine:
     def __init__(self,
                  tushare_dir,
                  save_path,
+                 year_lst=['2024'],
+                 fix_format=True
                  ):
         self.tushare_dir = tushare_dir
         self.save_path = save_path
+        self.year_lst = year_lst
+        self.fix_format = fix_format
 
     def gen_qfq_kline(self):
         ts_kline_df = self.collect_daily_bar()
@@ -31,7 +35,9 @@ class FqKLine:
 
     def collect_daily_bar(self):
         data = []
-        locs = glob.glob(rf'{self.tushare_dir}\2024\*\*.csv')
+        locs = []
+        for year in self.year_lst:
+            locs += glob.glob(rf'{self.tushare_dir}\{year}\*\*.csv')
         for loc in locs:
             print(loc)
             tushare_df = pd.read_csv(loc, converters={'trade_date': str})
@@ -42,8 +48,8 @@ class FqKLine:
         ts_kline_df = pd.concat(data)
         return ts_kline_df
 
-    @staticmethod
-    def fix_tushare_df_format(ts_kline_df):
+
+    def fix_tushare_df_format(self, ts_kline_df):
         """
         Parameters
         -------
@@ -66,7 +72,8 @@ class FqKLine:
             'vol': 'volume',
         })
         kline_df['date'] = pd.to_datetime(kline_df['date'])
-        kline_df['ticker'] = transfer_to_jy_ticker(kline_df['ticker'])
+        if self.fix_format:
+            kline_df['ticker'] = transfer_to_jy_ticker(kline_df['ticker'])
         kline_df = kline_df.set_index(['ticker', 'date']).sort_index()
         kline_df['pct_chg'] = kline_df['close'] / kline_df['pre_close'] - 1
         del kline_df['pre_close']
@@ -103,3 +110,13 @@ class FqKLine:
         kc_price_list = [price.xs(x, level=1) for x in kc_stocks]
         kc_price_df = pd.concat(kc_price_list, keys=kc_stocks).swaplevel().sort_index()
         kc_price_df.to_pickle(self.save_path.replace('.pkl', '_kc.pkl'))
+
+
+if __name__ == '__main__':
+    year_lat = ['2021', '2022', '2023', '2024']
+    FqKLine(
+        tushare_dir=r'D:\data\daily_raw_bar',
+        save_path=rf'D:\data\adjusted_kline21_24.pkl',
+        year_lst=year_lat,
+        fix_format=False
+    ).gen_qfq_kline()
