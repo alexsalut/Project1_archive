@@ -222,4 +222,4 @@ def format_number(value):
 
 
 if __name__ == '__main__':
-    send_strategy_review('20240409')
+    send_strategy_review()
