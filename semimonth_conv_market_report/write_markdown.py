@@ -41,7 +41,7 @@ class ConvMarketReview:
 
 
 if __name__ == '__main__':
-    ConvMarketReview(mark_date='20240415').gen_report(
-        start_date='20240329',
-        end_date='20240412',
+    ConvMarketReview(mark_date='20240429').gen_report(
+        start_date='20240412',
+        end_date='20240426',
     )
