@@ -6,21 +6,18 @@ import rqdatac as rq
 
 rq.init()
 
-def download_raw_daily_bar(date=None):
+def download_conv_raw_daily_bar(date=None):
     date = time.strftime('%Y%m%d') if date is None else pd.to_datetime(date).strftime('%Y%m%d')
-    dir = r'C:\Users\Yz02\Desktop\Data\conv_raw_daily_bar\convertible_raw_daily_bar\2024'
-    os.makedirs(dir, exist_ok=True)
-
+    year = date[:4]
+    raw_dir = rf'D:\data\conv_raw_daily_bar\{year}'
+    os.makedirs(raw_dir, exist_ok=True)
     df = get_conv_raw_daily_bar(date)
-    file = os.path.join(dir, f'raw_daily_bar_{date}.csv')
+    file = os.path.join(raw_dir, f'raw_daily_bar_{date}.csv')
+    ticker_list = df.index.tolist()
+    df['pct_chg'] = rq.get_price_change_rate(ticker_list, start_date=date, end_date=date).iloc[0]
     df.to_csv(file)
     print(f'{date} raw daily bar saved')
 
-    ticker_list = df.index.tolist()
-    df['pct_chg'] = rq.get_price_change_rate(ticker_list, start_date=date, end_date=date).iloc[0]
-    new_file = file.replace('raw', 'adjusted')
-    df.to_csv(new_file)
-    print(f'{new_file} adjusted daily bar saved')
 
 def get_conv_raw_daily_bar(date=None):
     date = time.strftime('%Y%m%d') if date is None else pd.to_datetime(date).strftime('%Y%m%d')
@@ -44,4 +41,7 @@ def get_conv_list(date=None):
 
 
 if __name__ == '__main__':
-    download_raw_daily_bar('20240229')
+    trading_dates = rq.get_trading_dates('2016-01-01', '2024-04-23')
+    dates = [date.strftime('%Y%m%d') for date in trading_dates]
+    for date in dates:
+        download_conv_raw_daily_bar(date)
