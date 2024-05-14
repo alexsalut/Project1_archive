@@ -11,10 +11,11 @@ import matplotlib.pyplot as plt
 
 
 
-def plot_table(data, path, col_width=3.0, row_height=0.625, font_size=14,
+def plot_table(data, path=None, col_width=3.0, row_height=0.625, font_size=14,
                      header_color='#40466e', row_colors=['#f1f1f2', 'w'], edge_color='w',
                      bbox=[0, 0, 1, 1], header_columns=0,
                      ax=None, **kwargs):
+    data = data.reset_index(drop=False)
     if ax is None:
         size = (np.array(data.shape[::-1]) + np.array([0, 1])) * np.array([col_width, row_height])
         fig, ax = plt.subplots(figsize=size)
@@ -32,6 +33,14 @@ def plot_table(data, path, col_width=3.0, row_height=0.625, font_size=14,
     plt.rcParams['font.sans-serif'] = ['SimHei']
     plt.rcParams['axes.unicode_minus'] = False
     fig = ax.get_figure()
-    fig.savefig(path)
+    if path is not None:
+        fig.savefig(path)
+    plt.show()
 
 
+
+
+if __name__ == '__main__':
+
+    stock_info = pd.read_pickle(r'D:\data\stock_info.pkl').iloc[:5,:6]
+    plot_table(stock_info, header_columns=0, col_width=3.0, font_size=14)

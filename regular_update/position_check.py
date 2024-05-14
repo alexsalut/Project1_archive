@@ -9,7 +9,7 @@ import time
 import os
 import pandas as pd
 
-from util.send_email import Mail
+from util.send_email import Mail, R
 from util.utils import SendEmailInfo
 from util.file_location import FileLocation
 
@@ -18,12 +18,13 @@ fl = FileLocation
 
 def send_position_check(date=None):
     date = date if date is not None else time.strftime('%Y%m%d')
-    account_list = ['踏浪1号', '盼澜1号', '听涟2号', '踏浪3号']
+    account_list = ['踏浪1号', '盼澜1号', '听涟2号', '听涟1号', '踏浪3号']
     account_pos_dict = check_all_account_pos(account_list, date=date)
 
     subject = rf'[Position Check] {date}'
     content = gen_check_email_content(account_pos_dict, date)
-    receivers = SendEmailInfo.department['research'] + SendEmailInfo.department['tech']
+
+    receivers = R.department['research'] + R.department['tech']
     Mail().send(subject=subject, body_content=content, receivers=receivers)
 
 
@@ -40,10 +41,13 @@ def check_all_account_pos(account_list, date=None):
 
 def gen_check_email_content(account_pos_dict, date):
     account_loc_dict = get_account_location(date)
+    account_string = '|'.join(account_pos_dict.keys())
+
+
     content = f"""
     <table width="800" border="0" cellspacing="0" cellpadding="4">
     <tr>
-    <td bgcolor="#CECFAD" height="30" style="font-size:21px"><b>踏浪1号|盼澜1号 持仓核对结果</b></td>
+    <td bgcolor="#CECFAD" height="30" style="font-size:21px"><b>{account_string} 持仓核对结果</b></td>
     </tr>
     <td bgcolor="#EFEBDE" height="100" style="font-size:13px">
     """
@@ -51,7 +55,8 @@ def gen_check_email_content(account_pos_dict, date):
         '踏浪1号': '踏浪1号信用账户',
         '盼澜1号': '盼澜1号信用账户',
         '听涟2号': '听涟2号信用账户',
-        '踏浪3号': '踏浪3号普通账户'
+        '踏浪3号': '踏浪3号普通账户',
+        '听涟1号': '听涟1号财达股票账户',
     }
     for account in account_pos_dict.keys():
         content += f"""
@@ -80,10 +85,12 @@ def check_account_pos(actual_pos_df, target_pos_df):
     filtered_pos_df.index = filtered_pos_df.index + 1
 
     def highlight_diff(s):
-        if abs(s) >= 200:
+        if s >= 200:
             return f'background-color: red'
+        elif s <= -200:
+            return f'background-color: green'
         elif abs(s) >= 100:
-            return f'background-color: lightgreen'
+            return f'background-color: lightblue'
         else:
             return ''
 
@@ -124,6 +131,16 @@ def get_account_location(date=None):
             'actual': rf"{fl.account_info_dir_dict['踏浪3号']}/PositionStatics-{formatted_date1}.csv",
             'target': rf'{fl.remote_target_pos_dir}/tag_pos_踏浪3号普通账户_{formatted_date1}.csv',
         },
+        '听涟1号': {
+            'actual': rf"{fl.account_info_dir_dict['听涟1号 cd']}/PositionStatics-{formatted_date1}.csv",
+            'target': rf'{fl.remote_target_pos_dir}/tag_pos_听涟1号财达股票账户_{formatted_date1}.csv',
+        },
+
+        '踏浪2号': {
+            'actual': rf"{fl.account_info_dir_dict['踏浪2号']}/PositionStatics-{formatted_date1}.csv",
+            'target': rf'{fl.remote_target_pos_dir}/tag_pos_踏浪2号普通账户_{formatted_date1}.csv',
+        }
+
     }
 
     return account_position_dict
@@ -152,7 +169,7 @@ class AccountPosition:
             raise FileNotFoundError
 
     def get_actual_position(self):
-        encoding = 'gbk' if self.account == '听涟2号' or self.account == '踏浪3号' else None
+        encoding = 'gbk' if self.account in ['听涟2号', '踏浪3号', '听涟1号','踏浪2号'] else None
         if os.path.exists(self.location_dict['actual']):
             actual_df = pd.read_csv(
                 self.location_dict['actual'],
@@ -210,9 +227,17 @@ class AccountPosition:
                 'actual account': '资金账号',
                 'actual market val': '市值',
 
-            }
+            },
+            '听涟1号': {
+                'actual code': '证券代码',
+                'actual name': '证券名称',
+                'actual': '当前拥股',
+                'actual account': '资金账号',
+                'actual market val': '市值',
+            },
         }
         account_col_dict['踏浪1号'] = account_col_dict['盼澜1号']
+        account_col_dict['踏浪2号'] = account_col_dict['踏浪3号']
         if self.account in account_col_dict.keys():
             return account_col_dict[self.account]
         else:

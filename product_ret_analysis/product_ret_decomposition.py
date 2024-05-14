@@ -13,7 +13,7 @@ from util.trading_calendar import TradingCalendar as tc
 from product_ret_analysis.account_reader import get_position_s, get_transaction_df, get_product_record, get_monitor_data
 from util.file_location import FileLocation
 from EmQuantAPI import c
-
+from record.get_terminal_info import read_terminal_info
 
 class ProductRetDecomposition:
     def __init__(self, date=None, stock_list=['踏浪1号', '盼澜1号', '听涟2号'], option_list=['盼澜1号', '听涟2号']):
@@ -25,18 +25,25 @@ class ProductRetDecomposition:
         self.product_fee_dict = {'盼澜1号': {'卖': 0.0616/100,
                                              '买': 0.0115/100,},
                                  '踏浪1号': {'卖': 0.063/100,
-                                             '买': 0.013/100,}
+                                             '买': 0.013/100,},
+                                 '听涟1号': {'卖': 0.07/100,
+                                             '买': 0.02/100,},
+                                 '踏浪3号':{ '卖': 0.06/100,
+                                             '买': 0.01/100,}
+
                                  }
 
     def gen_email(self):
+        rq.init()
         table_1, table_2, s_trade_pl_df, _ = self.gen_table()
         styled_1, styled_2, styled_3 = (self.format_table(table_1),
                                         self.format_table(table_2),
                                         self.format_table(s_trade_pl_df, if_percent=False))
+        product = '|'.join(set(self.stock_list + self.option_list))
         content = f"""
     <table width="800" border="0" cellspacing="0" cellpadding="4">
     <tr>
-    <td bgcolor="#CECFAD" height="30" style="font-size:21px"><b>踏浪1号|盼澜1号|听涟2号 收益率分析</b></td>
+    <td bgcolor="#CECFAD" height="30" style="font-size:21px"><b>{product} 收益率分析</b></td>
     </tr>
     <td bgcolor="#EFEBDE" height="100" style="font-size:13px">
     """
@@ -126,7 +133,8 @@ class ProductRetDecomposition:
 
     def get_ret_decomposition(self, product):
         product_dict = {}
-        stock_asset = get_product_record(product, '股票资产总值', self.last_trading_day)
+        asset_col = '总资产' if product == '踏浪3号' else '股票资产总值'
+        stock_asset = get_product_record(product, asset_col, self.last_trading_day)
         trade_df, net_trade_pl, gross_trade_pl, trade_fee = self.get_trade_pl(product, 'Credit', self.product_fee_dict[product])
 
         gross_trade_rate = gross_trade_pl / stock_asset
@@ -134,7 +142,8 @@ class ProductRetDecomposition:
         net_trade_rate = net_trade_pl / stock_asset
         hold_rate = self.get_hold_pl(product, 'Credit') / stock_asset
 
-        product_dict['股票收益率1'] = get_product_record(product, '股票盈亏', self.date) / stock_asset
+        pl_col = '当日盈亏' if product == '踏浪3号' else '股票盈亏'
+        product_dict['股票收益率1'] = get_product_record(product, pl_col, self.date) / stock_asset
         product_dict['股票交易收益率(毛)'] = gross_trade_rate
         product_dict['股票交易费率'] = trade_fee_rate
         product_dict['股票持有收益率'] = hold_rate
@@ -254,4 +263,6 @@ def get_t_raw_daily_bar(ticker_list, type, col='close', date=None):
 
 
 if __name__ == '__main__':
-    ProductRetDecomposition(stock_list=['踏浪1号', '盼澜1号'], option_list=['盼澜1号']).gen_email()
+    ProductRetDecomposition(date='20240509',
+                            stock_list=['踏浪1号', '盼澜1号', '踏浪3号'],
+                            option_list=['盼澜1号']).gen_email()

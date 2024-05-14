@@ -3,7 +3,7 @@
 # @Time    : 2023/11/8 14:24
 # @Author  : Suying
 # @Site    : 
-# @File    : cats_file_reader.py
+# @File    : cats_terminal_reader.py
 
 import time
 import os
@@ -106,9 +106,12 @@ class CatsFileReader:
         position_df = self.read_file([file_type])[file_type]
         return position_df
 
-    def get_transaction_df(self):
+    def get_transaction_info(self, vol=False):
         transaction_df = self.read_file(['Transaction'])['Transaction'].query(f'账户=={self.account_code}')
-        return transaction_df
+        if vol:
+            return transaction_df['成交额'].sum()
+        else:
+            return transaction_df
 
 
     def get_transaction_vol(self, df, file_type='normal'):

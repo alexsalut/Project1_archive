@@ -4,11 +4,14 @@
 # @Author  : Suying
 # @Site    : 
 # @File    : clearing_file_reader.py
+import time
+import os.path
 import zipfile
 import pandas as pd
 import numpy as np
 import rqdatac as rq
 from util.txt_data import TxtData
+from util.send_email import Mail, R
 
 
 def read_clearing_file(path, account):
@@ -32,6 +35,53 @@ def read_clearing_file(path, account):
         return read_ha_normal_account(path)
     elif account == '华泰期货账户':
         return read_matic_future_account(path)
+    elif account == '东证期货账户':
+        return read_dz_future_account(path)
+    elif account == '财达普通账户':
+        return read_cd_normal_account(path)
+
+
+
+
+def read_cd_normal_account(path):
+    df = pd.read_excel(path)
+    trade_df = sep_df('流水明细', '合计:', df)
+    total_transaction = trade_df['收付金额'].astype(float).abs().sum()
+    info_dict = {'账户净资产': float(get_value(df, '资产总值')),
+                 '证券市值': float(get_value(df, '证券市值')),
+                '成交额': total_transaction}
+    return info_dict
+
+
+
+
+def read_dz_future_account(path):
+    rq.init()
+    while not os.path.exists(path):
+        print(f'{path}不存在, 请检查路径是否正确, 2分钟后重试')
+        time.sleep(120)
+        Mail().send(
+            subject=f'!!!!东证期货账户对账单文件缺失',
+            body_content=f'{path}不存在',
+            receivers=R.staff['zhou'])
+
+    data = pd.read_csv(path,sep='\t',encoding='gbk', engine='python')
+    s = data.apply(lambda x: x[0].split() if '|' not in x[0] else x[0].split('|'), axis=1)
+    s = s.apply(lambda x: [i.strip() for i in x if i != ''])
+    df = pd.DataFrame([lst for lst in s])
+
+    pos_df = sep_df('持仓汇总',end=None, df=df)
+    pos_df.columns = pos_df.iloc[0]
+    pos_df = pos_df.iloc[2:-1].set_index('合约')
+
+    account_dict = {
+        '账户净资产': float(get_value(df, 'Equity：', False)),
+        '账户持仓': pos_df
+    }
+    return account_dict
+
+
+
 
 def read_matic_future_account(path):
     z = zipfile.ZipFile(path, 'r')
@@ -48,11 +98,20 @@ def read_ha_normal_account(path):
     df = pd.read_excel(path, index_col=False, header=None)
     account_dict = {
     '账户净资产': float(get_value(df, '资产总值'))}
-    security_df = sep_df('证券汇总', '流水汇总', df)
-
+    try:
+        security_df = sep_df('证券汇总', '流水汇总', df)
+    except:
+        security_df = sep_df('证券汇总', '未回流水汇总', df)
     account_dict['账户证券市值'] = security_df['市值'].astype(float).sum()
-    transaction_df = sep_df('流水明细', '未回业务流水明细', df)
-    account_dict['成交额'] = abs(transaction_df['收付金额'].astype(float)).sum()
+
+    try:
+        transaction_df = sep_df('流水明细', '未回业务流水明细', df)
+        account_dict['成交额'] = abs(transaction_df['收付金额'].astype(float)).sum()
+    except:
+        transaction_df = sep_df('未回业务流水明细','证券汇总', df)
+        account_dict['成交额'] = abs(transaction_df['收付金额'].astype(float)).sum()
+
+
     return account_dict
 
 
@@ -280,3 +339,5 @@ def get_instruments_type(df, col_name):
         lambda x: 'CS' if x in stock else 'ETF' if x in etf else 'Convertible' if x in convertible else 'Other')
     return df
 
+if __name__ == '__main__':
+    read_iquant_normal_account(r'C:\Users\Yz02\Desktop\Data\Save\账户对账单\190000612973普通对账单_20240424.txt')

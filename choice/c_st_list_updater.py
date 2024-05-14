@@ -75,7 +75,6 @@ class ST_List_Updater:
         all_st_s = pd.concat(all_st_list)
         c.stop()
 
-        # all_st_s = all_st_s.str[-2:].str.lower() + all_st_s.str[:6]
         all_st_s.index = pd.to_datetime(all_st_s.index).strftime("%Y%m%d")
         all_st_s.to_pickle(self.save_path)
         print(rf"[{index_ticker} list] updated and new .pkl file generated ")

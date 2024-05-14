@@ -15,8 +15,8 @@ from util.file_location import FileLocation
 
 
 def get_mini_strategy_history_ret(start):
-    dir = FileLocation.monitor_dir
-    filepath_list = glob.glob(os.path.join(dir, 'monitor_*.xlsx'))
+    file_dir = FileLocation.monitor_dir
+    filepath_list = glob.glob(os.path.join(file_dir, 'monitor_*.xlsx'))
     filepath_list = [path for path in filepath_list if 'formula' not in path]
 
     ret = []
@@ -32,4 +32,4 @@ def get_mini_strategy_history_ret(start):
             ret.append(ret_dict)
             print("Date finish processing:", date)
     ret_df = pd.DataFrame(ret).set_index('date')
-    ret_df.to_csv(os.path.join(dir, 'mini_strategy_history_ret.csv'))
+    ret_df.to_csv(os.path.join(file_dir, 'mini_strategy_history_ret.csv'))

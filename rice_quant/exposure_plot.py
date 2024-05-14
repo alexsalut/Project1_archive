@@ -33,11 +33,14 @@ def plot_single_barra_expo(barra_s):
     fig, ax = plt.subplots(3, 1, figsize=(20, 15), sharex=True)
     for i, account in enumerate(expo_df.columns):
         ax[i].bar(np.arange(len(expo_df.index)), expo_df[account].values)
+        ax[i].grid()
         ax[i].set_title(account)
+
     plt.xlabel('Date')
     plt.rcParams['font.sans-serif'] = ['SimHei']
+    plt.locator_params(axis='x', nbins=10)
     plt.rcParams['axes.unicode_minus'] = False
-    plt.xticks(np.arange(len(expo_df.index)), expo_df.index, rotation=45, ha='right')
+    plt.xticks(np.arange(len(expo_df.index))[::5], expo_df.index[::5], rotation=45)
 
     plt.suptitle(factor, fontsize=20)
     os.makedirs(fr'{FL().exposure_dir}\Data', exist_ok=True)

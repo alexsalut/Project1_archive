@@ -8,35 +8,28 @@ import time
 import os
 import shutil
 
+import pandas as pd
+
 from util.file_location import FileLocation
-from record.multi_strategy_perf import MultiStrategyPerf
 from record.talang_recorder import TalangRecorder
 from record.panlan1_tinglian2_recorder import PanlanTinglianRecorder
 from record.nongchao_recorder import NongchaoRecorder
 from util.send_email import Mail, R
 from util.trading_calendar import TradingCalendar
 from record.get_clearing_info import SettleInfo
-
+from record.tinglian1_recorder import Tinglian1Recorder
 
 def account_recorder(date=None, adjust='导出单', if_last_trading_day=False):
-    sep = '*' * 25
-    print(f"\n{sep * 2} Update Account Recorder{adjust} {sep * 2}")
-
-    formatted_date = time.strftime('%Y%m%d') if date is None else date
-    last_trading_day = TradingCalendar().get_n_trading_day(formatted_date, -1).strftime('%Y%m%d')
+    formatted_date = time.strftime('%Y%m%d') if date is None else pd.to_datetime(date).strftime('%Y%m%d')
+    last_trading_day = TradingCalendar().get_n_trading_day(formatted_date, -1).strftime('%Y-%m-%d')
     date_to_update = last_trading_day if if_last_trading_day else formatted_date
 
     monitor_dir = FileLocation.remote_monitor_dir
     account_path = rf'{monitor_dir}\衍舟策略观察.xlsx'
-    multi_strategy_path = rf'{monitor_dir}\多策略超额.xlsx'
     monitor_path = rf'{monitor_dir}\monitor_{date_to_update}.xlsx'
-    if not if_last_trading_day:
-        print(f'{sep} Update Multi-Strategy Performance {sep}')
-        MultiStrategyPerf(
-            account_path=multi_strategy_path,
-            monitor_path=monitor_path,
-            date=date_to_update,
-        ).update()
+
+    sep = '*' * 25
+    print(f"\n{sep * 2} Update Account Recorder {adjust} {date_to_update}  {sep * 2}")
 
     if adjust == '对账单':
         file_list = SettleInfo(date=date_to_update).file_path_list
@@ -45,7 +38,7 @@ def account_recorder(date=None, adjust='导出单', if_last_trading_day=False):
                        date_range=[6, 1],
                        file_list=file_names)
 
-    print(f'{sep} Update Fund Record {sep}')
+    print(f'{sep} Update Fund Record {date_to_update}{sep}')
     update_fund_recorder(account_path, monitor_path, date_to_update, adjust)
     try:
         shutil.copy(account_path, account_path.replace('策略观察', '策略观察备份'))
@@ -55,6 +48,7 @@ def account_recorder(date=None, adjust='导出单', if_last_trading_day=False):
 
 
 def update_fund_recorder(account_path, monitor_path, date_to_update, adjust):
+    Tinglian1Recorder(account_path=account_path, date=date_to_update, adjust=adjust).record_account()
     TalangRecorder(account_path=account_path, monitor_path=monitor_path, date=date_to_update, adjust=adjust).update()
     NongchaoRecorder(account_path=account_path, date=date_to_update, adjust=adjust).record_nongchao()
     PanlanTinglianRecorder(account_path=account_path, account='盼澜1号', date=date_to_update,
@@ -73,8 +67,8 @@ def send_email(account_path, date_to_update, adjust):
         <td bgcolor="#EFEBDE" height="100" style="font-size:13px">
         <p><b>文件路径:</b></p>
         {account_path}
-        <p><b>更新内容:</b></p>
-        <p>更新踏浪1号、踏浪2号、踏浪3号、盼澜1号、听涟2号、弄潮1号、弄潮2号的资产信息</p>
+        <p><b>更新内容:</b></p>  
+        <p>更新踏浪1号、踏浪2号、踏浪3号、盼澜1号、听涟2号、弄潮1号、弄潮2号、听涟1号的资产信息</p>
         """
     Mail().send(
         subject=f'[衍舟策略观察] {file} 更新完成',
@@ -85,5 +79,5 @@ def send_email(account_path, date_to_update, adjust):
 
 
 if __name__ == '__main__':
-    # account_recorder(adjust='对账单', if_last_trading_day=True)
-    account_recorder()
+    account_recorder(adjust='对账单', if_last_trading_day=True)
+    # account_recorder()

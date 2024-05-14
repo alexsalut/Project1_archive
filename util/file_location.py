@@ -21,6 +21,8 @@ class FileLocation:
         '弄潮1号 cats': r'\\192.168.1.116\trade\broker\cats\account',
         '弄潮1号 matic': r'\\192.168.1.116\trade\broker\matic\account',
         '弄潮2号 matic': r'\\192.168.1.116\trade\broker\matic\account',
+        '听涟1号 cd': r'\\192.168.1.116\trade\broker\qmt_cd\account\Stock',
+        '听涟1号 dz': r'D:\data\kq_dz'
     }
 
     # 客户编号
@@ -32,6 +34,7 @@ class FileLocation:
         '听涟2号': 310310300343,  # emc
         '弄潮1号 cats': 4069336,  # cats
         '弄潮1号 cats_HK': 7200001295,
+        '听涟1号': 895004947
     }
 
     # 资产账户

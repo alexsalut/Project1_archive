@@ -7,7 +7,10 @@
 import time
 import pandas as pd
 import numpy as np
-from record.cats_file_reader import CatsFileReader
+from record.cats_terminal_reader import CatsFileReader
+from record.get_terminal_info import read_terminal_info
+
+
 from util.file_location import FileLocation
 def get_product_record(product, indicator_name, date=None):
     record_path = FileLocation.record_path
@@ -18,12 +21,27 @@ def get_product_record(product, indicator_name, date=None):
 
 
 def get_monitor_data(indicator_name, date=None):
-    date = time.strftime('%Y%m%d') if date is None else date
-    monitor_df = pd.read_excel(rf'{FileLocation.remote_monitor_dir}/monitor_{date}.xlsx', sheet_name=0, header=None, index_col=False)
+    date = time.strftime('%Y-%m-%d') if date is None else pd.to_datetime(date).strftime('%Y-%m-%d')
+    if indicator_name in ['盼澜1号', '踏浪1号', '000688.SH']:
+        if indicator_name == '000688.SH':
+            col = indicator_name
+        else:
+            col = '科创50指增'
+        file_path = rf'{FileLocation.remote_monitor_dir}/monitor_{date}.xlsx'
+    elif indicator_name == '踏浪3号':
+        col = '中证500指增'
+        file_path = rf'{FileLocation.remote_monitor_dir}/monitor_zz500_{date}.xlsx'
+
+    else:
+        raise
+
+    monitor_df = pd.read_excel(file_path, sheet_name='monitor目标持仓', header=None, index_col=False)
     def get_values(df, indicator):
         loc = np.where(monitor_df.apply(lambda x: x.astype(str).str.contains(indicator)))
         return df.iloc[loc[0][0], loc[1][0]+1]
-    return get_values(monitor_df, indicator_name)
+
+    value = get_values(monitor_df, col)
+    return value
 
 
 
@@ -40,8 +58,18 @@ def get_transaction_df(account, type, date=None, fee_dict=None):
             account_code = FileLocation.option_account_code[account]
         else:
             account_code = FileLocation.account_code[account]
-        df = (CatsFileReader(file_dir=FileLocation.cats_dir, account_code=account_code, date=date).get_transaction_df())
-        df = df.rename(columns={'证券代码':'代码','交易': '交易类型','成交量':'成交数量','成交均价':'成交价格','成交额': '成交金额'})
+
+
+
+        if account == '踏浪3号':
+            df = read_terminal_info(date, account)['交易记录']
+            df['证券代码'] = df['证券代码'].astype(str).str.zfill(6)
+            code_conversion = lambda x: x+'.SH' if x.startswith('6') else x+'.SZ'
+            df['证券代码'] = df['证券代码'].apply(lambda x: code_conversion(str(x)))
+            df = df.rename(columns={'证券代码': '代码', '操作': '交易类型'})
+        else:
+            df = (CatsFileReader(file_dir=FileLocation.cats_dir, account_code=account_code, date=date).get_transaction_info())
+            df = df.rename(columns={'证券代码':'代码','交易': '交易类型','成交量':'成交数量','成交均价':'成交价格','成交额': '成交金额'})
         if len(df) > 0:
             df['代码'] = df['代码'].str.split('.', expand=True)[0]
         if type == 'Option':
@@ -94,6 +122,13 @@ def get_position_s(account, type, date=None):
             encoding='gbk',
             index_col=False).rename(columns={'证券代码':'代码','持仓数量':'持有数量'})
         position_s = position_df.groupby('代码')['持有数量'].sum()
+    elif account == '踏浪3号':
+        position_df = pd.read_csv(rf'\\192.168.1.116\trade\broker\qmt_ha\account\Stock\PositionStatics-{date}.csv',
+                                  encoding='gbk').query(f'资金账号=={account_code}')
+        position_df['证券代码'] = position_df['证券代码'].astype(str).str.zfill(6)
+        position_df = position_df.rename(columns={'证券代码':'代码','当前拥股':'持有数量'})
+        position_s = position_df.groupby('代码')['持有数量'].sum()
+
     else:
         raise KeyError
     return position_s

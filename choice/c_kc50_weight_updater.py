@@ -11,12 +11,12 @@ import pandas as pd
 from EmQuantAPI import c
 
 from util.send_email import Mail, R
-from util.file_location import FileLocation as FL
+from util.file_location import FileLocation as fl
 
 
 class KC50WeightUpdater:
     def __init__(self, today=None):
-        self.save_dir = FL().kc50_weight_dir
+        self.save_dir = fl.kc50_weight_dir
         self.today = time.strftime('%Y%m%d') if today is None else today
 
     def kc50_weight_update_and_confirm(self):
@@ -38,13 +38,18 @@ class KC50WeightUpdater:
             <p>Download path:</p>
             {save_path}
             """
-            Mail().send(subject=subject, body_content=content, receivers=R.department['research'])
+            Mail().send(subject=subject,
+                        body_content=content,
+                        # receivers=R.department['research'],
+                        receivers=R.staff['zhou']
+                        )
         else:
             print(f'[kc50 weight] error found, retry downloading in 10 seconds')
             time.sleep(10)
             self.kc50_weight_update_and_confirm()
 
-    def kc50_weight_check(self, save_path):
+    @staticmethod
+    def kc50_weight_check(save_path):
         error_list = []
         if os.path.exists(save_path):
             kc50_df = pd.read_pickle(save_path)
@@ -85,7 +90,8 @@ class KC50WeightUpdater:
             save_path=save_path
         )
 
-    def c_download_index_weight(self, index_ticker, date, save_path):
+    @staticmethod
+    def c_download_index_weight(index_ticker, date, save_path):
         print("Downloading Index Composition Weight")
         print("-----------------------------------")
 
@@ -96,6 +102,7 @@ class KC50WeightUpdater:
         )
         df.to_pickle(save_path)
         print(f'[{index_ticker} weight] {date} file has downloaded.')
+
 
 if __name__ == '__main__':
     KC50WeightUpdater().kc50_weight_update_and_confirm()

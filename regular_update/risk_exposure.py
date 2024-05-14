@@ -12,7 +12,7 @@ import pandas as pd
 from util.send_email import Mail, R
 from util.file_location import FileLocation
 from rice_quant.exposure_plot import plot_all_barra_expo
-
+from regular_update.position_check import AccountPosition
 
 
 exposure_save_dir = FileLocation.exposure_dir
@@ -27,28 +27,32 @@ def send_risk_exposure(date=None):
 
 
 def gen_expo_df(formatted_date):
-    # funds = ['踏浪1号', '踏浪2号', '踏浪3号']
-    funds = ['踏浪1号', '踏浪2号']
+    funds = ['踏浪1号', '踏浪2号', '踏浪3号']
+    # funds = ['踏浪1号', '踏浪2号']
     trading_dates = rq.get_trading_dates('20231001',formatted_date)
     trading_dates = [x.strftime('%Y%m%d') for x in trading_dates]
     for date in trading_dates:
         path = fr'{exposure_save_dir}\expo_{date}.csv'
         if os.path.exists(path):
             print(f'Risk exposure file for {date} already exists')
+            expo_df = pd.read_csv(path, encoding='gbk', header=[0, 1], index_col=0)
+            if date == formatted_date:
+                return expo_df
         else:
             data = [get_port_excess_exposure(date=date, fund=x) for x in funds]
             expo_df = pd.concat(data, axis=1, keys=funds)
             expo_df.to_csv(fr'{exposure_save_dir}\expo_{date}.csv', encoding='gbk')
             print(f'Risk exposure file for {date} generated')
             if date == formatted_date:
+                expo_df = pd.read_csv(path, encoding='gbk', header=[0, 1], index_col=0)
                 return expo_df
 
 
 def gen_barra_txt(expo_df):
     barra_df = expo_df.iloc[:11]
     styled_barra_df = barra_df.style.bar(
-        # subset=[('踏浪1号', 'relative'), ('踏浪2号', 'relative'), ('踏浪3号', 'relative')],
-        subset=[('踏浪1号', 'relative'), ('踏浪2号', 'relative')],
+        subset=[('踏浪1号', 'relative'), ('踏浪2号', 'relative'), ('踏浪3号', 'relative')],
+        # subset=[('踏浪1号', 'relative'), ('踏浪2号', 'relative')],
         color='#d65f5f',
     )
     styled_barra_df = styled_barra_df.format('{:.2f}')
@@ -59,8 +63,8 @@ def gen_barra_txt(expo_df):
 def gen_industry_txt(expo_df):
     industry_df = expo_df.iloc[11:]
     styled_industry_df = industry_df.style.bar(
-        # subset=[('踏浪1号', 'relative'), ('踏浪2号', 'relative'), ('踏浪3号', 'relative')],
-        subset=[('踏浪1号', 'relative'), ('踏浪2号', 'relative')],
+        subset=[('踏浪1号', 'relative'), ('踏浪2号', 'relative'), ('踏浪3号', 'relative')],
+        # subset=[('踏浪1号', 'relative'), ('踏浪2号', 'relative')],
         color='#d65f5f',
     )
 
@@ -110,20 +114,12 @@ def get_port_excess_exposure(date, fund):
 
 
 def get_port_weight(date, fund):
-    if fund == '踏浪1号':
-        new_date = pd.to_datetime(date).strftime('%Y-%m-%d')
-        pos_df = pd.read_csv(fr'\\192.168.1.116\trade\broker\cats\account/CreditPosition_{new_date}.csv')
-        pos_s = pos_df.query("备注 == '踏浪1信用账户' & 当前余额 > 0").set_index('代码')['参考市值']
-        stocklist = pos_s.index.astype(str) + '.XSHG'
-        port_weight = pos_s / pos_s.sum()
-        port_weight.index = stocklist
-    else:
-        pos_df = get_pos_df(date=date, fund=fund)
-        stock_pos_df = pos_df.query('证券代码.str.startswith("6") | 证券代码.str.startswith("0") | 证券代码.str.startswith("3")')
-        stock_pos_df['市值占比'] = stock_pos_df['市值'] / stock_pos_df['市值'].sum()
-        stocklist = stock_pos_df['证券代码'] + '.' + stock_pos_df['市场代码'].replace('SH', 'XSHG').replace('SZ', 'XSHE')
-        port_weight = stock_pos_df['市值占比']
-        port_weight.index = stocklist
+    pos_df = AccountPosition(fund, date).get_actual_position()
+    pos_s = pos_df['市值']
+    stock_conversion = lambda x: x+'.XSHG' if x.startswith('6') else x+'.XSHE'
+    stocklist = [stock_conversion(x) for x in pos_s.index]
+    port_weight = pos_s / pos_s.sum()
+    port_weight.index = stocklist
     return port_weight
 
 
@@ -154,7 +150,7 @@ def get_index_exposure(date, fund):
     if fund == '踏浪2号':
         index_ticker = '000905.XSHG'
     elif fund == '踏浪3号':
-        index_ticker = '000852.XSHG'
+        index_ticker = '000905.XSHG'
     elif fund == '踏浪1号':
         index_ticker = '000688.XSHG'
     else:
@@ -167,23 +163,6 @@ def get_index_exposure(date, fund):
         time.sleep(5)
         index_exposure = get_index_exposure(date, fund)
     return index_exposure
-
-
-def get_pos_df(date, fund):
-    if fund == '踏浪2号':
-        subdir = 'qmt_ha'
-    elif fund == '踏浪3号':
-        subdir = 'iQuant'
-    else:
-        raise
-
-    pos_df = pd.read_csv(
-        rf"\\192.168.1.116\trade\broker\{subdir}\account\Stock/PositionStatics-{date}.csv",
-        encoding='gbk',
-        converters={'证券代码': str},
-    ).query("市值>0")
-    return pos_df
-
 
 def rq_get_index_exposure(date, index_ticker):
     index_weight = rq.index_weights(index_ticker, date=date)
@@ -200,4 +179,4 @@ def rq_get_index_exposure(date, index_ticker):
 
 if __name__ == '__main__':
     # get_port_excess_exposure('20240326', '踏浪3号')
-    send_risk_exposure('20240424')
+    send_risk_exposure('20240510')

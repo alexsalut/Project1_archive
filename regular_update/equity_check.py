@@ -12,7 +12,7 @@ import pandas as pd
 
 from record.get_clearing_info import SettleInfo
 from util.send_email import Mail, R
-from record.account_info import read_terminal_info
+from record.get_terminal_info import read_terminal_info
 from util.trading_calendar import TradingCalendar
 from util.file_location import FileLocation
 
@@ -67,6 +67,9 @@ class EquityCheck:
     def check_account_info(self, account):
         clearing_info = SettleInfo(date=self.date).get_settle_info(account=account)
         record_info = read_terminal_info(date=self.date, account=account)
+        clearing_info.pop('交易记录') if '交易记录' in clearing_info.keys() else None
+        record_info.pop('交易记录') if '交易记录' in record_info.keys() else None
+
         if account in ['弄潮1号', '弄潮2号']:
             info_df = self.gen_dict_to_df(clearing_info, record_info)
         else:

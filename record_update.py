@@ -18,7 +18,7 @@ from regular_update.monitor import Monitor
 from product_ret_analysis.product_ret_decomposition import ProductRetDecomposition
 from regular_update.med_kc_stock_pred import send_med_stock_list
 from others.zz500_monitor import update_zz500_next_trading_day_pos
-from record.zz500_multi_strategy_update import ZZ500MultiStrategyPerf
+from record.multi_strategy_update import MultiStrategyPerf
 from choice.c_st_list_updater import ST_List_Updater
 from rice_quant.update_conversion_price import download_conversion_price
 
@@ -45,17 +45,18 @@ def run_daily_update():
         send_position_check()
         KC50WeightUpdater().kc50_weight_update_and_confirm()
         send_med_stock_list()
+        time.sleep(60)
 
-    elif current_minute == 1502:
+    elif current_minute == 1501:
         send_position_check()
         Monitor().update()
         account_recorder()
         update_zz500_next_trading_day_pos()
 
     elif current_minute == 1630:
-        ZZ500MultiStrategyPerf().update()
+        MultiStrategyPerf().update()
         send_strategy_review()
-        ProductRetDecomposition(stock_list=['踏浪1号', '盼澜1号'], option_list=['盼澜1号']).gen_email()
+        ProductRetDecomposition(stock_list=['踏浪1号', '盼澜1号','踏浪3号'], option_list=['盼澜1号']).gen_email()
         ST_List_Updater().st_list_update_and_confirm()
 
     elif current_minute > 1700:

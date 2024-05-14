@@ -41,7 +41,7 @@ def get_conv_list(date=None):
 
 
 if __name__ == '__main__':
-    trading_dates = rq.get_trading_dates('2016-01-01', '2024-04-23')
+    trading_dates = rq.get_trading_dates('2024-04-17', '2024-05-08')
     dates = [date.strftime('%Y%m%d') for date in trading_dates]
     for date in dates:
         download_conv_raw_daily_bar(date)

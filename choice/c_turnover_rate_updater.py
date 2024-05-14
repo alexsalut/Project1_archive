@@ -17,7 +17,7 @@ from util.file_location import FileLocation as FL
 
 class TurnoverRateUpdater:
     def __init__(self, today=None):
-        self.save_dir = FL().turnover_dir
+        self.save_dir = FL.turnover_dir
         self.today = time.strftime('%Y%m%d') if today is None else today
 
     def turnover_rate_update_and_confirm(self):

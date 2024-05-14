@@ -10,7 +10,7 @@ import time
 import pandas as pd
 import xlwings as xw
 
-from record.account_info import read_terminal_info
+from record.get_terminal_info import read_terminal_info
 from record.get_clearing_info import SettleInfo
 from util.utils import find_index_loc_in_excel
 

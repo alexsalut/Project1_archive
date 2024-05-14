@@ -15,7 +15,7 @@ from record.clearing_file_reader import read_clearing_file
 
 class SettleInfo:
     def __init__(self, date=None):
-        self.date = date if date is not None else time.strftime('%Y%m%d')
+        self.date = pd.to_datetime(date).strftime('%Y%m%d') if date is not None else time.strftime('%Y%m%d')
         self.dir = rf'{os.path.expanduser("~")}\Desktop\Data\Save\账户对账单'
         self.account_path = rf'C:\Users\Yz02\Desktop\strategy_update\cnn策略观察_{self.date}.xlsx'
         # 普通股票账户
@@ -25,7 +25,8 @@ class SettleInfo:
             '踏浪3号': rf'{self.dir}/华安证券账户对账单+衍舟踏浪3号+6030002036+{self.date}.xls',
             '弄潮1号cats': rf'{self.dir}/衍舟弄潮1号-客户对账单-7200001295_{self.date}.xlsx',
             '弄潮1号matic': rf'{self.dir}/666810075512_衍舟弄潮1号_普通账单_HT1_{self.date}.xlsx',
-            '弄潮2号': rf'{self.dir}/666810066802_衍舟弄潮2号_普通账单_HT1_{self.date}.xlsx'
+            '弄潮2号': rf'{self.dir}/666810066802_衍舟弄潮2号_普通账单_HT1_{self.date}.xlsx',
+            '听涟1号': rf'{self.dir}/账户对账单_895004947_衍舟听涟1号_{self.date}.xls'
         }
         # 期权账户
         self.option_account_path = {
@@ -38,7 +39,8 @@ class SettleInfo:
 
         self.future_account_path = {
             '弄潮1号matic': rf'{self.dir}/80012902-{self.date}.zip',
-            '弄潮2号matic': rf'{self.dir}/80012903-{self.date}.zip'
+            '弄潮2号matic': rf'{self.dir}/80012903-{self.date}.zip',
+            '听涟1号': rf'D:\data\kq_dz\结算单_{self.date}.txt'
         }
 
         # 信用账户
@@ -69,6 +71,9 @@ class SettleInfo:
             info_dict = self.generate_nongchao1_settle_info()
         elif account == '弄潮2号':
             info_dict = self.generate_nongchao2_settle_info()
+
+        elif account == '听涟1号':
+            info_dict = self.generate_tinglian1_settle_info()
         else:
             raise ValueError('Account name is not correct, '
                              'please input right account name.')
@@ -77,6 +82,24 @@ class SettleInfo:
             print(key, ':', value, '\n')
 
         return info_dict
+
+
+    def generate_tinglian1_settle_info(self):
+        cd_normal_account = read_clearing_file(self.normal_account_path['听涟1号'], '财达普通账户')
+        dz_future_account = read_clearing_file(self.future_account_path['听涟1号'], '东证期货账户')
+
+        pos_df = pd.read_csv(rf'D:\data\kq_dz\听涟1号_pos_{self.date}.csv', encoding='gbk')
+        future_cap = pos_df['持仓市值'].sum()
+        info_dict = {
+            '股票权益': cd_normal_account['账户净资产'],
+            '股票市值': cd_normal_account['证券市值'],
+            '股票成交额': cd_normal_account['成交额'],
+            '期货权益': dz_future_account['账户净资产'],
+            '期货市值': future_cap
+        }
+        return info_dict
+
+
 
     def generate_tinglian2_settle_info(self):
         emc_stock_account = read_clearing_file(self.credit_account_path['听涟2号'], '东财信用账户')
@@ -172,4 +195,4 @@ class SettleInfo:
 if __name__ == '__main__':
 
 
-    print(SettleInfo('20240426').get_settle_info('踏浪2号'))
+    print(SettleInfo('20240507').get_settle_info('听涟1号'))

@@ -22,7 +22,7 @@ def download_rzrq_limit_file(date=None):
     if os.path.exists(rf'{rq_dir}\{rq_file_name}'):
         print(f'[融资融券标的文件]{rq_dir}\{rq_file_name}下载成功')
         Mail().send(
-            subject=f'[融资融券标的文件]{rq_dir}\{rq_file_name}下载成功',
+            subject=f'[融资融券标的文件]{rq_file_name}下载成功',
             body_content=f'[融资融券标的文件]{rq_dir}\{rq_file_name}下载成功',
             receivers=R.department['research']
         )

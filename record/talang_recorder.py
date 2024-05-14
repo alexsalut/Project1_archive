@@ -12,7 +12,7 @@ import pandas as pd
 import xlwings as xw
 import rqdatac as rq
 
-from record.account_info import read_terminal_info
+from record.get_terminal_info import read_terminal_info
 from record.get_clearing_info import SettleInfo
 from util.utils import find_index_loc_in_excel
 
@@ -121,11 +121,11 @@ class TalangRecorder:
 
     def get_index_ret(self, sheet_name):
         assert sheet_name in ['踏浪2号', '踏浪3号', '踏浪1号']
-        monitor_df = pd.read_excel(self.monitor_path, sheet_name=0, index_col=False, header=None)
+        monitor_df = pd.read_excel(self.monitor_path, sheet_name='monitor目标持仓', index_col=False, header=None)
         index_code_dict = {
             '踏浪1号': '000688.SH',
             '踏浪2号': '000905.SH',
-            '踏浪3号': '000852.SH',
+            '踏浪3号': '000905.SH',
         }
 
         index_ret = get_value(monitor_df, index_code_dict[sheet_name], 0, 1)

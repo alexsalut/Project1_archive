@@ -6,11 +6,13 @@
 
 import time
 
+import pandas as pd
 
 from t.ts_kline_updater import KlineUpdater
 from t.ts_raw_daily_bar_updater import RawdailyBarUpdater
 from util.trading_calendar import TradingCalendar
 from regular_update.get_citic_rq import get_citic_rq
+from regular_update.download_cap import download_cap
 from regular_update.rzrq_limit import download_rzrq_limit_file, check_rzrq_limit_file
 from rice_quant.conv_raw_daily_bar import download_conv_raw_daily_bar
 from prepare_arbitrage_daily_data.concat_all_data import concat_all_data
@@ -39,6 +41,7 @@ def run_daily_update():
         check_rzrq_limit_file()
 
     elif current_minute == 1630:
+        download_cap()
         RawdailyBarUpdater().update_and_confirm_raw_daily_bar()
         KlineUpdater().update_confirm_adjusted_kline()
         download_conv_raw_daily_bar()

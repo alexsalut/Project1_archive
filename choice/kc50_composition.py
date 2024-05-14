@@ -10,12 +10,12 @@ import pandas as pd
 from EmQuantAPI import c
 
 from util.send_email import Mail, R
-from util.file_location import FileLocation as FL
+from util.file_location import FileLocation as fl
 
 
 def download_check_kc50_composition(date=None):
     date = time.strftime('%Y%m%d') if date is None else date
-    save_path = rf'{FL().kc50_composition_dir}\{date}.csv'
+    save_path = rf'{fl().kc50_composition_dir}\{date}.csv'
     c_download_kc50_composition(date, save_path)
     kc50_composition = pd.read_csv(save_path)
     if len(kc50_composition) == 50:
@@ -55,4 +55,3 @@ def c_download_kc50_composition(date, save_path):
     c.stop()
     df.to_csv(save_path, index=False)
     print(f'[kc50 composition] {date} file has downloaded.')
-

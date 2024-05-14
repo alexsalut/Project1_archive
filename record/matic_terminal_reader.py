@@ -3,7 +3,7 @@
 # @Time    : 2023/11/8 14:43
 # @Author  : Suying
 # @Site    : 
-# @File    : matic_file_reader.py
+# @File    : matic_terminal_reader.py
 
 import os
 import time
@@ -12,7 +12,7 @@ import datetime
 import pandas as pd
 
 from record.clearing_file_reader import update_asset
-from record.cats_file_reader import gen_info_dict
+from record.cats_terminal_reader import gen_info_dict
 
 
 class MaticFileReader:
@@ -86,6 +86,12 @@ class MaticFileReader:
     @staticmethod
     def get_newest_file(directory, key):
         file_list = glob.glob(f'{directory}/*{key}*')
+        if file_list == []:
+            print(f'未找到{key}文件, retry in 2 mins')
+            time.sleep(120)
+            return MaticFileReader.get_newest_file(directory, key)
+
+
         time_list = [os.path.getmtime(file) for file in file_list]
         newest_file = file_list[time_list.index(max(time_list))]
         return newest_file
