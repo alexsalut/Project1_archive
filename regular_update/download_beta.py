@@ -12,9 +12,6 @@ import glob
 import h5py
 
 def get_beta(window=120):
-    # rq.init()
-    # index = rq.get_price_change_rate('000905.XSHG', start_date='2018-01-01', end_date='2024-05-14')
-    # index.to_pickle('zz500_ret.pkl')
     index_path = r'kc50_ret.pkl'
     index_code = '000688.XSHG'
     suffix = 'kc50'
@@ -38,8 +35,6 @@ def get_beta(window=120):
     beta_df = pd.concat(beta_data, axis=1)
     beta_df = beta_df[beta_df.index > pd.to_datetime('20200101')]
     beta_s = beta_df.stack().rename('beta')
-
-
     beta_s.to_pickle(f'{suffix}_beta{window}.pkl')
 
 
@@ -62,18 +57,5 @@ def custom_rolling_cov(x, y, window):
 
 
 
-
-
-
-    # for index_code in index_info.index:
-    #     try:
-    #         symbol = index_info.loc[index_code, 'symbol']
-    #         index_price = rq.get_price(index_code, start_date='19900101', end_date='2024-05-14')
-    #         index_price = index_price.droplevel(0)
-    #         index_price['pct_chg'] = index_price['close']/index_price['prev_close'] - 1
-    #         index_price.to_pickle(rf'{save_dir}\raw\{index_code}.pkl')
-    #         print(index_code+symbol, 'done')
-    #     except Exception as e:
-    #         print(index_code, e)
 
 
