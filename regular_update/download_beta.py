@@ -56,32 +56,7 @@ def custom_rolling_cov(x, y, window):
     return beta
 
 
-if __name__ == '__main__':
-    rq.init()
-    save_dir = r'D:\data\archive\index'
-    index_info = pd.read_csv(rf'{save_dir}\index_info.csv', index_col=0)
 
-
-
-    file_lst = glob.glob(rf'{save_dir}\raw\*.pkl')
-    h5_file = rf'{save_dir}\index20240514.h5'
-
-    with h5py.File(h5_file, 'r') as f:
-        keys = f.keys()
-
-
-
-
-
-
-
-    with h5py.File(rf'{save_dir}\index.h5', 'w') as f:
-        for file in file_lst:
-            index_code = os.path.basename(file)[:-4]
-            symbol = index_info.loc[index_code, 'symbol']
-            index_price = pd.read_pickle(file)
-            f.create_dataset(index_code, data=index_price)
-            print(index_code, 'done')
 
 
 
