@@ -121,14 +121,19 @@ class TalangRecorder:
 
     def get_index_ret(self, sheet_name):
         assert sheet_name in ['踏浪2号', '踏浪3号', '踏浪1号']
-        monitor_df = pd.read_excel(self.monitor_path, sheet_name='monitor目标持仓', index_col=False, header=None)
         index_code_dict = {
             '踏浪1号': '000688.SH',
             '踏浪2号': '000905.SH',
             '踏浪3号': '000905.SH',
         }
-
-        index_ret = get_value(monitor_df, index_code_dict[sheet_name], 0, 1)
+        if self.adjust == '导出单':
+            monitor_df = pd.read_excel(self.monitor_path, sheet_name='monitor目标持仓', index_col=False, header=None)
+            index_ret = get_value(monitor_df, index_code_dict[sheet_name], 0, 1)
+        else:
+            index_code = rq.id_convert(index_code_dict[sheet_name])
+            index_ret = rq.get_price_change_rate(index_code,
+                                                 start_date=self.date,
+                                                 end_date=self.date).iloc[0,0]
         print(sheet_name,'对标指数', index_code_dict[sheet_name],'的收益', index_ret)
         return index_ret
 

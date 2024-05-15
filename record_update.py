@@ -53,7 +53,7 @@ def run_daily_update():
         account_recorder()
         update_zz500_next_trading_day_pos()
 
-    elif current_minute == 1630:
+    elif current_minute == 1631:
         MultiStrategyPerf().update()
         send_strategy_review()
         ProductRetDecomposition(stock_list=['踏浪1号', '盼澜1号','踏浪3号'], option_list=['盼澜1号']).gen_email()

@@ -9,7 +9,7 @@ import os
 import shutil
 
 import pandas as pd
-
+import rqdatac as rq
 from util.file_location import FileLocation
 from record.talang_recorder import TalangRecorder
 from record.panlan1_tinglian2_recorder import PanlanTinglianRecorder
@@ -20,6 +20,7 @@ from record.get_clearing_info import SettleInfo
 from record.tinglian1_recorder import Tinglian1Recorder
 
 def account_recorder(date=None, adjust='导出单', if_last_trading_day=False):
+    rq.init()
     formatted_date = time.strftime('%Y%m%d') if date is None else pd.to_datetime(date).strftime('%Y%m%d')
     last_trading_day = TradingCalendar().get_n_trading_day(formatted_date, -1).strftime('%Y-%m-%d')
     date_to_update = last_trading_day if if_last_trading_day else formatted_date
@@ -79,5 +80,4 @@ def send_email(account_path, date_to_update, adjust):
 
 
 if __name__ == '__main__':
-    account_recorder(adjust='对账单', if_last_trading_day=True)
-    # account_recorder()
+    account_recorder()

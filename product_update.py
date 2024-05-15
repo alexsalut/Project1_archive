@@ -40,7 +40,7 @@ def run_daily_update():
     elif current_minute == 1300:
         check_rzrq_limit_file()
 
-    elif current_minute == 1636:
+    elif current_minute == 1630:
         download_cap()
         RawdailyBarUpdater().update_and_confirm_raw_daily_bar()
         KlineUpdater().update_confirm_adjusted_kline()
