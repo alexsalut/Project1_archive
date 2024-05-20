@@ -1,6 +1,5 @@
 import os.path
 import time
-import datetime
 import numpy as np
 import xlwings as xw
 import pandas as pd
@@ -52,20 +51,7 @@ class Monitor:
             print('Generate excel pid:', app.pid)
             app.display_alerts = False
             app.screen_updating = False
-            print('open template')
             wb = app.books.open(template_path)
-            wb.save(next_monitor_path)
-            wb.close()
-            app.quit()
-            app.kill()
-            print(f'{next_monitor_path} copied from template')
-
-
-            app = xw.App(visible=False, add_book=False)
-            print('Generate excel pid:', app.pid)
-            app.display_alerts = False
-            app.screen_updating = False
-            wb = app.books.open(next_monitor_path)
             sheet = wb.sheets['monitor目标持仓']
             sheet.range('B1').value = next_trading_day
 
@@ -73,7 +59,6 @@ class Monitor:
                 sheet = wb.sheets[strategy]
                 clear_previous_rows(sheet)
                 pos_reshaped = np.reshape(pos, (-1, 1))
-
                 sheet.range(f'A2:A{1 + len(pos)}').value = pos_reshaped
                 print(f'{strategy} updated')
 
@@ -85,7 +70,6 @@ class Monitor:
 
         else:
             print(f'{next_monitor_path} already exists, no need to update')
-
 
     @staticmethod
     def read_pos_file(date):
@@ -104,8 +88,3 @@ def clear_previous_rows(sheet):
     rows_to_delete = range(row2, 180)
     for row in rows_to_delete:
         sheet.range(f'A{row}').value = None
-
-
-
-if __name__ == '__main__':
-    Monitor().update('20240508')

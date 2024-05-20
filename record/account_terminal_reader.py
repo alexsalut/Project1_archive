@@ -3,7 +3,7 @@
 # @Time    : 2024/5/7 9:47
 # @Author  : Suying
 # @Site    : 
-# @File    : terminal_file_reader.py
+# @File    : account_terminal_reader.py
 
 import os
 import time
@@ -13,8 +13,14 @@ import rqdatac as rq
 from record.cats_terminal_reader import CatsFileReader
 from record.matic_terminal_reader import MaticFileReader
 from util.send_email import Mail, R
-from record.get_clearing_info import SettleInfo
+from record.get_product_clearing import SettleInfo
+
+
+
+
+
 def read_terminal_file(dir, account, account_code=None, date=None):
+    rq.init()
     if account == '中信普通账户':
         return read_cats_normal_account(dir, account_code, date)
     elif account == '中信信用账户':
@@ -54,7 +60,6 @@ def read_cd_normal_account(dir, account_code, date):
     return account_info_dict
 
 def read_dz_future_account(dir, date):
-    rq.init()
     date = pd.to_datetime(date).strftime('%Y%m%d') if date is not None else time.strftime('%Y%m%d')
     last_trading_day = rq.get_previous_trading_date(date, 1).strftime('%Y%m%d')
 
@@ -97,6 +102,10 @@ def read_ha_normal_account(dir, account_code, date):
     if account_code in trades.index:
         transaction = trades.loc[account_code, '成交金额'].sum()
         account_trades = trades.loc[account_code]
+        account_trades['证券代码'] = account_trades['证券代码'].astype(str).str.zfill(6)
+        code_conversion = lambda x: x + '.SH' if x.startswith('6') else x + '.SZ'
+        account_trades['证券代码'] = account_trades['证券代码'].apply(lambda x: code_conversion(str(x)))
+        account_trades = account_trades.rename(columns={'证券代码': '代码', '操作': '交易类型'})
     else:
         transaction = 0
         account_trades = pd.DataFrame(columns=trades.columns)
@@ -105,7 +114,7 @@ def read_ha_normal_account(dir, account_code, date):
         '股票权益': float(info['总资产']),
         '股票市值': info['总市值'],
         '成交额': transaction,
-        '交易记录': account_trades
+        '股票交易明细': account_trades
     }
     return account_info_dict
 
@@ -155,6 +164,7 @@ def read_emc_credit_account(dir, account_code, date):
 
     trade_path = rf'{dir}/310310300343_RZRQ_MATCH.{date}.csv'
     if not os.path.exists(trade_path):
+        stock_transaction_df = pd.DataFrame(columns=['证券代码', '成交数量', '成交价格', '成交金额', '业务类型'])
         stock_transaction_vol = 0
     else:
         transaction_df = pd.read_csv(
@@ -170,6 +180,7 @@ def read_emc_credit_account(dir, account_code, date):
         '账户净资产': stock_equity,
         '证券市值': stock_df.loc[0, '总市值'],
         '成交额': stock_transaction_vol,
+        '交易明细': stock_transaction_df
     }
     return account_info
 

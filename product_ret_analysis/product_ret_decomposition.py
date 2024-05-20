@@ -12,25 +12,25 @@ from util.send_email import Mail, R
 from util.trading_calendar import TradingCalendar as tc
 from product_ret_analysis.account_reader import get_position_s, get_transaction_df, get_product_record, get_monitor_data
 from util.file_location import FileLocation
-from EmQuantAPI import c
-from record.get_terminal_info import read_terminal_info
+
 
 class ProductRetDecomposition:
-    def __init__(self, date=None, stock_list=['踏浪1号', '盼澜1号', '听涟2号'], option_list=['盼澜1号', '听涟2号']):
+    def __init__(self,
+                 date=None,
+                 stock_list=None,
+                 option_list=None,
+                 ):
+        rq.init()
         self.date = time.strftime('%Y%m%d') if date is None else date
         self.last_trading_day = tc().get_n_trading_day(self.date, -1).strftime('%Y%m%d')
-        self.stock_list = stock_list
-        self.option_list = option_list
+        self.stock_list = ['踏浪1号', '盼澜1号', '踏浪3号'] if stock_list is None else stock_list
+        self.option_list = ['盼澜1号', '听涟2号'] if option_list is None else option_list
         self.option_tickers = ['10006234', '10006225', '588000.XSHG']  # d（沽-购 + ETF）/ETF
-        self.product_fee_dict = {'盼澜1号': {'卖': 0.0616/100,
-                                             '买': 0.0115/100,},
-                                 '踏浪1号': {'卖': 0.063/100,
-                                             '买': 0.013/100,},
-                                 '听涟1号': {'卖': 0.07/100,
-                                             '买': 0.02/100,},
-                                 '踏浪3号':{ '卖': 0.06/100,
-                                             '买': 0.01/100,}
-
+        self.product_fee_dict = {'盼澜1号': {'卖': 0.0616 / 100, '买': 0.0115 / 100},
+                                 '踏浪1号': {'卖': 0.063 / 100, '买': 0.013 / 100},
+                                 '听涟1号': {'卖': 0.07 / 100, '买': 0.02 / 100},
+                                 '踏浪3号': {'卖': 0.06 / 100, '买': 0.01 / 100},
+                                 '听涟2号': {'卖': 0.0135 / 100, '买': 0.0635 / 100},
                                  }
 
     def gen_email(self):
@@ -89,7 +89,7 @@ class ProductRetDecomposition:
             styled_df = styled_df.format({product: '{:.2f}' for product in self.stock_list})
         styled_string = styled_df.to_html(classes='table', escape=False)
         styled_string = styled_string.replace('<table',
-                                      '<table style="border-collapse: collapse; border: 1px solid black;"')
+                                              '<table style="border-collapse: collapse; border: 1px solid black;"')
         styled_string = styled_string.replace('<tr', '<tr style="border-bottom: 1px solid black;"')
         styled_string = styled_string.replace('<th', '<th style="border-right: 1px solid black;"')
         styled_string = styled_string.replace('<td', '<td style="border-right: 1px solid black;"')
@@ -99,9 +99,7 @@ class ProductRetDecomposition:
 
     def gen_table(self):
         df, s_trade_df = self.gen_df()
-
-        table_1 = df.loc[['股票收益率1', '股票收益率2', '股票收益误差', '期权收益率1', '期权收益率2', '期权收益误差'],
-                  :]
+        table_1 = df.loc[['股票收益率1', '股票收益率2', '股票收益误差', '期权收益率1', '期权收益率2', '期权收益误差']]
         table_2_row = [x for x in df.index if x not in table_1.index]
         table_2 = df.loc[table_2_row, :]
         return table_1, table_2, s_trade_df, df
@@ -127,16 +125,27 @@ class ProductRetDecomposition:
         rq.init()
         stock_lst = [ticker for ticker in ticker_list if not ticker.startswith('1')]
         new_ticker_list = rq.id_convert(stock_lst)
+
         stock_info = rq.instruments(new_ticker_list)
         stock_name_dict = {stock.order_book_id[:6]: stock.symbol for stock in stock_info}
         return stock_name_dict
+
+    def get_kc50_ret(self, date):
+        rq.init()
+        rq_data = rq.get_price_change_rate('000688.XSHG', start_date=date, end_date=date)
+        if rq_data is None:
+            print('No data for', '000688.XSHG', date, '  sleep 120s')
+            time.sleep(120)
+            return self.get_kc50_ret(date)
+        else:
+            return rq_data.iloc[0, 0]
 
     def get_ret_decomposition(self, product):
         product_dict = {}
         asset_col = '总资产' if product == '踏浪3号' else '股票资产总值'
         stock_asset = get_product_record(product, asset_col, self.last_trading_day)
-        trade_df, net_trade_pl, gross_trade_pl, trade_fee = self.get_trade_pl(product, 'Credit', self.product_fee_dict[product])
-
+        trade_df, net_trade_pl, gross_trade_pl, trade_fee = self.get_trade_pl(product, 'Credit',
+                                                                              self.product_fee_dict[product])
         gross_trade_rate = gross_trade_pl / stock_asset
         trade_fee_rate = trade_fee / stock_asset
         net_trade_rate = net_trade_pl / stock_asset
@@ -161,24 +170,27 @@ class ProductRetDecomposition:
             product_dict['期权持有收益率'] = self.get_hold_pl(product, 'Option') / stock_asset
             product_dict['期权收益率2'] = product_dict['期权交易收益率'] + product_dict['期权持有收益率']
             product_dict['期权收益误差'] = product_dict['期权收益率1'] - product_dict['期权收益率2']
-            product_dict['指数收益率'] = get_monitor_data('000688.SH', self.date)
+            product_dict['指数收益率'] = self.get_kc50_ret(self.date)
             product_dict['期权基差'], etf_ret = self.get_base_diff()
             product_dict['ETF跟踪误差'] = etf_ret - product_dict['指数收益率']
-            product_dict['期权权重配置误差'] = product_dict['期权持有收益率'] + product_dict['指数收益率'] + \
-                                               product_dict['ETF跟踪误差'] - product_dict['期权基差']
+            product_dict['期权权重配置误差'] = (product_dict['期权持有收益率']
+                                                + product_dict['指数收益率']
+                                                + product_dict['ETF跟踪误差']
+                                                - product_dict['期权基差'])
 
         stock_trade_pl = trade_df['净盈亏'].sort_values(ascending=False)
         return product_dict, stock_trade_pl.rename(product)
 
-    def get_trade_pl(self, product, type, fee_dict=None):
+    def get_trade_pl(self, product, account_type, fee_dict=None):
         sep = '*' * 32
-        print(fr'{sep}Generating {product} {type} Trading P&L {sep}')
-        _, trade_df = get_transaction_df(product, type, self.date, fee_dict)
+        print(fr'{sep}Generating {product} {account_type} Trading P&L {sep}')
+        trade_df = get_transaction_df(product, account_type, self.date, fee_dict)
         trade_df.index = trade_df.index.astype(str)
         ticker_list = trade_df.index.astype(str).tolist()
         if ticker_list:
             new_trade_df = pd.concat(
-                [trade_df, get_t_raw_daily_bar(ticker_list=ticker_list, type=type, col='close', date=self.date)],
+                [trade_df,
+                 get_t_raw_daily_bar(ticker_list=ticker_list, ticker_type=account_type, col='close', date=self.date)],
                 axis=1)
             new_trade_df['毛盈亏'] = new_trade_df['成交数量'] * new_trade_df['close'] + new_trade_df['成交金额']
             new_trade_df['净盈亏'] = new_trade_df['成交数量'] * new_trade_df['close'] + new_trade_df['发生金额']
@@ -190,51 +202,55 @@ class ProductRetDecomposition:
         else:
             return trade_df, 0, 0, 0
 
-
-    def get_hold_pl(self, product, type):
+    def get_hold_pl(self, product, product_type):
         sep = '*' * 32
-        print(fr'{sep}Generating {product} {type} Holding P&L {sep}')
-        position_s = get_position_s(account=product, type=type, date=self.last_trading_day)
+        print(fr'{sep}Generating {product} {product_type} Holding P&L {sep}')
+        position_s = get_position_s(account=product, account_type=product_type, date=self.last_trading_day)
         position_s.index = position_s.index.astype(str)
         ticker_list = position_s.index.astype(str).tolist()
-        if type == 'Option':
-            close = get_t_raw_daily_bar(ticker_list=ticker_list, type=type, col=['close', 'prev_close'], date=self.date)
-            hold_pl = (close['close'] - close['prev_close']).mul(position_s).sum()
-        else:
-            close = get_t_raw_daily_bar(ticker_list=ticker_list, type=type, col=['close', 'prev_close'], date=self.date)
-            hold_pl = (close['close'] - close['prev_close']).mul(position_s).sum()
-
-            # pct_chg = get_t_raw_daily_bar(ticker_list=ticker_list, type=type, col='pct_chg', date=self.date)/100
-            # hold_pl = (pct_chg.mul(position_s)).sum()/position_s.sum()
-        print(f'{product} {type} Holding P&L(%) is {hold_pl}')
+        close = get_t_raw_daily_bar(ticker_list=ticker_list,
+                                    ticker_type=product_type,
+                                    col=['close', 'prev_close'],
+                                    date=self.date)
+        hold_pl = (close['close'] - close['prev_close']).mul(position_s).sum()
+        print(f'{product} {product_type} Holding P&L(%) is {hold_pl}')
         return hold_pl
 
     def get_base_diff(self):
-        l = self.option_tickers
+        option_tickers = self.option_tickers
         df = get_t_raw_daily_bar(
-            ticker_list=l,
-            type='Option',
+            ticker_list=option_tickers,
+            ticker_type='Option',
             col=['close', 'prev_close'],
             date=self.date
         )
         s = df['close'] - df['prev_close']
-        base_diff = (s[l[0]] - s[l[1]] + s[l[2]]) / df.loc[l[2], 'prev_close']
-        return base_diff, s[l[2]] / df.loc[l[2], 'prev_close']
+        base_diff = (s[option_tickers[0]] - s[option_tickers[1]] + s[option_tickers[2]]) / df.loc[
+            option_tickers[2], 'prev_close']
+        return base_diff, s[option_tickers[2]] / df.loc[option_tickers[2], 'prev_close']
 
 
-def get_t_raw_daily_bar(ticker_list, type, col='close', date=None):
-    if type == 'Option':
+def get_t_raw_daily_bar(ticker_list, ticker_type, col=None, date=None):
+    """
+    Get daily bar data for stock or option
+    :param ticker_list:
+    :param ticker_type:
+    :param col: str or list
+    :param date:
+    :return:
+    """
+    col = 'close' if col is None else col
+    if ticker_type == 'Option':
         rq.init()
         raw_daily = rq.get_price(ticker_list, start_date=date, end_date=date)
         if raw_daily is None:
             print('No data for', ticker_list, date, '  sleep 120s')
             time.sleep(120)
-            return get_t_raw_daily_bar(ticker_list, type, col, date)
+            return get_t_raw_daily_bar(ticker_list, ticker_type, col, date)
         else:
             raw_daily = raw_daily.droplevel(1)
             raw_daily['pct_chg'] = (raw_daily['close'] / raw_daily['prev_close'] - 1) * 100
             return raw_daily[col] * 10000
-
 
     else:
         date = time.strftime('%Y%m%d') if date is None else pd.to_datetime(date).strftime('%Y%m%d')
@@ -243,8 +259,10 @@ def get_t_raw_daily_bar(ticker_list, type, col='close', date=None):
         raw_daily_df = pd.read_csv(file_path, index_col=0)
         raw_daily_df.index = raw_daily_df.index.str.split('.', expand=True).get_level_values(0)
         raw_daily_df = raw_daily_df.rename(columns={'pre_close': 'prev_close'})
-        non_stock_tickers = [ticker for ticker in ticker_list if ticker not in raw_daily_df.index and not ticker.startswith('1')]
-        stock_tickers = [ticker for ticker in ticker_list if ticker not in non_stock_tickers and not ticker.startswith('1')]
+        non_stock_tickers = [ticker for ticker in ticker_list if
+                             ticker not in raw_daily_df.index and not ticker.startswith('1')]
+        stock_tickers = [ticker for ticker in ticker_list if
+                         ticker not in non_stock_tickers and not ticker.startswith('1')]
         stock_df = raw_daily_df.loc[stock_tickers, col]
 
         if len(non_stock_tickers) == 0:
@@ -258,11 +276,3 @@ def get_t_raw_daily_bar(ticker_list, type, col='close', date=None):
             price.index = price.index.str.split('.', expand=True).get_level_values(0)
             price_s = pd.concat([stock_df, price], axis=0)
             return price_s
-
-
-
-
-if __name__ == '__main__':
-    ProductRetDecomposition(date='20240509',
-                            stock_list=['踏浪1号', '盼澜1号', '踏浪3号'],
-                            option_list=['盼澜1号']).gen_email()

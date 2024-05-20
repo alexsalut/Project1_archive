@@ -1,7 +1,7 @@
 # -*- coding: utf-8 -*-
 # @Time    : 2023/6/13 16:09
 # @Author  : Youwei Wu
-# @File    : risk_exposure.py
+# @File    : download_risk_exposure.py
 # @Software: PyCharm
 import os.path
 import time
@@ -14,11 +14,57 @@ from util.file_location import FileLocation
 from rice_quant.exposure_plot import plot_all_barra_expo
 from regular_update.position_check import AccountPosition
 
-
 exposure_save_dir = FileLocation.exposure_dir
-rq.init()
+
+def download_history_market_exposure(end, start='20240101'):
+    rq.init()
+    trading_dates = rq.get_trading_dates(start, end)
+    for date in trading_dates:
+        download_daily_market_exposure(date)
+
+
+def download_daily_market_exposure(date=None):
+    date = time.strftime('%Y%m%d') if date is None else pd.to_datetime(date).strftime('%Y%m%d')
+    bar_path = rf'{FileLocation.raw_daily_dir}/{date[:4]}/{date[:6]}/raw_daily_{date}.csv'
+
+    save_dir = r'D:\data\archive\factor\barra'
+    save_path = rf'{save_dir}\{date}.csv'
+    # save_path = rf'\\192.168.1.116\data\factor\barra\{date}.csv'
+
+    if os.path.exists(save_path):
+        print(f'Risk exposure file for {date} already exists')
+    else:
+        df = pd.read_csv(bar_path, index_col=0)
+        stock_list = df.index.tolist()
+        stock_list = rq.id_convert(stock_list)
+
+        index_comp_exposure = rq.get_factor_exposure(
+            stock_list,
+            date,
+            date,
+            factors=None,
+            industry_mapping='sw2021',
+        )
+
+        if index_comp_exposure is None:
+            print(f'RiceQuant has no risk-exposure data({date}) ')
+        else:
+            index_comp_exposure = index_comp_exposure.reset_index('date', drop=True)
+            barra = index_comp_exposure.loc[:, : 'comovement']
+            industry = index_comp_exposure.loc[:, '银行':]
+            industry = industry.stack().reset_index(1)
+
+            industry = industry.rename(columns={'level_1': 'industry', 0: 'relative'})
+            industry = industry.query('relative != 0')
+
+            df = pd.concat([barra, industry['industry']], axis=1)
+            del df['comovement']
+            df.to_csv(save_path, encoding='gbk')
+            print(f'Risk exposure file for {date} generated')
+
 
 def send_risk_exposure(date=None):
+    rq.init()
     formatted_date = time.strftime('%Y%m%d') if date is None else pd.to_datetime(date).strftime('%Y%m%d')
     expo_df = gen_expo_df(formatted_date)
     barra_txt = gen_barra_txt(expo_df)
@@ -29,7 +75,7 @@ def send_risk_exposure(date=None):
 def gen_expo_df(formatted_date):
     funds = ['踏浪1号', '踏浪2号', '踏浪3号']
     # funds = ['踏浪1号', '踏浪2号']
-    trading_dates = rq.get_trading_dates('20231001',formatted_date)
+    trading_dates = rq.get_trading_dates('20231001', formatted_date)
     trading_dates = [x.strftime('%Y%m%d') for x in trading_dates]
     for date in trading_dates:
         path = fr'{exposure_save_dir}\expo_{date}.csv'
@@ -116,7 +162,7 @@ def get_port_excess_exposure(date, fund):
 def get_port_weight(date, fund):
     pos_df = AccountPosition(fund, date).get_actual_position()
     pos_s = pos_df['市值']
-    stock_conversion = lambda x: x+'.XSHG' if x.startswith('6') else x+'.XSHE'
+    stock_conversion = lambda x: x + '.XSHG' if x.startswith('6') else x + '.XSHE'
     stocklist = [stock_conversion(x) for x in pos_s.index]
     port_weight = pos_s / pos_s.sum()
     port_weight.index = stocklist
@@ -164,6 +210,7 @@ def get_index_exposure(date, fund):
         index_exposure = get_index_exposure(date, fund)
     return index_exposure
 
+
 def rq_get_index_exposure(date, index_ticker):
     index_weight = rq.index_weights(index_ticker, date=date)
     index_comp_exposure = rq.get_factor_exposure(
@@ -176,7 +223,3 @@ def rq_get_index_exposure(date, index_ticker):
     index_exposure = index_comp_exposure.mul(index_weight, axis=0).sum()
     index_exposure.name = index_ticker
     return index_exposure
-
-if __name__ == '__main__':
-    # get_port_excess_exposure('20240326', '踏浪3号')
-    send_risk_exposure('20240510')

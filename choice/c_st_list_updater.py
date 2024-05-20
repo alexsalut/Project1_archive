@@ -9,11 +9,10 @@ import time
 import pandas as pd
 
 from EmQuantAPI import c
-from util.file_location import FileLocation as FL
 from util.send_email import Mail, R
 
 
-class ST_List_Updater:
+class STListUpdater:
     def __init__(self, today=None, year='2024'):
         self.today = time.strftime('%Y%m%d') if today is None else today
         self.year = year
@@ -78,6 +77,3 @@ class ST_List_Updater:
         all_st_s.index = pd.to_datetime(all_st_s.index).strftime("%Y%m%d")
         all_st_s.to_pickle(self.save_path)
         print(rf"[{index_ticker} list] updated and new .pkl file generated ")
-
-if __name__ == '__main__':
-    ST_List_Updater().st_list_update_and_confirm()

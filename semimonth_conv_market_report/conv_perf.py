@@ -12,8 +12,6 @@ from matplotlib import ticker
 from EmQuantAPI import c
 
 
-
-
 def gen_all_graph(start, end, save_dir):
     c.start("ForceLogin=1")
     debt_nav, debt_ret = get_index_perf(start, end, '债')
@@ -24,9 +22,6 @@ def gen_all_graph(start, end, save_dir):
     yearly_ind_nav, yearly_ind_ret = get_index_perf('20240101', end, '行业')
     ind_nav, ind_ret = get_index_perf(start, end, '行业')
     c.stop()
-
-
-
 
     plot_index_nav(yearly_ind_nav, save_dir, title=f'2024年东财可转债行业指数走势', vertical=start, date=True)
 
@@ -47,7 +42,8 @@ def gen_all_graph(start, end, save_dir):
     plot_index_ret(ind_ret, save_dir, title=f'近两周东财可转债行业指数({start}-{end})区间收益', label_size=7)
 
 
-def plot_index_nav(index_nav, save_dir, title='近两周主流指数区间净值', date=True, vertical=None, dotted_index_lst=None):
+def plot_index_nav(index_nav, save_dir, title='近两周主流指数区间净值', date=True, vertical=None,
+                   dotted_index_lst=None):
     end_nav = index_nav.iloc[-1]
     sorted_list = end_nav.sort_values(ascending=False).index.tolist()
     index_nav = index_nav[sorted_list]
@@ -148,7 +144,3 @@ def get_index_close(start, end, index_lst):
     data = data.rename(columns=name)
     data.index = pd.to_datetime(data.index)
     return data
-
-
-if __name__ == '__main__':
-    gen_all_graph('20240301', '20240315', save_dir=r'fig')

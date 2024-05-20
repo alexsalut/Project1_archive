@@ -162,7 +162,3 @@ class R:
         'admin': ['chen.zf@yz-fund.com.cn']
 
     }
-
-
-if __name__ == '__main__':
-    Mail().receive(r'D:\data\中信券源\raw', date_range=[30, 2], file_list=['CITIC_SBL_Securities_List'])

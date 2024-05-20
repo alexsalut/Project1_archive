@@ -5,14 +5,12 @@
 # @Site    : 
 # @File    : matic_terminal_reader.py
 
-import os
 import time
-import glob
-import datetime
 import pandas as pd
 
-from record.clearing_file_reader import update_asset
+from record.account_clearing_reader import update_asset
 from record.cats_terminal_reader import gen_info_dict
+from util.utils import get_newest_file, check_file_gen_time
 
 
 class MaticFileReader:
@@ -20,14 +18,14 @@ class MaticFileReader:
         self.date = time.strftime('%Y%m%d') if date is None else pd.to_datetime(date).strftime('%Y%m%d')
         self.file_dir = file_dir
         self.file_path_dict = {
-            '信用成交': self.get_newest_file(self.file_dir, f'信用交易_成交报表_{self.date}'),
-            '信用持仓': self.get_newest_file(self.file_dir, f'信用交易_持仓报表_{self.date}'),
-            '信用资产': self.get_newest_file(self.file_dir, f'信用交易_资产报表_{self.date}'),
-            '普通成交': self.get_newest_file(self.file_dir, f'普通交易_成交报表_{self.date}'),
-            '普通持仓': self.get_newest_file(self.file_dir, f'普通交易_持仓报表_{self.date}'),
-            '普通资产': self.get_newest_file(self.file_dir, f'普通交易_资产报表_{self.date}'),
+            '信用成交': get_newest_file(self.file_dir, f'信用交易_成交报表_{self.date}'),
+            '信用持仓': get_newest_file(self.file_dir, f'信用交易_持仓报表_{self.date}'),
+            '信用资产': get_newest_file(self.file_dir, f'信用交易_资产报表_{self.date}'),
+            '普通成交': get_newest_file(self.file_dir, f'普通交易_成交报表_{self.date}'),
+            '普通持仓': get_newest_file(self.file_dir, f'普通交易_持仓报表_{self.date}'),
+            '普通资产': get_newest_file(self.file_dir, f'普通交易_资产报表_{self.date}'),
         }
-        self.gen_date_check = self.check_file_gen_time(list(self.file_path_dict.values()))
+        self.gen_date_check = check_file_gen_time(list(self.file_path_dict.values()), self.date, 15)
         self.account_code = account_code
         if self.gen_date_check:
             print(f'读取{self.date}{file_dir}的MATIC文件, 生成时间检查通过')
@@ -60,20 +58,19 @@ class MaticFileReader:
     def get_normal_account_info(self):
         normal = self.read_file(['普通资产', '普通持仓', '普通成交'])
         normal_asset = gen_info_dict(
-            key_list=['账户净资产', '账户证券市值', '资金余额','成交额'],
-            col_list=['总资产', '证券市值', '可用资金','总成交金额'],
+            key_list=['账户净资产', '账户证券市值', '资金余额', '成交额'],
+            col_list=['总资产', '证券市值', '可用资金', '总成交金额'],
             df=normal['普通资产'],
             is_df=True)
         normal['普通持仓']['证券代码'] = normal['普通持仓']['证券代码'].astype(str)
         normal_asset = update_asset(normal_asset, normal['普通持仓'], '证券代码', '证券名称', '市值（CNY）')
         return normal_asset
 
-    def get_future_account_info(self):
-        # future = self.read_file(['期货资产', '期货持仓', '期货成交'])
+    @staticmethod
+    def get_future_account_info():
         future_asset = ['账户净资产', '多头期权市值', '空头期权市值', '保证金风险度']
-        future_dict = {key : 0 for key in future_asset}
+        future_dict = {key: 0 for key in future_asset}
         return future_dict
-
 
     def read_file(self, filetype_list):
         data_dict = {}
@@ -82,23 +79,3 @@ class MaticFileReader:
                 f'账户名称=="{self.account_code}"')
 
         return data_dict
-
-    @staticmethod
-    def get_newest_file(directory, key):
-        file_list = glob.glob(f'{directory}/*{key}*')
-        if file_list == []:
-            print(f'未找到{key}文件, retry in 2 mins')
-            time.sleep(120)
-            return MaticFileReader.get_newest_file(directory, key)
-
-
-        time_list = [os.path.getmtime(file) for file in file_list]
-        newest_file = file_list[time_list.index(max(time_list))]
-        return newest_file
-
-    def check_file_gen_time(self, path_list):
-        for path in path_list:
-            gen_time = datetime.datetime.fromtimestamp(os.path.getmtime(path))
-            if gen_time < datetime.datetime.strptime(self.date, '%Y%m%d').replace(hour=15, minute=0, second=0):
-                return False
-        return True

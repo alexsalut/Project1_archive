@@ -7,6 +7,7 @@
 import pandas as pd
 import mysql.connector
 
+
 def db_connect():
     connection = mysql.connector.connect(host='120.24.4.184',
                                          database='yanzhou_netvalue',
@@ -30,12 +31,3 @@ def get_db_data(connection, table_name):
     df.index = pd.to_datetime(df.index)
     print(table_name, '净值获取成功')
     return df
-
-
-if __name__ == '__main__':
-
-
-    df = get_db_data(db_connect(), 'nongchao2_daily_value')
-    print()
-
-

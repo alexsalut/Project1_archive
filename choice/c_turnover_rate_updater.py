@@ -45,7 +45,8 @@ class TurnoverRateUpdater:
                 Mail().send(subject=subject, body_content=content, receivers=R.department['research'])
                 self.redownload_turnover_rate(save_path=save_path)
 
-    def get_turnover_info(self, save_path):
+    @staticmethod
+    def get_turnover_info(save_path):
         error_list = []
         turnover_rate_df = pd.read_csv(save_path, index_col=0)
         s = turnover_rate_df[(turnover_rate_df > 100) | (turnover_rate_df < 0)].any(axis=1)
@@ -69,7 +70,8 @@ class TurnoverRateUpdater:
         time.sleep(10)
         self.turnover_rate_update_and_confirm()
 
-    def send_turnover_email(self, save_path, turnover_info_dict):
+    @staticmethod
+    def send_turnover_email(save_path, turnover_info_dict):
         subject = '[Turnover Rate] File downloaded successfully.'
         content = f"""
         <table width="800" border="0" cellspacing="0" cellpadding="4">
@@ -110,7 +112,8 @@ class TurnoverRateUpdater:
             else:
                 self.c_download_daily_turnover_rate(index_ticker='001071', date=date, save_path=save_path)
 
-    def c_download_daily_turnover_rate(self, index_ticker, date, save_path):
+    @staticmethod
+    def c_download_daily_turnover_rate(index_ticker, date, save_path):
         print("Downloading turnover rate")
         print("-------------------------")
 

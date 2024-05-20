@@ -4,7 +4,6 @@
 # @Author  : Suying
 # @Site    : 
 # @File    : concat_all_data.py
-import os.path
 import time
 import pandas as pd
 import rqdatac as rq
@@ -76,7 +75,3 @@ def concat_all_data(date=None, premium_thresh=0.05):
         attachs=[save_path]
 
     )
-
-
-if __name__ == '__main__':
-    concat_all_data()

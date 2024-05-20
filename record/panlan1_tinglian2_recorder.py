@@ -11,9 +11,10 @@ import xlwings as xw
 import pandas as pd
 
 from util.file_location import FileLocation
-from record.get_terminal_info import read_terminal_info
-from record.get_clearing_info import SettleInfo
+from record.get_product_terminal import read_terminal_info
+from record.get_product_clearing import SettleInfo
 from util.utils import find_index_loc_in_excel
+
 
 class PanlanTinglianRecorder:
     def __init__(self, account_path, account, date=None, adjust=None):
@@ -25,10 +26,10 @@ class PanlanTinglianRecorder:
         self.adjust = adjust
 
         f = FileLocation()
-        self.panlan_dir = f.account_info_dir_dict['盼澜1号']
-        self.tinglian_dir = f.account_info_dir_dict['听涟2号 emc']
+        self.panlan_dir = f.account_dir['盼澜1号']
+        self.tinglian_dir = f.account_dir['听涟2号 emc']
 
-    def record_account(self):
+    def update(self):
         app = xw.App(visible=False, add_book=False)
         print('Generate excel pid:', app.pid)
         wb = xw.books.open(self.account_path)
@@ -60,6 +61,3 @@ class PanlanTinglianRecorder:
         app.quit()
         app.kill()
         print(f'Sheet-{self.account} has been updated.')
-
-
-

@@ -18,7 +18,7 @@ from EmQuantAPI import c
 def gen_live_virtual_kline(current_minute, execute_min):
     date = time.strftime('%Y%m%d')
     stock_list = gen_stock_list(date)
-    if current_minute == execute_min-1:
+    if current_minute == execute_min - 1:
         while int(time.strftime('%H%M')) == current_minute:
             print(time.strftime('%X'), 'Wait for update!')
             time.sleep(0.1)
@@ -97,7 +97,7 @@ def notify_with_email(error_dict):
     text = f"""
     <table width="800" border="0" cellspacing="0" cellpadding="4">
     <tr>
-    <td bgcolor="#CECFAD" height="30" style="font-size:21px"><b>Ricequant Virtual Kline updated</b></td>
+    <td bgcolor="#CECFAD" height="30" style="font-size:21px"><b>pdated</b></td>
     </tr>
     <td bgcolor="#EFEBDE" height="100" style="font-size:13px">
     <p>Virtual Kline has been generated.</p>
@@ -123,4 +123,3 @@ def get_kc_stock_num(date=None):
     num = data.Data['B_001057'][0]
     c.stop()
     return num
-

@@ -10,9 +10,9 @@ import time
 
 import pandas as pd
 
-from record.get_clearing_info import SettleInfo
+from record.get_product_clearing import SettleInfo
 from util.send_email import Mail, R
-from record.get_terminal_info import read_terminal_info
+from record.get_product_terminal import read_terminal_info
 from util.trading_calendar import TradingCalendar
 from util.file_location import FileLocation
 
@@ -23,25 +23,20 @@ def send_equity_check(date=None):
 
 class EquityCheck:
     def __init__(self, account=None, date=None):
-        # self.account = [account] if account is not None else ['踏浪1号', '踏浪2号', '踏浪3号',
-        #                                                       '盼澜1号', '听涟2号']
-
         self.account = [account] if account is not None else ['踏浪1号', '踏浪2号',
                                                               '盼澜1号', '听涟2号']
-
-
         last_trading_day = TradingCalendar().get_n_trading_day(time.strftime('%Y%m%d'), -1).strftime('%Y%m%d')
         self.date = date if date is not None else last_trading_day
         self.dir = FileLocation.clearing_dir
         self.account_path = rf'{FileLocation.remote_monitor_dir}\衍舟策略观察_{self.date}.xlsx'
 
     def notify_check_with_email(self):
+        file_list = SettleInfo(date=self.date).file_path_list
         Mail().receive(save_dir=self.dir,
                        user='trading_1@yz-fund.com.cn',
-                       pwd='BO6iJOUXZwDdndz0')
-        file_list = SettleInfo(date=self.date).file_path_list
+                       pwd='BO6iJOUXZwDdndz0',
+                       file_list=[os.path.basename(file) for file in file_list])
         missed_file_list = [f for f in file_list if not os.path.exists(f)]
-
         if missed_file_list:
             self.retry(missed_file_list)
         else:
@@ -67,8 +62,12 @@ class EquityCheck:
     def check_account_info(self, account):
         clearing_info = SettleInfo(date=self.date).get_settle_info(account=account)
         record_info = read_terminal_info(date=self.date, account=account)
-        clearing_info.pop('交易记录') if '交易记录' in clearing_info.keys() else None
-        record_info.pop('交易记录') if '交易记录' in record_info.keys() else None
+        clearing_keys = [k for k in clearing_info.keys() if '交易明细' in k]
+        record_keys = [k for k in record_info.keys() if '交易明细' in k]
+        for key in clearing_keys:
+            clearing_info.pop(key)
+        for key in record_keys:
+            record_info.pop(key)
 
         if account in ['弄潮1号', '弄潮2号']:
             info_df = self.gen_dict_to_df(clearing_info, record_info)
@@ -102,7 +101,6 @@ class EquityCheck:
         data = []
         for key, value in settle_dict.items():
             common_key = value.keys() & record_dict[key].keys()
-            # common_key = [k for k in common_key if k not in ['成交额']]
             key_deduct = key.replace('账户', '')
             new_key = [f'{key_deduct}{k}' for k in common_key]
             settle = pd.Series([value[k] for k in common_key], index=new_key, name='对账单')
@@ -146,7 +144,3 @@ class EquityCheck:
                 '股票权益': record_df.loc[self.date, '股票资产总值'],
             })
         return record_info_dict
-
-
-if __name__ == '__main__':
-    send_equity_check()

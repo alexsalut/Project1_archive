@@ -27,39 +27,14 @@ def gen_product_indicators(product, start, end):
 
     indicator_dict['累计收益率'] = nav_s.iloc[-1] - 1
     indicator_dict['周均收益率'] = ret_s.mean()
-    indicator_dict['周胜率'] = (ret_s>0).mean()
-    indicator_dict['盈亏比'] = ret_s[ret_s>0].mean() / -ret_s[ret_s<0].mean()
-    indicator_dict['正收益周'] = (ret_s>=0).sum()
-    indicator_dict['负收益周'] = (ret_s<0).sum()
-    indicator_dict['年化收益率'] = nav_s.iloc[-1] ** (52 / (len(nav_s)-1)) - 1
+    indicator_dict['周胜率'] = (ret_s > 0).mean()
+    indicator_dict['盈亏比'] = ret_s[ret_s > 0].mean() / -ret_s[ret_s < 0].mean()
+    indicator_dict['正收益周'] = (ret_s >= 0).sum()
+    indicator_dict['负收益周'] = (ret_s < 0).sum()
+    indicator_dict['年化收益率'] = nav_s.iloc[-1] ** (52 / (len(nav_s) - 1)) - 1
     indicator_dict['最大回撤'] = (nav_s / nav_s.cummax() - 1).min()
     indicator_dict['收益回撤比'] = indicator_dict['年化收益率'] / abs(indicator_dict['最大回撤'])
     indicator_dict['夏普比率'] = indicator_dict['年化收益率'] / (ret_s.std() * (52 ** 0.5))
 
     indicator_s = pd.Series(indicator_dict)
     return indicator_s
-
-
-
-
-if __name__ == '__main__':
-    product_dict = {
-        '听涟1号': 'tinglian_daily_value',
-        '弄潮2号': 'nongchao2_weekly_value',
-        '弄潮1号': 'nongchao_weekly_value',
-    }
-    start_time = {
-        '听涟1号': pd.to_datetime('2022-08-24'),
-        '弄潮2号': pd.to_datetime('2023-02-02'),
-        '弄潮1号': pd.to_datetime('2023-02-01'),
-    }
-
-    end = pd.to_datetime('2024-04-12')
-    data = []
-    for product in product_dict.keys():
-        s = gen_product_indicators(product_dict[product], start_time[product], end)
-        s.name = product
-        data.append(s)
-    df = pd.concat(data, axis=1)
-    end_date = end.strftime('%Y-%m-%d')
-    df.T.to_excel(f'产品指标_{end_date}.xlsx')

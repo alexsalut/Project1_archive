@@ -9,7 +9,6 @@ import os
 from conv_perf import gen_all_graph
 
 
-
 class ConvMarketReview:
 
     def __init__(self, mark_date):
@@ -23,25 +22,17 @@ class ConvMarketReview:
     ):
         gen_all_graph(start=start_date, end=end_date, save_dir=self.cache_dir)
 
-
         indent = "&emsp;&emsp;"
         with open(f"{self.cache_dir}/MarketReview_{start_date}_{end_date}.md", 'w') as f:
             f.write(
                 f"# 市场综述报告：{start_date} - {end_date}\n"
-                
+
                 "## 1 市场整体表现\n"
                 f"![](近两周可转债和股票指数({start_date}-{end_date})区间收益.png)\n"
                 f"![](近两周可转债和股票指数({start_date}-{end_date})走势.png)\n"
                 f"![](2024年可转债和股票指数走势.png)\n"
-                
+
                 "## 2 东财可转债行业指数\n"
                 f"![](近两周东财可转债行业指数({start_date}-{end_date})区间收益.png)\n"
                 f"![](2024年东财可转债行业指数走势.png)\n"
             )
-
-
-if __name__ == '__main__':
-    ConvMarketReview(mark_date='20240513').gen_report(
-        start_date='20240426',
-        end_date='20240510',
-    )

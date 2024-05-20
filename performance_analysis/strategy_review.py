@@ -36,12 +36,12 @@ def send_strategy_review(date=None):
         df_html=statistics_df,
         data_dict=data[date],
         fig_paths=fig_paths,
-        date = date
+        date=date
     )
 
 
 def get_market_performance(data):
-    kc50_medians = pd.Series([x['科创50中位数'] for x in data.values()], index=data.keys(),name='科创50中位数')
+    kc50_medians = pd.Series([x['科创50中位数'] for x in data.values()], index=data.keys(), name='科创50中位数')
     kc50_median_nav = kc50_medians.cumsum() + 1
     kc50_median_nav /= kc50_median_nav.iloc[0]
     kc_medians = pd.Series([x['科创板中位数'] for x in data.values()], index=data.keys(), name='科创板中位数')
@@ -53,8 +53,9 @@ def get_market_performance(data):
     diff_nav /= diff_nav.iloc[0]
     return pd.concat([kc50_median_nav, kc_median_nav, diff_nav], axis=1), pd.concat([kc50_medians, kc_medians], axis=1)
 
+
 def plot_market_nav(nav_df):
-    fig, ax = plt.subplots(figsize=(13, 10))
+    plt.figure(figsize=(13, 10))
     plt.plot(nav_df['科创50中位数'], marker='o', color='blue', linestyle='--')
     plt.plot(nav_df['科创板中位数'], marker='o', color='red', linestyle='--')
     plt.plot(nav_df['科创板-科创50'], marker='o', color='orange')
@@ -70,11 +71,11 @@ def plot_market_nav(nav_df):
     plt.rcParams['axes.unicode_minus'] = False
     plt.tight_layout()
 
-
     nav_path = rf'Z:\temp\performance_analysis\data\科创中位数净值_{nav_df.index[-1]}.png'
     plt.savefig(nav_path)
     plt.show()
     return nav_path
+
 
 def plot_market_bar_ret(ret_df):
     plt.figure(figsize=(16, 12))
@@ -97,7 +98,6 @@ def plot_market_bar_ret(ret_df):
     return ret_path
 
 
-
 def get_history_data(dates):
     data = {}
     for date in dates:
@@ -116,7 +116,6 @@ def get_data_dict(date):
     kc_stock_ret = get_kc_stock_pct(date)
     kc50_stock_ret = kc_stock_ret[kc50_stock_list]
 
-
     ret_dict = {
         'date': date,
         'talang1': get_talang1_ret(date),
@@ -127,9 +126,6 @@ def get_data_dict(date):
         '科创50中位数': np.median(kc50_stock_ret.values),
     }
     return ret_dict
-
-
-
 
 
 def plot_hist_performance(data_dict, stock_name):
@@ -201,7 +197,6 @@ def notify_with_email(df_html, data_dict, fig_paths, date):
     path1 = rf'{monitor_dir}\monitor_{formatted_date1}.xlsx'
     path2 = rf'{monitor_dir}\monitor_zz500_{formatted_date2}.xlsx'
 
-
     Mail().send(
         subject,
         content,
@@ -219,7 +214,3 @@ def format_number(value):
         return int(value)
     else:
         return f'{value:.2%}'
-
-
-if __name__ == '__main__':
-    send_strategy_review()

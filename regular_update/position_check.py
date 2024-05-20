@@ -10,20 +10,15 @@ import os
 import pandas as pd
 
 from util.send_email import Mail, R
-from util.utils import SendEmailInfo
-from util.file_location import FileLocation
-
-fl = FileLocation
+from util.file_location import FileLocation as fl
 
 
 def send_position_check(date=None):
     date = date if date is not None else time.strftime('%Y%m%d')
     account_list = ['踏浪1号', '盼澜1号', '听涟2号', '听涟1号', '踏浪3号']
     account_pos_dict = check_all_account_pos(account_list, date=date)
-
     subject = rf'[Position Check] {date}'
     content = gen_check_email_content(account_pos_dict, date)
-
     receivers = R.department['research'] + R.department['tech']
     Mail().send(subject=subject, body_content=content, receivers=receivers)
 
@@ -42,7 +37,6 @@ def check_all_account_pos(account_list, date=None):
 def gen_check_email_content(account_pos_dict, date):
     account_loc_dict = get_account_location(date)
     account_string = '|'.join(account_pos_dict.keys())
-
 
     content = f"""
     <table width="800" border="0" cellspacing="0" cellpadding="4">
@@ -116,33 +110,32 @@ def get_account_location(date=None):
     formatted_date2 = time.strftime('%Y-%m-%d') if date is None else pd.to_datetime(date).strftime("%Y-%m-%d")
     account_position_dict = {
         '盼澜1号': {
-            'actual': rf"{fl.account_info_dir_dict['盼澜1号']}/CreditPosition_{formatted_date2}.csv",
+            'actual': rf"{fl.account_dir['盼澜1号']}/CreditPosition_{formatted_date2}.csv",
             'target': rf'{fl.remote_target_pos_dir}/tag_pos_盼澜1号信用账户_{formatted_date1}.csv',
         },
         '听涟2号': {
-            'actual': rf"{fl.account_info_dir_dict['听涟2号 emc']}/310310300343_RZRQ_POSITION.{formatted_date1}.csv",
+            'actual': rf"{fl.account_dir['听涟2号 emc']}/310310300343_RZRQ_POSITION.{formatted_date1}.csv",
             'target': rf'{fl.remote_target_pos_dir}/tag_pos_听涟2号信用账户_{formatted_date1}.csv',
         },
         '踏浪1号': {
-            'actual': rf"{fl.account_info_dir_dict['踏浪1号']}/CreditPosition_{formatted_date2}.csv",
+            'actual': rf"{fl.account_dir['踏浪1号']}/CreditPosition_{formatted_date2}.csv",
             'target': rf'{fl.remote_target_pos_dir}/tag_pos_踏浪1号信用账户_{formatted_date1}.csv',
         },
         '踏浪3号': {
-            'actual': rf"{fl.account_info_dir_dict['踏浪3号']}/PositionStatics-{formatted_date1}.csv",
+            'actual': rf"{fl.account_dir['踏浪3号']}/PositionStatics-{formatted_date1}.csv",
             'target': rf'{fl.remote_target_pos_dir}/tag_pos_踏浪3号普通账户_{formatted_date1}.csv',
         },
         '听涟1号': {
-            'actual': rf"{fl.account_info_dir_dict['听涟1号 cd']}/PositionStatics-{formatted_date1}.csv",
+            'actual': rf"{fl.account_dir['听涟1号 cd']}/PositionStatics-{formatted_date1}.csv",
             'target': rf'{fl.remote_target_pos_dir}/tag_pos_听涟1号财达股票账户_{formatted_date1}.csv',
         },
 
         '踏浪2号': {
-            'actual': rf"{fl.account_info_dir_dict['踏浪2号']}/PositionStatics-{formatted_date1}.csv",
+            'actual': rf"{fl.account_dir['踏浪2号']}/PositionStatics-{formatted_date1}.csv",
             'target': rf'{fl.remote_target_pos_dir}/tag_pos_踏浪2号普通账户_{formatted_date1}.csv',
         }
 
     }
-
     return account_position_dict
 
 
@@ -169,7 +162,7 @@ class AccountPosition:
             raise FileNotFoundError
 
     def get_actual_position(self):
-        encoding = 'gbk' if self.account in ['听涟2号', '踏浪3号', '听涟1号','踏浪2号'] else None
+        encoding = 'gbk' if self.account in ['听涟2号', '踏浪3号', '听涟1号', '踏浪2号'] else None
         if os.path.exists(self.location_dict['actual']):
             actual_df = pd.read_csv(
                 self.location_dict['actual'],
@@ -185,12 +178,11 @@ class AccountPosition:
                 account_col = self.col_dict['actual account']
                 actual_df[account_col] = actual_df[account_col].astype('Int64')
 
-
             actual_df = actual_df.rename(columns={
                 self.col_dict['actual code']: '代码',
                 self.col_dict['actual name']: '名称',
                 self.col_dict['actual']: '实际',
-                self.col_dict['actual account'] : '账户',
+                self.col_dict['actual account']: '账户',
                 self.col_dict['actual market val']: '市值'}).set_index('代码')
             actual_df.index = actual_df.index.str.zfill(6)
             if '账户' in actual_df.columns:
@@ -242,6 +234,3 @@ class AccountPosition:
             return account_col_dict[self.account]
         else:
             raise ValueError(f'Error: account {self.account} is not supported')
-
-if __name__ == '__main__':
-    send_position_check()

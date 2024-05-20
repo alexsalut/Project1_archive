@@ -5,8 +5,8 @@
 # @Site    : 
 # @File    : get_conversion_price.py
 import time
-import pandas as pd
 import rqdatac as rq
+
 
 def get_conversion_price(conv_list, date=None):
     formatted_date = date if date is not None else time.strftime('%Y%m%d')

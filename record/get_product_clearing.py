@@ -10,7 +10,7 @@ import time
 
 import pandas as pd
 
-from record.clearing_file_reader import read_clearing_file
+from record.account_clearing_reader import read_clearing_file
 
 
 class SettleInfo:
@@ -35,7 +35,6 @@ class SettleInfo:
             '弄潮1号': rf'{self.dir}/衍舟弄潮1号-个股期权对账单-9008023990_{self.date}.xlsx',
             '踏浪1号': rf'{self.dir}/衍舟踏浪1号-个股期权对账单-9008024407_{self.date}.xlsx',
         }
-
 
         self.future_account_path = {
             '弄潮1号matic': rf'{self.dir}/80012902-{self.date}.zip',
@@ -71,18 +70,16 @@ class SettleInfo:
             info_dict = self.generate_nongchao1_settle_info()
         elif account == '弄潮2号':
             info_dict = self.generate_nongchao2_settle_info()
-
         elif account == '听涟1号':
             info_dict = self.generate_tinglian1_settle_info()
         else:
-            raise ValueError('Account name is not correct, '
-                             'please input right account name.')
+            raise ValueError(
+                '目前仅支持盼澜1号、听涟2号、踏浪1号、踏浪2号、踏浪3号、弄潮1号、弄潮2号、听涟1号账户对账单信息的获取！')
         print(f'[{account}对账单信息]\n')
         for key, value in info_dict.items():
             print(key, ':', value, '\n')
 
         return info_dict
-
 
     def generate_tinglian1_settle_info(self):
         cd_normal_account = read_clearing_file(self.normal_account_path['听涟1号'], '财达普通账户')
@@ -99,12 +96,9 @@ class SettleInfo:
         }
         return info_dict
 
-
-
     def generate_tinglian2_settle_info(self):
         emc_stock_account = read_clearing_file(self.credit_account_path['听涟2号'], '东财信用账户')
         cats_option_account = read_clearing_file(self.option_account_path['听涟2号'], '中信期权账户')
-
         info_dict = {
             '期权权益': cats_option_account['账户净资产'],
             '股票权益': emc_stock_account['账户净资产'],
@@ -191,8 +185,3 @@ class SettleInfo:
             '华泰期货账户': matic_future
         }
         return info_dict
-
-if __name__ == '__main__':
-
-
-    print(SettleInfo('20240507').get_settle_info('听涟1号'))

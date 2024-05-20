@@ -40,8 +40,7 @@ class KC50WeightUpdater:
             """
             Mail().send(subject=subject,
                         body_content=content,
-                        # receivers=R.department['research'],
-                        receivers=R.staff['zhou']
+                        receivers=R.department['research'],
                         )
         else:
             print(f'[kc50 weight] error found, retry downloading in 10 seconds')
@@ -102,7 +101,3 @@ class KC50WeightUpdater:
         )
         df.to_pickle(save_path)
         print(f'[{index_ticker} weight] {date} file has downloaded.')
-
-
-if __name__ == '__main__':
-    KC50WeightUpdater().kc50_weight_update_and_confirm()

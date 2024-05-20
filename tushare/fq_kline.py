@@ -48,7 +48,6 @@ class FqKLine:
         ts_kline_df = pd.concat(data)
         return ts_kline_df
 
-
     def fix_tushare_df_format(self, ts_kline_df):
         """
         Parameters
@@ -101,22 +100,9 @@ class FqKLine:
         return fq_price.dropna()  # 此步至关重要，万万不可修改
 
     def extract_price_of_kc_stocks(self):
-
         price = pd.read_pickle(self.save_path)
-
         all_stocks = price.index.levels[1]
         kc_stocks = all_stocks[all_stocks.str.startswith('sh68')]
-
         kc_price_list = [price.xs(x, level=1) for x in kc_stocks]
         kc_price_df = pd.concat(kc_price_list, keys=kc_stocks).swaplevel().sort_index()
         kc_price_df.to_pickle(self.save_path.replace('.pkl', '_kc.pkl'))
-
-
-if __name__ == '__main__':
-    year_lat = ['2021', '2022', '2023', '2024']
-    FqKLine(
-        tushare_dir=r'D:\data\daily_raw_bar',
-        save_path=rf'D:\data\adjusted_kline21_24.pkl',
-        year_lst=year_lat,
-        fix_format=False
-    ).gen_qfq_kline()

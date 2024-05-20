@@ -7,19 +7,18 @@
 
 import glob
 import time
-import os
 import pandas as pd
 
 import rqdatac as rq
-from regular_update.rzrq_limit import download_citic_rq_file
+from regular_update.download_rq_rzrq import download_citic_rq_file
 
 
 def get_citic_rq(date=None, year='2024'):
     rq.init()
     formatted_date1 = date if date is not None else time.strftime('%Y%m%d')
     download_citic_rq_file(formatted_date1)
-    dir = r'D:\data\中信券源\raw'
-    files = glob.glob(dir + '/*.xlsx')
+    file_dir = r'D:\data\中信券源\raw'
+    files = glob.glob(file_dir + '/*.xlsx')
     trading_dates = rq.get_trading_dates(f'{year}0101', formatted_date1)
     dates1 = [date.strftime('%Y%m%d') for date in trading_dates]
 
@@ -46,7 +45,3 @@ def get_rzrq_list(file):
             stock_lst += data.index.tolist()
     rq_list = list(set(stock_lst))
     return rq_list
-
-
-if __name__ == '__main__':
-    get_citic_rq()

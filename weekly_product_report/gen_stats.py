@@ -19,7 +19,7 @@ class ProductStats:
         self.index_code_dict = {
             '踏浪1号': '000688.SH',
             '踏浪2号': '000905.SH',
-            '踏浪3号': '000852.SH',
+            '踏浪3号': '000905.SH',
         }
         self.table_name_dict = {
             '弄潮2号': 'nongchao2_weekly_value',

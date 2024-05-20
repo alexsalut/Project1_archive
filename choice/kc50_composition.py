@@ -15,7 +15,7 @@ from util.file_location import FileLocation as fl
 
 def download_check_kc50_composition(date=None):
     date = time.strftime('%Y%m%d') if date is None else date
-    save_path = rf'{fl().kc50_composition_dir}\{date}.csv'
+    save_path = rf'{fl.kc50_composition_dir}\{date}.csv'
     c_download_kc50_composition(date, save_path)
     kc50_composition = pd.read_csv(save_path)
     if len(kc50_composition) == 50:

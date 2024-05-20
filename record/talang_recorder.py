@@ -12,25 +12,28 @@ import pandas as pd
 import xlwings as xw
 import rqdatac as rq
 
-from record.get_terminal_info import read_terminal_info
-from record.get_clearing_info import SettleInfo
+from record.get_product_terminal import read_terminal_info
+from record.get_product_clearing import SettleInfo
 from util.utils import find_index_loc_in_excel
 
+
 class TalangRecorder:
-    def __init__(self, account_path, monitor_path, date=None, adjust=None):
+    def __init__(self,
+                 account_path,
+                 monitor_path,
+                 date=None,
+                 adjust=None,
+                 product_list=None):
         self.date = pd.to_datetime(date).strftime('%Y%m%d') if date is not None else time.strftime('%Y%m%d')
         self.account_path = account_path
         self.monitor_path = monitor_path
         self.adjust = adjust
+        self.product_list = ['踏浪1号', '踏浪2号', '踏浪3号'] if product_list is None else product_list
         print('TalangRecorder initialized!')
 
-
-
-
     def update(self):
-        self.update_account(account='踏浪1号')
-        self.update_account(account='踏浪2号')
-        self.update_account(account='踏浪3号')
+        for product in self.product_list:
+            self.update_account(product)
 
     def update_account(self, account):
         index_ret = self.get_index_ret(sheet_name=account)
@@ -51,7 +54,6 @@ class TalangRecorder:
                 account_info_dict=account_info_dict,
                 index_ret=index_ret
             )
-
 
     def input_talang1_account_cell_value(self, sheet_name, account_info, index_ret):
         app = xw.App(visible=False, add_book=False)
@@ -74,7 +76,7 @@ class TalangRecorder:
 
         sheet.range(f'K{row_to_fill}').value = account_info['股票权益']
         sheet.range(f'L{row_to_fill}').formula = f'=K{row_to_fill}-K{row_to_fill - 1}-R{row_to_fill}'
-        sheet.range(f'M{row_to_fill}').value = account_info['股票市值']/account_info['股票权益']
+        sheet.range(f'M{row_to_fill}').value = account_info['股票市值'] / account_info['股票权益']
         sheet.range(f'N{row_to_fill}').value = account_info['成交额']
         sheet.range(f'O{row_to_fill}').formula = f'=N{row_to_fill}/B{row_to_fill - 1}'
 
@@ -86,8 +88,6 @@ class TalangRecorder:
         app.quit()
         app.kill()
         print(f'Sheet-{sheet_name} has been updated.')
-
-
 
     def input_talang23_account_cell_value(self, sheet_name, account_info_dict, index_ret):
         app = xw.App(visible=False, add_book=False)
@@ -133,9 +133,10 @@ class TalangRecorder:
             index_code = rq.id_convert(index_code_dict[sheet_name])
             index_ret = rq.get_price_change_rate(index_code,
                                                  start_date=self.date,
-                                                 end_date=self.date).iloc[0,0]
-        print(sheet_name,'对标指数', index_code_dict[sheet_name],'的收益', index_ret)
+                                                 end_date=self.date).iloc[0, 0]
+        print(sheet_name, '对标指数', index_code_dict[sheet_name], '的收益', index_ret)
         return index_ret
+
 
 def get_value(df, string, i, j):
     loc = np.where(df.values == string)

@@ -3,7 +3,7 @@
 # @Time    : 2023/11/29 9:56
 # @Author  : Suying
 # @Site    : 
-# @File    : rzrq_limit.py
+# @File    : download_rq_rzrq.py
 import glob
 import os.path
 import time
@@ -13,28 +13,28 @@ import pandas as pd
 from util.send_email import Mail, R
 
 
-def download_rzrq_limit_file(date=None):
+def download_rzrq_file(date=None):
     date = time.strftime('%Y%m%d') if date is None else date
     rq_dir = r'\\192.168.1.116\trade\broker\rzrq'
     rq_file_name = rf'融资融券标的 {date}.csv'
     Mail().receive(save_dir=rq_dir, date_range=[2, 2], file_list=[rq_file_name])
 
     if os.path.exists(rf'{rq_dir}\{rq_file_name}'):
-        print(f'[融资融券标的文件]{rq_dir}\{rq_file_name}下载成功')
+        print(fr'[融资融券标的文件]{rq_dir}\{rq_file_name}下载成功')
         Mail().send(
             subject=f'[融资融券标的文件]{rq_file_name}下载成功',
-            body_content=f'[融资融券标的文件]{rq_dir}\{rq_file_name}下载成功',
+            body_content=fr'[融资融券标的文件]{rq_dir}\{rq_file_name}下载成功',
             receivers=R.department['research']
         )
     else:
-        print(f'!!![融资融券标的文件]{rq_dir}\{rq_file_name}下载失败, 10分钟后重试')
+        print(fr'!!![融资融券标的文件]{rq_dir}\{rq_file_name}下载失败, 10分钟后重试')
         Mail().send(
             subject=f'!!!!![融资融券标的文件]{rq_file_name}还未发送到指定邮箱, 10分钟后重试',
             body_content=f'[融资融券标的文件]{rq_file_name}还未发送到指定邮箱, 10分钟后重试',
             receivers=R.department['research']
         )
         time.sleep(600)
-        download_rzrq_limit_file(date=date)
+        download_rzrq_file(date=date)
 
 
 def download_citic_rq_file(date=None):
@@ -66,9 +66,6 @@ def download_citic_rq_file(date=None):
         download_citic_rq_file(date=date1)
 
 
-
-
-
 def check_rzrq_limit_file(date=None):
     date = time.strftime('%Y%m%d') if date is None else date
     file_name = rf'融资融券标的 {date}.csv'
@@ -83,9 +80,4 @@ def check_rzrq_limit_file(date=None):
             receivers=R.department['research']
         )
         time.sleep(600)
-        download_rzrq_limit_file(date=date)
-
-
-if __name__ == '__main__':
-    # download_citic_rq_file()
-    download_rzrq_limit_file()
+        download_rzrq_file(date=date)

@@ -8,20 +8,19 @@
 import time
 
 from choice.c_kc50_weight_updater import KC50WeightUpdater
-from record.account_recorder import account_recorder
+from record.product_recorder import product_recorder
 from performance_analysis.strategy_review import send_strategy_review
 from util.trading_calendar import TradingCalendar
 from regular_update.equity_check import send_equity_check
 from regular_update.position_check import send_position_check
-from regular_update.risk_exposure import send_risk_exposure
-from regular_update.monitor import Monitor
+from regular_update.download_risk_exposure import send_risk_exposure
+from record.kc50_monitor import Monitor
 from product_ret_analysis.product_ret_decomposition import ProductRetDecomposition
 from regular_update.med_kc_stock_pred import send_med_stock_list
-from others.zz500_monitor import update_zz500_next_trading_day_pos
+from record.zz500_monitor import update_zz500_next_trading_day_pos
 from record.multi_strategy_update import MultiStrategyPerf
-from choice.c_st_list_updater import ST_List_Updater
+from choice.c_st_list_updater import STListUpdater
 from rice_quant.update_conversion_price import download_conversion_price
-
 
 
 def record_update():
@@ -37,27 +36,31 @@ def record_update():
 
 def run_daily_update():
     current_minute = int(time.strftime('%H%M'))
-    if current_minute == 830:
+    if current_minute == 841:
         send_equity_check()
-        account_recorder(adjust='对账单', if_last_trading_day=True)
+        product_recorder(adjust='对账单', if_last_trading_day=True)
+
+    elif current_minute == 1440:
+        KC50WeightUpdater().kc50_weight_update_and_confirm()
+        time.sleep(60)
 
     elif current_minute == 1457:
         send_position_check()
-        KC50WeightUpdater().kc50_weight_update_and_confirm()
         send_med_stock_list()
         time.sleep(60)
 
     elif current_minute == 1501:
         send_position_check()
         Monitor().update()
-        account_recorder()
         update_zz500_next_trading_day_pos()
+        product_recorder()
+
 
     elif current_minute == 1631:
         MultiStrategyPerf().update()
         send_strategy_review()
-        ProductRetDecomposition(stock_list=['踏浪1号', '盼澜1号','踏浪3号'], option_list=['盼澜1号']).gen_email()
-        ST_List_Updater().st_list_update_and_confirm()
+        ProductRetDecomposition().gen_email()
+        STListUpdater().st_list_update_and_confirm()
 
     elif current_minute > 1700:
         download_conversion_price()

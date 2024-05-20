@@ -10,16 +10,20 @@ import time
 import pandas as pd
 import xlwings as xw
 
-from record.get_terminal_info import read_terminal_info
-from record.get_clearing_info import SettleInfo
+from record.get_product_terminal import read_terminal_info
+from record.get_product_clearing import SettleInfo
 from util.utils import find_index_loc_in_excel
 
 
 class NongchaoRecorder:
-    def __init__(self, account_path, date=None, adjust='导出单'):
+    def __init__(self, account_path,
+                 date=None,
+                 adjust='导出单',
+                 product_list=None):
         self.date = pd.to_datetime(date).strftime('%Y%m%d') if date is not None else time.strftime('%Y%m%d')
         self.account_path = account_path
         self.adjust = adjust
+        self.product_list = ['弄潮1号', '弄潮2号'] if product_list is None else product_list
         self.account_col = {
             '弄潮1号': {
                 '中信信用账户': ['N', 'O', 'P', 'Q', 'R', 'S', 'T', 'U', 'V', 'W', 'X', 'Y', 'Z'],
@@ -48,12 +52,11 @@ class NongchaoRecorder:
                 '华泰期货账户': 'AM',
             }
         }
-
         self.total_account_col = ['B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', 'J', 'K', 'L', 'M']
 
-    def record_nongchao(self):
-        self.record_account_nongchao(sheet_name='弄潮1号')
-        self.record_account_nongchao(sheet_name='弄潮2号')
+    def update(self):
+        for product in self.product_list:
+            self.record_account_nongchao(sheet_name=product)
 
     def record_account_nongchao(self, sheet_name):
         print('*' * 24, '更新', self.date, sheet_name, '*' * 24)
@@ -113,7 +116,6 @@ class NongchaoRecorder:
         sheet.range(f'{col_list[2]}{last_row}').value = account_dict['多头期权市值']
         sheet.range(f'{col_list[3]}{last_row}').value = account_dict['空头期权市值']
         sheet.range(f'{col_list[4]}{last_row}').value = account_dict['保证金风险度']
-        # sheet.range(f'{cash_col}{last_row}').value = account_dict['出入金']
 
     @staticmethod
     def input_normal_account(sheet, col_list, account_dict, cash_col, last_row):
@@ -137,12 +139,10 @@ class NongchaoRecorder:
             account_dict['融券负债'],
             account_dict['融资融券费用']
         ]
-
         sheet.range(
             f'{col_list[5]}{last_row}').formula = (f'=({col_list[0]}{last_row}-'
                                                    f'{col_list[0]}{last_row - 1}-'
                                                    f'{cash_col}{last_row})')
-
         sheet.range(f'{col_list[6]}{last_row}').value = [
             account_dict['维担比例'],
             account_dict['账户证券市值'],
@@ -161,7 +161,8 @@ class NongchaoRecorder:
         sheet.range(f'A{last_row}').value = self.date
         sheet.range(f'{col_list[2]}{last_row}').formula = f'={col_list[1]}{last_row}/{col_list[0]}{last_row} + 1'
         sheet.range(f'{col_list[3]}{last_row}').value = sum(
-            [account['可转债市值(含可转债ETF)'] for account in account_dict.values() if '可转债市值(含可转债ETF)' in account.keys()])
+            [account['可转债市值(含可转债ETF)'] for account in account_dict.values() if
+             '可转债市值(含可转债ETF)' in account.keys()])
         sheet.range(f'{col_list[4]}{last_row}').value = sum(
             [account['融券负债'] for account in account_dict.values() if '融券负债' in account.keys()])
 
@@ -184,4 +185,5 @@ class NongchaoRecorder:
             [account['账户净资产'] for account in account_dict.values()])
         sheet.range(f'{col_list[1]}{last_row}').value = sum(
             [account['账户总负债'] for account in account_dict.values() if '账户总负债' in account.keys()])
-        sheet.range(f'{col_list[10]}{last_row}').value = sum([account['成交额'] for account in account_dict.values() if '成交额' in account.keys()])
+        sheet.range(f'{col_list[10]}{last_row}').value = sum(
+            [account['成交额'] for account in account_dict.values() if '成交额' in account.keys()])

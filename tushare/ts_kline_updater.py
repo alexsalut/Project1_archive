@@ -9,7 +9,7 @@ import time
 import pandas as pd
 
 from util.send_email import Mail, R
-from t.fq_kline import FqKLine
+from tushare.fq_kline import FqKLine
 from util.file_location import FileLocation as FL
 
 
@@ -125,8 +125,3 @@ class KlineUpdater:
             tushare_dir=self.raw_dir,
             save_path=self.save_path,
         ).gen_qfq_kline()
-
-
-if __name__ == '__main__':
-    updater = KlineUpdater()
-    updater.update_confirm_adjusted_kline()

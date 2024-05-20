@@ -10,7 +10,6 @@ from EmQuantAPI import c
 from util.send_email import Mail, R
 
 
-
 def download_cap(date=None):
     date = time.strftime('%Y%m%d') if date is None else date
     print('download cap:', date)
@@ -23,7 +22,7 @@ def download_cap(date=None):
         enddate=date,
         options="ispandas=1",
     )
-    save_path = rf'\\192.168.1.116\data\cap/{date}.csv'
+    save_path = rf'\\192.168.1.116\data\factor\cap/{date}.csv'
     df.to_csv(save_path)
     c.stop()
 
@@ -38,7 +37,3 @@ def download_cap(date=None):
         &nbsp&nbsp {save_path}
         """
     Mail().send(subject=subject, body_content=content, receivers=R.department['research'])
-
-
-if __name__ == '__main__':
-    download_cap('20240430')

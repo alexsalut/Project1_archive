@@ -8,12 +8,13 @@ import time
 import rqdatac as rq
 
 
-from prepare_arbitrage_daily_data.filter_security_lst import get_filtered_convertible_pair
-
-
-
-## 获取下一个交易日的跌停价
 def get_stock_sell_price_limit(stock_list, date=None):
+    """
+    获取下一个交易日的跌停价
+    :param stock_list:
+    :param date:
+    :return:
+    """
     rq.init()
     formatted_date = date if date is not None else time.strftime('%Y%m%d')
     last_trading_day = rq.get_previous_trading_date(formatted_date, 1).strftime('%Y%m%d')
@@ -25,8 +26,3 @@ def get_stock_sell_price_limit(stock_list, date=None):
     stock_df = stock_df.rename(columns={'close': 'prev_close'})
     stock_df = stock_df.droplevel(1)
     return stock_df
-
-if __name__ == '__main__':
-    pair_s = get_filtered_convertible_pair()
-    stock_list = pair_s.to_list()
-    stock_sell_limit = get_stock_sell_price_limit(stock_list)

@@ -8,12 +8,12 @@ import time
 
 import pandas as pd
 
-from t.ts_kline_updater import KlineUpdater
-from t.ts_raw_daily_bar_updater import RawdailyBarUpdater
+from tushare.ts_kline_updater import KlineUpdater
+from tushare.ts_raw_daily_bar_updater import RawdailyBarUpdater
 from util.trading_calendar import TradingCalendar
 from regular_update.get_citic_rq import get_citic_rq
 from regular_update.download_cap import download_cap
-from regular_update.rzrq_limit import download_rzrq_limit_file, check_rzrq_limit_file
+from regular_update.download_rq_rzrq import download_rzrq_file, check_rzrq_limit_file
 from rice_quant.conv_raw_daily_bar import download_conv_raw_daily_bar
 from prepare_arbitrage_daily_data.concat_all_data import concat_all_data
 
@@ -31,7 +31,7 @@ def product_update():
 def run_daily_update():
     current_minute = int(time.strftime('%H%M'))
     if current_minute == 850:
-        download_rzrq_limit_file()
+        download_rzrq_file()
         get_citic_rq()
 
     elif current_minute == 910:
